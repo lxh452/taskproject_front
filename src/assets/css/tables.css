@@ -1,0 +1,90 @@
+/* Gemini 3 Pro 风格的表格样式 */
+
+/* 统一表格容器 */
+.el-table {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+/* 表头样式 */
+.el-table :deep(.el-table__header) {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.el-table :deep(.el-table__header th) {
+    background: transparent !important;
+    color: #374151;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 16px 0;
+    border-bottom: 2px solid #e5e7eb;
+    letter-spacing: -0.01em;
+}
+
+/* 表格行样式 */
+.el-table :deep(.el-table__body tr) {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+}
+
+.el-table :deep(.el-table__body tr:hover) {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+    transform: scale(1.005);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.el-table :deep(.el-table__body td) {
+    padding: 16px 0;
+    border-bottom: 1px solid #f3f4f6;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+/* 斑马纹 */
+.el-table--striped :deep(.el-table__body tr.el-table__row--striped) {
+    background: #fafbfc;
+}
+
+.el-table--striped :deep(.el-table__body tr.el-table__row--striped:hover) {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+}
+
+/* 空状态 */
+.el-table :deep(.el-table__empty-block) {
+    background: #ffffff;
+    padding: 60px 0;
+}
+
+.el-table :deep(.el-table__empty-text) {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+/* 固定列阴影 */
+.el-table :deep(.el-table__fixed),
+.el-table :deep(.el-table__fixed-right) {
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 加载状态 */
+.el-table :deep(.el-loading-mask) {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* 表格边框优化 */
+.el-table :deep(.el-table__inner-wrapper::before) {
+    background-color: #e5e7eb;
+}
+
+.el-table :deep(.el-table__inner-wrapper::after) {
+    background-color: #e5e7eb;
+}
+
+
+
+
+
+
+
