@@ -1,26 +1,38 @@
 <template>
-    <div class="tasks-list-page">
-        <div class="toolbar">
-            <div class="toolbar-left">
+    <div class="tasks-page">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">任务列表</h1>
+                <p class="page-desc">管理和追踪所有项目任务</p>
+            </div>
+            <el-button type="primary" :icon="Plus" @click="openCreateTaskDialog" class="create-btn">
+                创建任务
+            </el-button>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="filter-left">
                 <el-input 
                     v-model="query.keyword" 
-                    placeholder="搜索任务..." 
+                    placeholder="搜索任务名称..." 
                     clearable 
                     class="search-input"
                     :prefix-icon="Search"
                 />
                 <el-select v-model="query.priority" placeholder="优先级" clearable class="filter-select">
                     <el-option label="紧急" :value="1">
-                        <span class="priority-dot danger"></span>紧急
+                        <span class="priority-option"><span class="dot danger"></span>紧急</span>
                     </el-option>
                     <el-option label="高" :value="2">
-                        <span class="priority-dot warning"></span>高
+                        <span class="priority-option"><span class="dot warning"></span>高</span>
                     </el-option>
                     <el-option label="中" :value="3">
-                        <span class="priority-dot info"></span>中
+                        <span class="priority-option"><span class="dot info"></span>中</span>
                     </el-option>
                     <el-option label="低" :value="4">
-                        <span class="priority-dot success"></span>低
+                        <span class="priority-option"><span class="dot success"></span>低</span>
                     </el-option>
                 </el-select>
                 <el-select v-model="query.status" placeholder="状态" clearable class="filter-select">
@@ -28,86 +40,86 @@
                     <el-option label="进行中" :value="1" />
                     <el-option label="已完成" :value="2" />
                 </el-select>
-                <el-date-picker
-                    v-model="query.deadlineRange"
-                    type="daterange"
-                    range-separator="-"
-                    start-placeholder="开始"
-                    end-placeholder="结束"
-                    value-format="YYYY-MM-DD"
-                    class="date-picker"
-                />
             </div>
-            <div class="toolbar-right">
-                <el-button @click="resetFilter" plain :icon="Refresh">重置</el-button>
-                <el-button type="primary" :icon="Plus" @click="openCreateTaskDialog">
-                    创建任务
-                </el-button>
+            <div class="filter-right">
+                <el-button :icon="Refresh" circle @click="resetFilter" />
             </div>
         </div>
         
-        <div class="table-container">
-            <el-table :data="filteredRows" style="width: 100%" v-loading="loading" class="tasks-table" :header-cell-style="{ background: '#f9fafb', color: '#6b7280', fontWeight: '600' }">
-                <el-table-column prop="taskTitle" label="任务标题" min-width="240">
-                    <template #default="{ row }">
-                        <div class="task-title-cell">
-                            <div class="task-icon-wrapper">
+        <!-- 任务卡片网格 -->
+        <div class="content-area">
+            <el-skeleton :rows="4" animated v-if="loading" />
+            <template v-else>
+                <div v-if="filteredRows.length > 0" class="tasks-grid">
+                    <div
+                        v-for="row in filteredRows"
+                        :key="row.id"
+                        class="task-card"
+                        @click="viewDetail(row.id)"
+                    >
+                        <div class="card-header">
+                            <div class="task-icon" :class="row.priorityType">
                                 <el-icon><Document /></el-icon>
                             </div>
-                            <span class="task-title">{{ row.taskTitle }}</span>
+                            <div class="status-badge" :class="getStatusClass(row.status)">
+                                {{ row.statusText }}
+                            </div>
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="priorityText" label="优先级" width="120" align="center">
-                    <template #default="{ row }">
-                        <div class="priority-badge" :class="row.priorityType">
-                            {{ row.priorityText }}
+
+                        <div class="card-body">
+                            <h3 class="task-title">{{ row.taskTitle }}</h3>
+                            <div class="task-meta">
+                                <span class="meta-item priority" :class="row.priorityType">
+                                    <span class="dot"></span>
+                                    {{ row.priorityText }}
+                                </span>
+                                <span class="meta-item date">
+                                    <el-icon><Calendar /></el-icon>
+                                    {{ row.deadline || '无截止日期' }}
+                                </span>
+                            </div>
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="deadline" label="截止时间" width="180">
-                    <template #default="{ row }">
-                        <div class="deadline-cell">
-                            <el-icon><Calendar /></el-icon>
-                            <span>{{ row.deadline || '-' }}</span>
+                        
+                        <div class="card-footer">
+                            <div class="progress-info">
+                                <span class="progress-label">进度</span>
+                                <span class="progress-value">{{ row.progress }}%</span>
+                            </div>
+                            <el-progress 
+                                :percentage="row.progress" 
+                                :stroke-width="6"
+                                :show-text="false"
+                                :color="getProgressColor(row.progress)"
+                            />
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="statusText" label="状态" width="120" align="center">
-                    <template #default="{ row }">
-                        <div class="status-badge" :class="getStatusClass(row.status)">
-                            {{ row.statusText }}
+
+                        <div class="card-actions">
+                            <el-button text size="small" @click.stop="viewDetail(row.id)">
+                                <el-icon><View /></el-icon>
+                            </el-button>
+                            <el-button text size="small" @click.stop="editTask(row.id)">
+                                <el-icon><Edit /></el-icon>
+                            </el-button>
+                            <el-button text size="small" @click.stop="openCreateNodeDialog(row)">
+                                <el-icon><Plus /></el-icon>
+                            </el-button>
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column label="进度" width="200" align="center">
-                    <template #default="{ row }">
-                        <el-progress 
-                            :percentage="row.progress" 
-                            :status="row.progressStatus"
-                            :stroke-width="8"
-                            :format="(percentage) => `${percentage}%`"
-                        />
-                    </template>
-                </el-table-column>
-                <el-table-column label="操作" width="260" align="right" fixed="right">
-                    <template #default="{ row }">
-                        <el-button link type="primary" @click="viewDetail(row.id)">查看</el-button>
-                        <el-button link type="primary" @click="editTask(row.id)">编辑</el-button>
-                        <el-button link type="primary" @click="openCreateNodeDialog(row)">创建节点</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
+                    </div>
+                </div>
+                <div v-else class="empty-state">
+                    <el-empty description="暂无任务" />
+                </div>
+            </template>
         </div>
 
         <!-- 创建任务抽屉 -->
         <el-drawer
             v-model="createTaskDialogVisible"
             title="创建任务"
-            size="600px"
+            size="560px"
             :close-on-click-modal="false"
             destroy-on-close
-            class="modern-drawer"
+            class="vben-drawer"
         >
             <create-task-form 
                 v-if="createTaskDialogVisible"
@@ -120,10 +132,10 @@
         <el-drawer
             v-model="createNodeDialogVisible"
             title="创建任务节点"
-            size="600px"
+            size="560px"
             :close-on-click-modal="false"
             destroy-on-close
-            class="modern-drawer"
+            class="vben-drawer"
         >
             <create-node-form 
                 v-if="createNodeDialogVisible"
@@ -138,7 +150,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { Search, Refresh, Document, Calendar, Plus } from '@element-plus/icons-vue';
+import { Search, Refresh, Document, Calendar, Plus, View, Edit } from '@element-plus/icons-vue';
 import { listTasks } from '@/api';
 import { ElMessage } from 'element-plus';
 import CreateTaskForm from './create-task-form.vue';
@@ -147,7 +159,7 @@ import CreateNodeForm from '../tasknodes/create-node-form.vue';
 const router = useRouter();
 
 const rows = ref<any[]>([]);
-const query = ref<any>({ keyword: '', priority: null, status: null, deadlineRange: null });
+const query = ref<any>({ keyword: '', priority: null, status: null });
 const loading = ref(false);
 
 const createTaskDialogVisible = ref(false);
@@ -155,20 +167,17 @@ const createNodeDialogVisible = ref(false);
 const selectedTaskId = ref('');
 
 const filteredRows = computed(() => {
-    const { keyword, priority, status, deadlineRange } = query.value;
+    const { keyword, priority, status } = query.value;
     return rows.value.filter((r) => {
         const byKw = !keyword || r.taskTitle.toLowerCase().includes(keyword.toLowerCase());
         const byPr = !priority || r.priority === priority;
         const bySt = (status === '' || status === null || status === undefined) || r.status === status;
-        const byDl = !deadlineRange || deadlineRange.length !== 2
-            ? true
-            : (r.deadline >= `${deadlineRange[0]} 00:00:00` && r.deadline <= `${deadlineRange[1]} 23:59:59`);
-        return byKw && byPr && bySt && byDl;
+        return byKw && byPr && bySt;
     });
 });
 
 const resetFilter = () => { 
-    query.value = { keyword: '', priority: null, status: null, deadlineRange: null }; 
+    query.value = { keyword: '', priority: null, status: null }; 
 };
 
 function openCreateTaskDialog() {
@@ -212,6 +221,12 @@ function getStatusClass(status: number) {
     return 'default';
 }
 
+function getProgressColor(progress: number) {
+    if (progress >= 100) return '#10b981';
+    if (progress >= 60) return '#dc2626';
+    return '#f59e0b';
+}
+
 async function loadData() {
     loading.value = true;
     try {
@@ -228,7 +243,6 @@ async function loadData() {
             const deadline = t.deadline || t.taskDeadline;
             const progress = t.progress ?? 0;
             const status = t.status ?? 0;
-            const left = deadline ? Math.ceil((Date.parse(deadline) - Date.now()) / (24 * 3600 * 1000)) : 0;
             return {
                 id: t.id || t.taskId,
                 taskTitle: t.taskTitle || t.title || '未命名任务',
@@ -239,7 +253,6 @@ async function loadData() {
                 priorityText: pri.text,
                 priorityType: pri.type,
                 statusText: status === 1 ? '进行中' : status === 2 ? '已完成' : status === 0 ? '待处理' : '未知',
-                progressStatus: left < 0 && progress < 100 ? 'exception' : left <= 1 && progress < 100 ? 'warning' : undefined,
             } as any;
         });
     } catch (error: any) {
@@ -257,142 +270,315 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tasks-list-page {
-    padding: 24px;
-    background: #f9fafb;
-    min-height: calc(100vh - 64px);
+.tasks-page {
+    padding: clamp(16px, 1.5vw, 24px);
+    background: var(--bg-page);
+    min-height: calc(100vh - clamp(56px, 4vh, 64px));
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-.toolbar {
+/* Page Header */
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    background: #ffffff;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap;
-    gap: 16px;
+    margin-bottom: 1.5vw;
 }
 
-.toolbar-left {
+.page-title {
+    font-size: clamp(20px, 1.5vw, 24px);
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 clamp(4px, 0.3vw, 8px);
+}
+
+.page-desc {
+    font-size: clamp(13px, 0.95vw, 15px);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.create-btn {
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    background: linear-gradient(135deg, var(--color-danger) 0%, #b91c1c 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+    color: #fff;
+}
+
+.create-btn:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+}
+
+/* Filter Bar */
+.filter-bar {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 1vw 1.3vw;
+    background: var(--bg-card);
+    border-radius: 0.8vw;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5vw;
+}
+
+.filter-left {
+    display: flex;
     gap: 12px;
-    flex-wrap: wrap;
+    align-items: center;
 }
 
 .search-input {
     width: 240px;
 }
 
-.filter-select {
-    width: 140px;
-}
-
-.date-picker {
-    width: 260px;
-}
-
-.table-container {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    padding: 4px;
-}
-
-.tasks-table {
-    --el-table-border-color: #f3f4f6;
-    --el-table-header-bg-color: #f9fafb;
-}
-
-.task-title-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.task-icon-wrapper {
-    width: 32px;
-    height: 32px;
-    background: #eff6ff;
+.search-input :deep(.el-input__wrapper) {
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #3b82f6;
-    font-size: 16px;
+    box-shadow: 0 0 0 1px var(--border-color) inset;
+    background-color: var(--bg-card);
 }
 
-.task-title {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 14px;
+.search-input :deep(.el-input__wrapper:hover),
+.search-input :deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px var(--color-danger) inset;
 }
 
-.deadline-cell {
+.filter-select {
+    width: 120px;
+}
+
+.filter-select :deep(.el-input__wrapper) {
+    border-radius: 8px;
+    background-color: var(--bg-card);
+}
+
+.priority-option {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #6b7280;
-    font-size: 13px;
 }
 
-/* Badges */
-.priority-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.priority-badge.danger { background: #fef2f2; color: #ef4444; }
-.priority-badge.warning { background: #fffbeb; color: #f59e0b; }
-.priority-badge.info { background: #f3f4f6; color: #6b7280; }
-.priority-badge.success { background: #ecfdf5; color: #10b981; }
-
-.priority-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
+.dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    margin-right: 6px;
 }
-.priority-dot.danger { background: #ef4444; }
-.priority-dot.warning { background: #f59e0b; }
-.priority-dot.info { background: #6b7280; }
-.priority-dot.success { background: #10b981; }
+
+.dot.danger { background: var(--color-danger); }
+.dot.warning { background: var(--color-warning); }
+.dot.info { background: var(--text-secondary); }
+.dot.success { background: var(--color-success); }
+
+/* Tasks Grid */
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 20vw, 320px), 1fr));
+    gap: clamp(12px, 1.2vw, 20px);
+    width: 100%;
+}
+
+.task-card {
+    background: var(--bg-card);
+    border-radius: clamp(12px, 1vw, 16px);
+    border: 1px solid var(--border-color);
+    padding: clamp(16px, 1.3vw, 24px);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.task-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: clamp(12px, 1vw, 16px);
+}
+
+.task-icon {
+    width: clamp(40px, 3vw, 52px);
+    height: clamp(40px, 3vw, 52px);
+    border-radius: clamp(10px, 0.8vw, 14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(18px, 1.3vw, 24px);
+}
+
+.task-icon.danger { background: var(--bg-hover); color: var(--color-danger); }
+.task-icon.warning { background: var(--bg-hover); color: var(--color-warning); }
+.task-icon.info { background: var(--bg-hover); color: var(--text-secondary); }
+.task-icon.success { background: var(--bg-hover); color: var(--color-success); }
 
 .status-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    font-size: clamp(11px, 0.8vw, 13px);
     font-weight: 500;
+    padding: clamp(3px, 0.3vw, 5px) clamp(10px, 0.8vw, 14px);
+    border-radius: clamp(16px, 1.3vw, 20px);
 }
 
-.status-badge.success { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-.status-badge.warning { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
-.status-badge.default { color: #6b7280; background: rgba(107, 114, 128, 0.1); }
+.status-badge.success { background: var(--bg-hover); color: var(--color-success); }
+.status-badge.warning { background: var(--bg-hover); color: var(--color-warning); }
+.status-badge.default { background: var(--bg-hover); color: var(--text-secondary); }
 
-/* Modern Drawer Styles */
-:deep(.modern-drawer) {
-    background: #ffffff !important;
+.card-body {
+    margin-bottom: clamp(12px, 1vw, 16px);
 }
 
-:deep(.modern-drawer .el-drawer__header) {
-    margin-bottom: 0;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-    color: #1f2937;
+.task-title {
+    font-size: clamp(14px, 1vw, 16px);
     font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 clamp(8px, 0.8vw, 12px);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: clamp(42px, 3vw, 48px);
 }
 
-:deep(.modern-drawer .el-drawer__body) {
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 1vw, 16px);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.4vw, 6px);
+    font-size: clamp(11px, 0.8vw, 13px);
+    color: var(--text-secondary);
+}
+
+.meta-item.priority .dot {
+    width: clamp(5px, 0.4vw, 6px);
+    height: clamp(5px, 0.4vw, 6px);
+}
+
+.meta-item.priority.danger { color: var(--color-danger); }
+.meta-item.priority.warning { color: var(--color-warning); }
+.meta-item.priority.info { color: var(--text-secondary); }
+.meta-item.priority.success { color: var(--color-success); }
+
+.card-footer {
+    padding-top: clamp(12px, 1vw, 16px);
+    border-top: 1px solid var(--border-color);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.progress-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-actions .el-button {
+    color: var(--text-muted);
+    padding: 6px 8px;
+}
+
+.card-actions .el-button:hover {
+    color: var(--color-danger);
+    background: var(--bg-hover);
+}
+
+/* Empty State */
+.empty-state {
+    padding: 60px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+/* Drawer */
+:deep(.vben-drawer) {
+    --el-drawer-padding-primary: 0;
+}
+
+:deep(.vben-drawer .el-drawer__header) {
+    padding: 20px 24px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+:deep(.vben-drawer .el-drawer__body) {
     padding: 24px;
-    overflow-y: auto;
+}
+
+/* 响应式布局 - 保持比例 */
+@media (max-width: 1024px) {
+    .tasks-grid {
+        grid-template-columns: repeat(auto-fill, minmax(22vw, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .tasks-page {
+        padding: 4vw;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2vw;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5vw;
+    }
+    
+    .filter-left {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .search-input,
+    .filter-select {
+        width: 100%;
+    }
+    
+    .tasks-grid {
+        grid-template-columns: 1fr;
+        gap: 3vw;
+    }
 }
 </style>

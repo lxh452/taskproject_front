@@ -68,10 +68,15 @@
                             <el-button :icon="ArrowRight" circle size="small" @click="nextWeek" />
                         </div>
                     </div>
-                    <div class="gantt-content">
+                    <div class="gantt-content" ref="ganttRef">
                         <div class="gantt-header-row">
-                            <div v-for="date in dateRange" :key="date.toString()" class="gantt-date-cell" :class="{ today: isToday(date) }">
-                                <div class="day-num">{{ getDay(date) }}</div>
+                            <div
+                                v-for="date in dateRange"
+                                :key="date.toString()"
+                                class="gantt-date-cell"
+                                :class="{ today: isToday(date) }"
+                            >
+                                <div class="day-num">{{ formatDateOnly(date) }}</div>
                                 <div class="day-text">{{ getWeekDay(date) }}</div>
                             </div>
                         </div>
@@ -81,8 +86,8 @@
                                     class="gantt-bar"
                                     :class="getPriorityClass(task.priority)"
                                     :style="getTaskBarStyle(task)"
-                                    :title="task.name"
                                 >
+                                    <div class="bar-label">{{ task.name }}</div>
                                     <div class="bar-progress" :style="{ width: (task.progress || 0) + '%' }"></div>
                                 </div>
                             </div>
@@ -195,6 +200,8 @@ const employeeTasks = ref<any[]>([]);
 const upcomingTasks = ref<any[]>([]);
 const currentDate = ref(new Date());
 const dateRange = ref<Date[]>([]);
+const zoomDays = ref(30); // 时间轴范围天数，支持缩放
+const ganttRef = ref<HTMLElement | null>(null);
 
 const selectedEmployee = computed(() => {
     if (!selectedEmployeeId.value) return null;
@@ -255,19 +262,44 @@ function getTaskAssigneeName(task: any): string {
 }
 
 function getTaskBarStyle(task: any): any {
-    if (!task.startTime || !task.endTime) return {};
-    const start = new Date(task.startTime).getTime();
-    const end = new Date(task.endTime).getTime();
-    const rangeStart = dateRange.value[0]?.getTime() || start;
-    const rangeEnd = dateRange.value[dateRange.value.length - 1]?.getTime() || end;
-    const rangeDuration = rangeEnd - rangeStart + 24 * 3600 * 1000; // Include last day
-    
-    const leftPercent = Math.max(0, ((start - rangeStart) / rangeDuration) * 100);
-    const widthPercent = Math.min(100 - leftPercent, ((end - start) / rangeDuration) * 100);
-                
+    if (!task.startTime || !task.endTime || dateRange.value.length === 0) return {};
+
+    const taskStart = new Date(task.startTime).getTime();
+    const taskEnd = new Date(task.endTime).getTime();
+    const rangeStart = dateRange.value[0].getTime();
+    const rangeEnd = dateRange.value[dateRange.value.length - 1].getTime();
+
+    const oneDay = 24 * 3600 * 1000;
+    const rangeDuration = rangeEnd - rangeStart + oneDay; // 包含最后一天
+
+    // 如果任务完全在当前可视区间左侧或右侧，直接不显示
+    if (taskEnd < rangeStart || taskStart > rangeEnd) {
+        return { display: 'none' };
+    }
+
+    // 初始按任务完整区间计算
+    let leftPercent = ((taskStart - rangeStart) / rangeDuration) * 100;
+    let widthPercent = ((taskEnd - taskStart + oneDay) / rangeDuration) * 100;
+
+    // 如果任务开始在左侧之外，截断宽度
+    if (leftPercent < 0) {
+        widthPercent += leftPercent;
+        leftPercent = 0;
+    }
+
+    // 如果任务在右侧超出，截断宽度
+    if (leftPercent + widthPercent > 100) {
+        widthPercent = 100 - leftPercent;
+    }
+
+    // 宽度和位置兜底，避免看不到
+    if (widthPercent < 1) widthPercent = 1;
+    if (leftPercent < 0) leftPercent = 0;
+    if (leftPercent > 100) leftPercent = 100;
+
     return {
         left: `${leftPercent}%`,
-        width: `${Math.max(widthPercent, 1)}%` // Min 1% width
+        width: `${widthPercent}%`,
     };
 }
 
@@ -295,26 +327,41 @@ function handleViewChange(view: string) {
 }
 
 function prevWeek() {
-    currentDate.value = new Date(currentDate.value.getTime() - 7 * 24 * 3600 * 1000);
+    currentDate.value = new Date(currentDate.value.getTime() - zoomDays.value * 24 * 3600 * 1000);
     updateDateRange();
 }
 
 function nextWeek() {
-    currentDate.value = new Date(currentDate.value.getTime() + 7 * 24 * 3600 * 1000);
+    currentDate.value = new Date(currentDate.value.getTime() + zoomDays.value * 24 * 3600 * 1000);
     updateDateRange();
 }
 
 function updateDateRange() {
     const dates: Date[] = [];
     const start = new Date(currentDate.value);
-    start.setDate(start.getDate() - start.getDay() + 1); // Start from Monday
+    // 以当前日期为中心，按 zoomDays 范围生成日期
+    const half = Math.floor(zoomDays.value / 2);
+    start.setDate(start.getDate() - half);
     
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < zoomDays.value; i++) {
         const date = new Date(start);
         date.setDate(start.getDate() + i);
         dates.push(date);
     }
     dateRange.value = dates;
+}
+
+// 鼠标滚轮缩放（按住 Ctrl + 滚轮）
+function handleWheel(e: WheelEvent) {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    // 向上滚=放大（时间范围变短），向下=缩小（时间范围变长）
+    if (e.deltaY < 0) {
+        zoomDays.value = Math.max(7, zoomDays.value - 7);
+    } else {
+        zoomDays.value = Math.min(120, zoomDays.value + 7);
+    }
+    updateDateRange();
 }
 
 function toggleFullscreen() {
@@ -328,13 +375,14 @@ function toggleFullscreen() {
 async function loadMyTasks() {
     try {
         const allItems: any[] = [];
+        const employeeId = userStore.employeeId || ''; // 使用员工ID作为责任人ID
         
-        // Load Nodes
+        // 1. 我的任务节点（执行人 / 负责人）
         const res = await getMyTaskNodes({ page: 1, pageSize: 1000 });
         if (res.data.code === 200) {
             const data = res.data?.data || {};
             const nodes = [...(data.executor_task || []), ...(data.leader_task || [])];
-            const nodeMap = new Map();
+            const nodeMap = new Map<string, any>();
             
             nodes.forEach((it: any) => {
                 const id = it.id || it.taskNodeId;
@@ -343,25 +391,28 @@ async function loadMyTasks() {
                     id,
                     type: 'taskNode',
                     name: it.nodeName || it.taskNodeName,
-                    startTime: it.createTime || it.startTime,
+                    startTime: it.nodeStartTime || it.createTime || it.startTime,
                     endTime: it.nodeDeadline || it.endTime || it.deadline,
-                    priority: it.priority || it.nodeType || 3,
+                    priority: it.nodePriority || it.nodeType || 3,
                     progress: it.progress || 0,
-                    assigneeId: it.leaderId || (it.executorIds?.[0]) || '',
+                    assigneeId: employeeId,
                 });
             });
             allItems.push(...nodeMap.values());
         }
         
-        // Load Tasks
+        // 2. 我负责的任务（负责人列表里包含当前员工ID）
         const taskResp = await listTasks({ page: 1, pageSize: 100 });
         if (taskResp.data?.code === 200) {
             const tasks = taskResp.data?.data?.list || [];
-            const userId = userStore.userId || userStore.id || '';
             
             tasks.forEach((t: any) => {
-                const responsibles = (t.responsibleEmployeeIds || '').split(',').filter(Boolean);
-                if (responsibles.includes(userId)) {
+                const responsibles = (t.responsibleEmployeeIds || '')
+                    .split(',')
+                    .map((x: string) => x.trim())
+                    .filter(Boolean);
+                
+                if (employeeId && responsibles.includes(employeeId)) {
                     allItems.push({
                         id: t.id || t.taskId,
                         type: 'task',
@@ -370,7 +421,7 @@ async function loadMyTasks() {
                         endTime: t.taskDeadline || t.deadline,
                         priority: t.taskPriority || t.priority || 3,
                         progress: t.progress || 0,
-                        assigneeId: responsibles[0],
+                        assigneeId: employeeId,
                     });
                 }
             });
@@ -391,14 +442,18 @@ async function loadEmployees() {
         const resp = await listEmployees({ page: 1, pageSize: 1000, companyId });
         if (resp.data?.code === 200) {
             const list = resp.data?.data?.list || [];
+            // 下拉选择和任务里的 responsibleEmployeeIds 对齐，统一使用 employeeId
             employees.value = list.map((e: any) => ({
-                id: e.id || e.employeeId,
+                id: e.employeeId || e.id,
                 name: e.realName || e.name || '未知',
                 avatar: e.avatar || '',
             }));
             
             list.forEach((e: any) => {
-                if (e.id) employeesMap.value[String(e.id)] = { name: e.realName || e.name };
+                const empId = e.employeeId || e.id;
+                if (empId) {
+                    employeesMap.value[String(empId)] = { name: e.realName || e.name };
+                }
             });
         }
     } catch (error) {
@@ -417,20 +472,62 @@ async function loadEmployeeTasks() {
             const list = resp.data?.data?.list || [];
             const empId = String(selectedEmployeeId.value);
             
-            employeeTasks.value = list
+            // 1）该员工作为任务负责人
+            const taskItems = list
                 .filter((t: any) => {
-                    const responsibles = (t.responsibleEmployeeIds || '').split(',').filter(Boolean);
+                    const responsibles = (t.responsibleEmployeeIds || '')
+                        .split(',')
+                        .map((x: string) => x.trim())
+                        .filter(Boolean);
                     return responsibles.includes(empId);
                 })
                 .map((t: any) => ({
                     id: t.taskId || t.id,
+                    type: 'task',
                     name: t.taskTitle || t.title,
                     startTime: t.taskStartTime,
                     endTime: t.taskDeadline,
                     priority: t.taskPriority || 3,
                     progress: t.progress || 0,
-                    assigneeId: empId
+                    assigneeId: empId,
                 }));
+
+            // 2）该员工参与的任务节点（执行人或负责人）
+            const nodeRes = await getMyTaskNodes({ page: 1, pageSize: 1000 });
+            const nodeItems: any[] = [];
+            if (nodeRes.data?.code === 200) {
+                const data = nodeRes.data?.data || {};
+                const nodes = [...(data.executor_task || []), ...(data.leader_task || [])];
+                const nodeMap = new Map<string, any>();
+
+                nodes.forEach((it: any) => {
+                    const id = it.id || it.taskNodeId;
+                    if (!id || nodeMap.has(id)) return;
+                    // 只保留当前选中员工参与的节点
+                    const executorIds: string[] = (it.executorIds || it.executorId || '')
+                        .toString()
+                        .split(',')
+                        .map((x: string) => x.trim())
+                        .filter(Boolean);
+                    const leaderId = (it.leaderId || '').toString();
+                    if (!executorIds.includes(empId) && leaderId !== empId) return;
+
+                    nodeMap.set(id, {
+                        id,
+                        type: 'taskNode',
+                        name: it.nodeName || it.taskNodeName,
+                        startTime: it.nodeStartTime || it.createTime || it.startTime,
+                        endTime: it.nodeDeadline || it.endTime || it.deadline,
+                        priority: it.nodePriority || it.nodeType || 3,
+                        progress: it.progress || 0,
+                        assigneeId: empId,
+                    });
+                });
+
+                nodeItems.push(...nodeMap.values());
+            }
+
+            employeeTasks.value = [...taskItems, ...nodeItems];
         }
     } catch (error) {
         ElMessage.error('加载员工任务失败');
@@ -462,17 +559,21 @@ async function loadData() {
 
 onMounted(() => {
     loadData();
+    if (ganttRef.value) {
+        ganttRef.value.addEventListener('wheel', handleWheel, { passive: false });
+    }
 });
 </script>
 
 <style scoped>
 .task-overview-page {
     padding: 24px;
-    background: #f9fafb;
+    background: var(--bg-page);
     min-height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .toolbar {
@@ -483,11 +584,11 @@ onMounted(() => {
 }
 
 .view-switcher {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 4px;
     border-radius: 8px;
     display: flex;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
 }
 
 .view-btn {
@@ -495,23 +596,24 @@ onMounted(() => {
     border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .view-btn.active {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .content-area {
     flex: 1;
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     position: relative;
+    border: 1px solid var(--border-color);
 }
 
 /* Timeline View */
@@ -522,17 +624,17 @@ onMounted(() => {
 
 .task-list-panel {
     width: 280px;
-    border-right: 1px solid #f3f4f6;
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    background: #ffffff;
+    background: var(--bg-card);
 }
 
 .panel-header {
     padding: 16px 20px;
     font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #f3f4f6;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .task-list-content {
@@ -542,22 +644,22 @@ onMounted(() => {
 
 .task-item {
     padding: 12px 20px;
-    border-bottom: 1px solid #f9fafb;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .task-item:hover, .task-item.active {
-    background: #f9fafb;
+    background: var(--bg-hover);
 }
 
-.task-item.type-task { border-left: 3px solid #3b82f6; }
-.task-item.type-node { border-left: 3px solid #10b981; }
+.task-item.type-task { border-left: 3px solid var(--color-danger); }
+.task-item.type-node { border-left: 3px solid var(--color-success); }
 
 .task-name {
     font-size: 14px;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--text-main);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -568,13 +670,13 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
-.meta-tag.critical { color: #ef4444; }
-.meta-tag.high { color: #f59e0b; }
-.meta-tag.medium { color: #3b82f6; }
-.meta-tag.low { color: #10b981; }
+.meta-tag.critical { color: var(--color-danger); }
+.meta-tag.high { color: var(--color-warning); }
+.meta-tag.medium { color: var(--color-danger); }
+.meta-tag.low { color: var(--color-success); }
 
 /* Gantt Panel */
 .gantt-panel {
@@ -586,7 +688,7 @@ onMounted(() => {
 
 .gantt-header {
     padding: 12px 20px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: center;
 }
@@ -599,7 +701,7 @@ onMounted(() => {
 
 .date-range {
     font-weight: 600;
-    color: #374151;
+    color: var(--text-main);
     font-variant-numeric: tabular-nums;
 }
 
@@ -612,8 +714,8 @@ onMounted(() => {
 
 .gantt-header-row {
     display: flex;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafbfc;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-base);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -624,12 +726,12 @@ onMounted(() => {
     min-width: 60px;
     text-align: center;
     padding: 8px 0;
-    border-right: 1px solid #f3f4f6;
+    border-right: 1px solid var(--border-color);
 }
 
 .gantt-date-cell.today {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .day-num {
@@ -640,7 +742,7 @@ onMounted(() => {
 
 .day-text {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
 .gantt-body {
@@ -649,9 +751,9 @@ onMounted(() => {
 
 .gantt-row {
     height: 66px; /* Match task-item height approx */
-    border-bottom: 1px solid #f9fafb;
+    border-bottom: 1px solid var(--border-color);
     position: relative;
-    background: #ffffff;
+    background: var(--bg-card);
 }
 
 .gantt-bar {
@@ -659,19 +761,31 @@ onMounted(() => {
     top: 18px;
     height: 30px;
     border-radius: 6px;
-    background: #e5e7eb;
+    background: var(--border-color);
     overflow: hidden;
     min-width: 4px;
+    display: flex;
+    align-items: center;
 }
 
-.gantt-bar.critical { background: #fee2e2; border: 1px solid #ef4444; }
-.gantt-bar.high { background: #fef3c7; border: 1px solid #f59e0b; }
-.gantt-bar.medium { background: #eff6ff; border: 1px solid #3b82f6; }
-.gantt-bar.low { background: #dcfce7; border: 1px solid #10b981; }
+.bar-label {
+    font-size: 12px;
+    color: var(--text-main);
+    padding: 0 6px;
+    line-height: 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gantt-bar.critical { background: var(--color-danger); color: white; border: 1px solid var(--color-danger); }
+.gantt-bar.high { background: var(--color-warning); color: white; border: 1px solid var(--color-warning); }
+.gantt-bar.medium { background: var(--color-primary); color: white; border: 1px solid var(--color-primary); }
+.gantt-bar.low { background: var(--color-success); color: white; border: 1px solid var(--color-success); }
 
 .bar-progress {
     height: 100%;
-    background: rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.3);
 }
 
 /* Team View */
@@ -699,12 +813,12 @@ onMounted(() => {
     gap: 16px;
     margin-bottom: 24px;
     padding-bottom: 24px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header-avatar {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
     font-size: 20px;
     font-weight: 600;
 }
@@ -712,12 +826,12 @@ onMounted(() => {
 .header-name {
     font-size: 18px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-main);
 }
 
 .header-meta {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .task-cards-grid {
@@ -727,8 +841,8 @@ onMounted(() => {
 }
 
 .task-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 16px;
     position: relative;
@@ -747,20 +861,20 @@ onMounted(() => {
     height: 8px;
     border-radius: 50%;
 }
-.priority-dot.critical { background: #ef4444; }
-.priority-dot.high { background: #f59e0b; }
-.priority-dot.medium { background: #3b82f6; }
-.priority-dot.low { background: #10b981; }
+.priority-dot.critical { background: var(--color-danger); }
+.priority-dot.high { background: var(--color-warning); }
+.priority-dot.medium { background: var(--color-primary); }
+.priority-dot.low { background: var(--color-success); }
 
 .task-status {
     font-size: 12px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .card-title {
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-main);
     margin-bottom: 16px;
     line-height: 1.4;
 }
@@ -770,7 +884,7 @@ onMounted(() => {
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
 .card-progress-bg {
@@ -779,12 +893,12 @@ onMounted(() => {
     left: 0;
     right: 0;
     height: 4px;
-    background: #f3f4f6;
+    background: var(--bg-base);
 }
 
 .card-progress-fill {
     height: 100%;
-    background: #3b82f6;
+    background: var(--color-primary);
 }
 
 /* Upcoming View */
@@ -801,9 +915,9 @@ onMounted(() => {
 }
 
 .upcoming-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     padding: 20px;
 }
 
@@ -821,14 +935,14 @@ onMounted(() => {
     border-radius: 20px;
 }
 
-.upcoming-days.urgent { background: #fee2e2; color: #ef4444; }
-.upcoming-days.normal { background: #eff6ff; color: #3b82f6; }
-.upcoming-days.overdue { background: #1f2937; color: #fff; }
+.upcoming-days.urgent { background: var(--color-danger); color: white; }
+.upcoming-days.normal { background: var(--color-primary-light); color: var(--color-primary); }
+.upcoming-days.overdue { background: var(--text-main); color: var(--bg-card); }
 
 .upcoming-title {
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-main);
     margin-bottom: 12px;
 }
 
@@ -840,21 +954,21 @@ onMounted(() => {
 }
 
 .meta-avatar {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--bg-base);
+    color: var(--text-secondary);
     font-size: 10px;
 }
 
 .meta-name {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .upcoming-footer {
     padding-top: 16px;
-    border-top: 1px solid #f9fafb;
+    border-top: 1px solid var(--border-color);
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     text-align: right;
 }
 
@@ -862,5 +976,127 @@ onMounted(() => {
     padding: 60px;
     display: flex;
     justify-content: center;
+}
+
+/* 响应式布局 */
+@media (max-width: 1200px) {
+    .task-list-panel {
+        width: 240px;
+    }
+    
+    .task-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    
+    .upcoming-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .task-overview-page {
+        padding: 16px;
+    }
+    
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .view-switcher {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .view-btn {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .timeline-view {
+        flex-direction: column;
+    }
+    
+    .task-list-panel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        max-height: 200px;
+    }
+    
+    .gantt-panel {
+        flex: 1;
+        min-height: 400px;
+    }
+    
+    .gantt-header-row {
+        overflow-x: auto;
+    }
+    
+    .gantt-date-cell {
+        min-width: 50px;
+    }
+    
+    .team-view {
+        padding: 16px;
+    }
+    
+    .member-select {
+        width: 100%;
+    }
+    
+    .task-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .upcoming-view {
+        padding: 16px;
+    }
+    
+    .upcoming-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .view-btn {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .task-item {
+        padding: 10px 16px;
+    }
+    
+    .task-name {
+        font-size: 13px;
+    }
+    
+    .gantt-date-cell {
+        min-width: 40px;
+        padding: 6px 0;
+    }
+    
+    .day-num {
+        font-size: 14px;
+    }
+    
+    .day-text {
+        font-size: 11px;
+    }
+    
+    .gantt-bar {
+        height: 26px;
+        top: 20px;
+    }
+    
+    .bar-label {
+        font-size: 11px;
+        padding: 0 4px;
+    }
 }
 </style>

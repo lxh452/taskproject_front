@@ -1,187 +1,137 @@
 <template>
     <div class="handovers-page">
-        <!-- 页面标题 -->
-        <div class="page-title-section">
-            <div class="title-left">
-                <h1>交接管理</h1>
-                <span class="subtitle">管理任务交接申请与审批</span>
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">交接管理</h1>
+                <p class="page-desc">管理任务交接申请与审批流程</p>
             </div>
-            <el-button type="primary" :icon="Plus" @click="createHandover">发起交接</el-button>
+            <el-button type="primary" :icon="Plus" @click="createHandover" class="create-btn">
+                发起交接
+            </el-button>
         </div>
 
         <!-- 统计卡片 -->
         <div class="stats-row">
-            <div class="stat-card waiting-confirm">
-                <div class="stat-icon">
+            <div class="stat-card">
+                <div class="stat-icon warning">
                     <el-icon><User /></el-icon>
                 </div>
-                <div class="stat-info">
-                    <span class="stat-value">{{ stats.waitingConfirm }}</span>
-                    <span class="stat-label">待接收确认</span>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.waitingConfirm }}</div>
+                    <div class="stat-label">待接收确认</div>
                 </div>
             </div>
-            <div class="stat-card pending">
-                <div class="stat-icon">
+            <div class="stat-card">
+                <div class="stat-icon primary">
                     <el-icon><Clock /></el-icon>
                 </div>
-                <div class="stat-info">
-                    <span class="stat-value">{{ stats.pending }}</span>
-                    <span class="stat-label">待上级审批</span>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.pending }}</div>
+                    <div class="stat-label">待上级审批</div>
                 </div>
             </div>
-            <div class="stat-card approved">
-                <div class="stat-icon">
+            <div class="stat-card">
+                <div class="stat-icon success">
                     <el-icon><CircleCheck /></el-icon>
                 </div>
-                <div class="stat-info">
-                    <span class="stat-value">{{ stats.approved }}</span>
-                    <span class="stat-label">已通过</span>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.approved }}</div>
+                    <div class="stat-label">已通过</div>
                 </div>
             </div>
-            <div class="stat-card rejected">
-                <div class="stat-icon">
+            <div class="stat-card">
+                <div class="stat-icon default">
                     <el-icon><CircleClose /></el-icon>
                 </div>
-                <div class="stat-info">
-                    <span class="stat-value">{{ stats.rejected }}</span>
-                    <span class="stat-label">已拒绝</span>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.rejected }}</div>
+                    <div class="stat-label">已拒绝</div>
                 </div>
             </div>
         </div>
 
-        <!-- 工具栏 -->
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <el-input 
-                    v-model="query.keyword" 
-                    placeholder="搜索任务/交出人/接收人" 
-                    clearable 
-                    class="search-input"
-                    :prefix-icon="Search"
-                />
-                <el-select v-model="query.status" placeholder="状态筛选" clearable class="filter-select">
-                    <el-option label="待接收确认" :value="0">
-                        <span class="status-dot info"></span>待接收确认
-                    </el-option>
-                    <el-option label="待上级审批" :value="1">
-                        <span class="status-dot warning"></span>待上级审批
-                    </el-option>
-                    <el-option label="已通过" :value="2">
-                        <span class="status-dot success"></span>已通过
-                    </el-option>
-                    <el-option label="已拒绝" :value="3">
-                        <span class="status-dot danger"></span>已拒绝
-                    </el-option>
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="filter-left">
+                <el-input v-model="query.keyword" placeholder="搜索任务 / 人员..." clearable class="search-input" :prefix-icon="Search" />
+                <el-select v-model="query.status" placeholder="状态" clearable class="filter-select">
+                    <el-option label="待接收" :value="0" />
+                    <el-option label="待审批" :value="1" />
+                    <el-option label="已通过" :value="2" />
+                    <el-option label="已拒绝" :value="3" />
                 </el-select>
-                <el-select v-model="query.type" placeholder="类型筛选" clearable class="filter-select">
+                <el-select v-model="query.type" placeholder="类型" clearable class="filter-select">
                     <el-option label="我发起的" value="from" />
                     <el-option label="待我审批" value="to" />
                 </el-select>
             </div>
-            <div class="toolbar-right">
-                <el-button @click="resetFilter" plain :icon="Refresh">重置</el-button>
-            </div>
+            <el-button :icon="Refresh" circle @click="resetFilter" />
         </div>
         
-        <!-- 表格容器 -->
-        <div class="table-container">
-            <el-table 
-                :data="filteredRows" 
-                style="width: 100%" 
-                v-loading="loading" 
-                class="handovers-table" 
-                :header-cell-style="{ background: '#f9fafb', color: '#6b7280', fontWeight: '600' }"
-                @row-click="viewHandover"
-            >
-                <el-table-column prop="task" label="任务" min-width="220">
-                    <template #default="{ row }">
-                        <div class="task-cell">
-                            <div class="task-icon-wrapper">
-                                <el-icon><Document /></el-icon>
+        <!-- 交接卡片列表 -->
+        <div class="content-area">
+            <el-skeleton :rows="3" animated v-if="loading" />
+            <template v-else>
+                <div v-if="filteredRows.length > 0" class="handovers-grid">
+                    <div v-for="row in filteredRows" :key="row.id" class="handover-card" @click="viewHandover(row)">
+                        <div class="card-header">
+                            <div class="type-tag" :class="row.isLeaveRequest ? 'leave' : 'task'">
+                                {{ row.isLeaveRequest ? '离职' : '任务' }}
                             </div>
-                            <span class="task-name">{{ row.task }}</span>
+                            <div class="status-badge" :class="row.statusType">
+                                {{ row.statusText }}
+                            </div>
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="from" label="交出人" width="160">
-                    <template #default="{ row }">
-                        <div class="employee-cell">
-                            <el-avatar :size="28" class="employee-avatar from">{{ row.from?.charAt(0) }}</el-avatar>
-                            <span>{{ row.from || '-' }}</span>
+                        
+                        <div class="card-body">
+                            <h3 class="card-title">{{ row.task }}</h3>
+                            
+                            <div class="flow-visual">
+                                <div class="flow-node">
+                                    <el-avatar :size="36" class="flow-avatar from">{{ row.from?.charAt(0) }}</el-avatar>
+                                    <span class="flow-name">{{ row.from }}</span>
+                                </div>
+                                <div class="flow-arrow">
+                                    <el-icon><Right /></el-icon>
+                                </div>
+                                <div class="flow-node">
+                                    <template v-if="!row.isLeaveRequest">
+                                        <el-avatar :size="36" class="flow-avatar to">{{ row.to?.charAt(0) }}</el-avatar>
+                                        <span class="flow-name">{{ row.to }}</span>
+                                    </template>
+                                    <template v-else>
+                                        <div class="audit-badge">审</div>
+                                        <span class="flow-name">待审批</span>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
-                    </template>
-                </el-table-column>
-                <el-table-column width="50" align="center">
-                    <template #default>
-                        <el-icon class="arrow-icon"><Right /></el-icon>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="to" label="接收人/审批人" width="160">
-                    <template #default="{ row }">
-                        <div class="employee-cell">
-                            <el-avatar v-if="!row.isLeaveRequest" :size="28" class="employee-avatar to">{{ row.to?.charAt(0) }}</el-avatar>
-                            <el-avatar v-else :size="28" class="employee-avatar to" style="background: #f59e0b;">审</el-avatar>
-                            <span>{{ row.to || '-' }}</span>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="statusText" label="状态" width="120" align="center">
-                    <template #default="{ row }">
-                        <div class="status-badge" :class="row.statusType">
-                            {{ row.statusText }}
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="time" label="申请时间" width="170">
-                    <template #default="{ row }">
-                        <div class="time-cell">
-                            <el-icon><Calendar /></el-icon>
-                            <span>{{ row.time || '-' }}</span>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="reason" label="原因" min-width="180" show-overflow-tooltip>
-                    <template #default="{ row }">
-                        <span class="reason-text">{{ row.reason || '-' }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column label="操作" width="140" align="right" fixed="right">
-                    <template #default="{ row }">
-                        <el-button link type="primary" @click.stop="viewHandover(row)">查看</el-button>
-                        <el-button 
-                            v-if="!row.isLeaveRequest && row.status === 0 && row.toEmployeeId === currentEmployeeId" 
-                            link 
-                            type="success" 
-                            @click.stop="quickApprove(row)"
-                        >
-                            确认
-                        </el-button>
-                        <el-button 
-                            v-if="row.status === 1 && row.approverId === currentEmployeeId" 
-                            link 
-                            type="warning" 
-                            @click.stop="quickApprove(row)"
-                        >
-                            审批
-                        </el-button>
-                        <el-button 
-                            v-if="row.isLeaveRequest && row.status === 0 && row.fromEmployeeId === currentEmployeeId" 
-                            link 
-                            type="primary" 
-                            @click.stop="quickApprove(row)"
-                        >
-                            确认离职
-                        </el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
 
-            <!-- 空状态 -->
-            <div v-if="!loading && filteredRows.length === 0" class="empty-state">
-                <el-icon class="empty-icon"><FolderOpened /></el-icon>
-                <p>暂无交接记录</p>
-                <el-button type="primary" @click="createHandover">发起交接</el-button>
-            </div>
+                        <div class="card-footer">
+                            <div class="time-info">
+                                <el-icon><Calendar /></el-icon>
+                                <span>{{ row.time }}</span>
+                            </div>
+                            <div class="action-btns">
+                                <el-button 
+                                    v-if="!row.isLeaveRequest && row.status === 0 && row.toEmployeeId === currentEmployeeId" 
+                                    size="small" type="success" plain
+                                    @click.stop="quickApprove(row)"
+                                >确认</el-button>
+                                <el-button 
+                                    v-if="row.status === 1 && row.approverId === currentEmployeeId" 
+                                    size="small" type="warning" plain
+                                    @click.stop="quickApprove(row)"
+                                >审批</el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="empty-state">
+                    <el-empty description="暂无交接记录" />
+                </div>
+            </template>
         </div>
     </div>
 </template>
@@ -189,11 +139,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { 
-    Search, Refresh, Document, Right, Plus, 
-    Clock, CircleCheck, CircleClose, User,
-    Calendar, FolderOpened
-} from '@element-plus/icons-vue';
+import { Search, Refresh, Plus, Right, Clock, CircleCheck, CircleClose, User, Calendar } from '@element-plus/icons-vue';
 import { listHandovers, getMyEmployee } from '@/api';
 import { ElMessage } from 'element-plus';
 
@@ -203,19 +149,12 @@ const loading = ref(false);
 const query = ref<any>({ keyword: '', status: null, type: null });
 const currentEmployeeId = ref('');
 
-const stats = computed(() => {
-    const waitingConfirm = rows.value.filter(r => r.status === 0).length;
-    const pending = rows.value.filter(r => r.status === 1).length;
-    const approved = rows.value.filter(r => r.status === 2).length;
-    const rejected = rows.value.filter(r => r.status === 3).length;
-    return {
-        waitingConfirm,
-        pending,
-        approved,
-        rejected,
-        total: rows.value.length
-    };
-});
+const stats = computed(() => ({
+    waitingConfirm: rows.value.filter(r => r.status === 0).length,
+    pending: rows.value.filter(r => r.status === 1).length,
+    approved: rows.value.filter(r => r.status === 2).length,
+    rejected: rows.value.filter(r => r.status === 3).length,
+}));
 
 const filteredRows = computed(() => {
     const { keyword, status, type } = query.value;
@@ -226,49 +165,30 @@ const filteredRows = computed(() => {
             (r.to && r.to.toLowerCase().includes(keyword.toLowerCase()));
         const bySt = (status === '' || status === null || status === undefined) || r.status === status;
         let byType = true;
-        if (type === 'from') {
-            byType = r.fromEmployeeId === currentEmployeeId.value;
-        } else if (type === 'to') {
-            byType = r.toEmployeeId === currentEmployeeId.value;
-        }
+        if (type === 'from') byType = r.fromEmployeeId === currentEmployeeId.value;
+        else if (type === 'to') byType = r.toEmployeeId === currentEmployeeId.value;
         return byKw && bySt && byType;
     });
 });
 
 const resetFilter = () => { query.value = { keyword: '', status: null, type: null }; };
-
-const createHandover = () => {
-    router.push('/handovers/create');
-};
-
-function viewHandover(row: any) {
-    router.push(`/handovers/detail/${row.id}`);
-}
-
-function quickApprove(row: any) {
-    router.push(`/handovers/detail/${row.id}`);
-}
+const createHandover = () => { router.push('/handovers/create'); };
+function viewHandover(row: any) { router.push(`/handovers/detail/${row.id}`); }
+function quickApprove(row: any) { router.push(`/handovers/detail/${row.id}`); }
 
 async function loadData() {
     loading.value = true;
     try {
-        // 获取当前用户（使用id而不是employeeId，id是员工主键）
         const meResp = await getMyEmployee();
         if (meResp.data.code === 200 && meResp.data.data) {
             currentEmployeeId.value = meResp.data.data.id || meResp.data.data.Id || meResp.data.data.ID;
         }
 
         const resp = await listHandovers({ page: 1, pageSize: 100 });
-        if (resp.data.code !== 200) {
-            ElMessage.error(resp.data.msg || '加载交接列表失败');
-            rows.value = [];
-            return;
-        }
-        const responseData = resp.data?.data || resp.data || {};
-        const list = responseData.list || [];
+        if (resp.data.code !== 200) { ElMessage.error(resp.data.msg || '加载交接列表失败'); rows.value = []; return; }
+        const list = resp.data?.data?.list || [];
         rows.value = list.map((h: any) => {
-            const handoverStatus = h.handoverStatus ?? h.HandoverStatus ?? h.status ?? h.Status ?? 0;
-            // 状态映射: 0=待接收确认, 1=待上级审批, 2=已通过, 3=已拒绝
+            const handoverStatus = h.handoverStatus ?? h.status ?? 0;
             const statusMap: Record<number, { text: string; type: string }> = {
                 0: { text: '待接收确认', type: 'info' },
                 1: { text: '待上级审批', type: 'warning' },
@@ -276,309 +196,289 @@ async function loadData() {
                 3: { text: '已拒绝', type: 'danger' },
             };
             const statusInfo = statusMap[handoverStatus] || { text: '未知', type: 'default' };
-            // 判断是否是离职申请（taskId为空或taskTitle为"离职审批"）
-            const isLeaveRequest = !h.taskId && !h.TaskId || h.taskTitle === '离职审批' || h.TaskTitle === '离职审批';
-            const taskDisplay = isLeaveRequest ? '离职审批' : (h.taskTitle || h.TaskTitle || h.taskId || h.TaskId || '-');
-            
+            const isLeaveRequest = !h.taskId || h.taskTitle === '离职审批';
             return {
-                id: h.handoverId || h.HandoverId || h.id || h.Id,
-                task: taskDisplay,
-                from: h.fromEmployeeName || h.FromEmployeeName || h.fromEmployeeId || h.FromEmployeeId || '-',
-                fromEmployeeId: h.fromEmployeeId || h.FromEmployeeId,
-                to: isLeaveRequest ? '待审批' : (h.toEmployeeName || h.ToEmployeeName || h.toEmployeeId || h.ToEmployeeId || '-'),
-                toEmployeeId: h.toEmployeeId || h.ToEmployeeId || '',
-                approverId: h.approverId || h.ApproverId || '',
+                id: h.handoverId || h.id,
+                task: isLeaveRequest ? '离职审批' : (h.taskTitle || h.taskId || '-'),
+                from: h.fromEmployeeName || h.fromEmployeeId || '-',
+                fromEmployeeId: h.fromEmployeeId,
+                to: isLeaveRequest ? '待审批' : (h.toEmployeeName || h.toEmployeeId || '-'),
+                toEmployeeId: h.toEmployeeId || '',
+                approverId: h.approverId || '',
                 status: handoverStatus,
                 statusText: statusInfo.text,
                 statusType: statusInfo.type,
-                time: h.handoverTime || h.HandoverTime || h.createTime || h.CreateTime || '-',
-                reason: h.handoverReason || h.HandoverReason || h.handoverNote || h.HandoverNote || '-',
-                isLeaveRequest: isLeaveRequest, // 标记是否是离职申请
+                time: h.handoverTime || h.createTime || '-',
+                isLeaveRequest,
             };
         });
-    } catch (error: any) {
-        console.error('加载交接列表失败:', error);
-        ElMessage.error('加载交接列表失败');
-        rows.value = [];
-    } finally {
-        loading.value = false;
-    }
+    } catch (error: any) { console.error('加载交接列表失败:', error); rows.value = []; } 
+    finally { loading.value = false; }
 }
 
-onMounted(() => {
-    loadData();
-});
+onMounted(() => { loadData(); });
 </script>
 
 <style scoped>
 .handovers-page {
-    padding: 24px;
-    background: #f5f7fa;
-    min-height: calc(100vh - 64px);
+    padding: clamp(16px, 1.5vw, 24px);
+    background: var(--bg-page);
+    min-height: calc(100vh - clamp(56px, 8vh, 64px));
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* 页面标题 */
-.page-title-section {
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: clamp(16px, 1.5vw, 24px);
 }
 
-.title-left h1 {
-    margin: 0 0 4px;
-    font-size: 24px;
-    font-weight: 700;
-    color: #1f2937;
+.page-title { font-size: clamp(20px, 1.5vw, 24px); font-weight: 700; color: var(--text-main); margin: 0 0 clamp(4px, 0.3vw, 8px); }
+.page-desc { font-size: clamp(13px, 0.95vw, 15px); color: var(--text-secondary); margin: 0; }
+
+.create-btn {
+    height: clamp(36px, 2.5vw, 40px);
+    padding: 0 clamp(16px, 1.3vw, 20px);
+    border-radius: clamp(8px, 0.7vw, 10px);
+    font-weight: 500;
+    background: linear-gradient(135deg, var(--color-danger) 0%, #b91c1c 100%);
+    border: none;
+    box-shadow: 0 clamp(3px, 0.3vw, 4px) clamp(10px, 0.8vw, 12px) rgba(220, 38, 38, 0.25);
+    color: #fff;
 }
 
-.subtitle {
-    font-size: 14px;
-    color: #6b7280;
-}
-
-/* 统计卡片 */
 .stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 15vw, 240px), 1fr));
+    gap: clamp(12px, 1.2vw, 20px);
+    margin-bottom: clamp(16px, 1.5vw, 24px);
+    width: 100%;
 }
 
 .stat-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
+    background: var(--bg-card);
+    border-radius: clamp(10px, 0.8vw, 14px);
+    padding: clamp(14px, 1.2vw, 20px);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
+    gap: clamp(12px, 1vw, 16px);
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: clamp(40px, 3vw, 48px);
+    height: clamp(40px, 3vw, 48px);
+    border-radius: clamp(8px, 0.7vw, 10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: clamp(18px, 1.3vw, 22px);
 }
 
-.stat-card.pending .stat-icon {
-    background: #fef3c7;
-    color: #f59e0b;
+.stat-icon.warning { background: var(--bg-hover); color: var(--color-warning); }
+.stat-icon.primary { background: var(--bg-hover); color: var(--color-danger); }
+.stat-icon.success { background: var(--bg-hover); color: var(--color-success); }
+.stat-icon.default { background: var(--bg-hover); color: var(--text-muted); }
+
+.stat-value { 
+    font-size: clamp(20px, 1.7vw, 28px);
+    font-weight: 700; 
+    color: var(--text-main); 
+    line-height: 1; 
+}
+.stat-label { 
+    font-size: clamp(12px, 0.9vw, 14px);
+    color: var(--text-secondary); 
+    margin-top: clamp(3px, 0.3vw, 6px); 
 }
 
-.stat-card.approved .stat-icon {
-    background: #d1fae5;
-    color: #10b981;
-}
-
-.stat-card.rejected .stat-icon {
-    background: #fee2e2;
-    color: #ef4444;
-}
-
-.stat-card.waiting-confirm .stat-icon {
-    background: #e0f2fe;
-    color: #0284c7;
-}
-
-.stat-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1f2937;
-    line-height: 1;
-}
-
-.stat-label {
-    font-size: 13px;
-    color: #6b7280;
-    margin-top: 4px;
-}
-
-/* 工具栏 */
-.toolbar {
+.filter-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    background: #ffffff;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: clamp(12px, 1vw, 16px) clamp(16px, 1.3vw, 20px);
+    background: var(--bg-card);
+    border-radius: clamp(10px, 0.8vw, 12px);
+    border: 1px solid var(--border-color);
+    margin-bottom: clamp(16px, 1.5vw, 24px);
 }
 
-.toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.filter-left { display: flex; gap: clamp(10px, 0.8vw, 12px); align-items: center; }
+.search-input { width: clamp(180px, 13vw, 220px); }
+.filter-select { width: clamp(100px, 8vw, 140px); }
+
+.handovers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 22vw, 360px), 1fr));
+    gap: clamp(12px, 1.2vw, 20px);
+    width: 100%;
 }
 
-.search-input {
-    width: 260px;
-}
-
-.filter-select {
-    width: 140px;
-}
-
-/* 表格容器 */
-.table-container {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    padding: 4px;
-}
-
-.handovers-table {
-    --el-table-border-color: #f3f4f6;
-    --el-table-header-bg-color: #f9fafb;
-}
-
-.handovers-table :deep(.el-table__row) {
+.handover-card {
+    background: var(--bg-card);
+    border-radius: clamp(12px, 0.9vw, 14px);
+    border: 1px solid var(--border-color);
+    padding: clamp(16px, 1.3vw, 20px);
     cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.handovers-table :deep(.el-table__row:hover) {
-    background-color: #f8fafc;
+.handover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 
-.task-cell {
+.card-header {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
 }
 
-.task-icon-wrapper {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6366f1;
-}
-
-.task-name {
+.type-tag {
+    font-size: 11px;
     font-weight: 600;
-    color: #1f2937;
-    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 
-.employee-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #4b5563;
-    font-size: 14px;
-}
-
-.employee-avatar {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.employee-avatar.from { 
-    background: linear-gradient(135deg, #fca5a5, #f87171);
-    color: #fff;
-}
-
-.employee-avatar.to { 
-    background: linear-gradient(135deg, #6ee7b7, #34d399);
-    color: #fff;
-}
-
-.arrow-icon {
-    color: #9ca3af;
-    font-size: 16px;
-}
+.type-tag.task { background: var(--bg-hover); color: var(--color-danger); }
+.type-tag.leave { background: var(--bg-hover); color: var(--color-warning); }
 
 .status-badge {
-    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 12px;
+}
+
+.status-badge.info { background: var(--bg-hover); color: var(--text-secondary); }
+.status-badge.warning { background: var(--bg-hover); color: var(--color-warning); }
+.status-badge.success { background: var(--bg-hover); color: var(--color-success); }
+.status-badge.danger { background: var(--bg-hover); color: var(--color-danger); }
+
+.card-title {
+    font-size: 15px;
     font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 16px;
+    line-height: 1.4;
 }
 
-.status-badge.success { background: #ecfdf5; color: #10b981; }
-.status-badge.warning { background: #fffbeb; color: #f59e0b; }
-.status-badge.danger { background: #fef2f2; color: #ef4444; }
-.status-badge.info { background: #e0f2fe; color: #0284c7; }
-.status-badge.default { background: #f3f4f6; color: #6b7280; }
-
-.status-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-right: 6px;
-}
-.status-dot.success { background: #10b981; }
-.status-dot.warning { background: #f59e0b; }
-.status-dot.danger { background: #ef4444; }
-.status-dot.info { background: #0284c7; }
-
-.time-cell {
+.flow-visual {
     display: flex;
     align-items: center;
-    gap: 6px;
-    color: #6b7280;
-    font-size: 13px;
+    justify-content: space-between;
+    background: var(--bg-hover);
+    padding: 14px;
+    border-radius: 10px;
 }
 
-.time-cell .el-icon {
-    font-size: 14px;
-    color: #9ca3af;
-}
-
-.reason-text {
-    color: #6b7280;
-    font-size: 13px;
-}
-
-/* 空状态 */
-.empty-state {
+.flow-node {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 6px;
+}
+
+.flow-avatar.from { background: var(--text-muted); color: #fff; font-weight: 600; }
+.flow-avatar.to { background: var(--color-danger); color: #fff; font-weight: 600; }
+
+.audit-badge {
+    width: 36px;
+    height: 36px;
+    background: var(--color-warning);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    padding: 60px 20px;
-    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 600;
 }
 
-.empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-    color: #d1d5db;
+.flow-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.flow-arrow { color: var(--text-muted); font-size: 18px; }
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
 }
 
-.empty-state p {
-    margin: 0 0 20px;
-    font-size: 15px;
+.time-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
-:deep(.el-button--primary) {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border: none;
+.empty-state {
+    padding: 60px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
 }
 
-:deep(.el-button--primary:hover) {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+/* 响应式布局 - 保持比例 */
+@media (max-width: 1024px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .handovers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(25vw, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .handovers-page {
+        padding: 4vw;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2vw;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 2vw;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5vw;
+    }
+    
+    .filter-left {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .search-input,
+    .filter-select {
+        width: 100%;
+    }
+    
+    .handovers-grid {
+        grid-template-columns: 1fr;
+        gap: 3vw;
+    }
 }
 </style>

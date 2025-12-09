@@ -1,95 +1,116 @@
 <template>
-    <div class="sidebar" :class="{ 'is-collapse': sidebar.collapse }">
+    <div class="sidebar-container" :class="{ 'is-collapse': sidebar.collapse }">
         <!-- Logo 区域 -->
         <div class="sidebar-logo">
-            <div class="logo-icon">
-                <el-icon><Briefcase /></el-icon>
+            <div class="logo-wrapper">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <transition name="fade">
+                    <span class="logo-text" v-if="!sidebar.collapse">Task Pro</span>
+                </transition>
             </div>
-            <span class="logo-text" v-if="!sidebar.collapse">任务系统</span>
         </div>
 
         <!-- 导航菜单 -->
-        <el-menu
-            class="sidebar-el-menu"
-            :default-active="onRoutes"
-            :collapse="sidebar.collapse"
-            background-color="#ffffff"
-            text-color="#4b5563"
-            active-text-color="#4f46e5"
-            router
-        >
-            <template v-for="item in menuData" :key="item.index">
-                <template v-if="item.children">
-                    <el-sub-menu :index="item.index" v-permiss="item.id">
-                        <template #title>
-                            <el-icon class="menu-icon">
-                                <component :is="item.icon"></component>
-                            </el-icon>
-                            <span class="menu-title">{{ item.title }}</span>
+        <div class="sidebar-menu-wrapper">
+            <el-scrollbar>
+                <el-menu
+                    class="sidebar-menu"
+                    :default-active="onRoutes"
+                    :collapse="sidebar.collapse"
+                    :collapse-transition="false"
+                    background-color="transparent"
+                    text-color="#64748b"
+                    active-text-color="#dc2626"
+                    router
+                >
+                    <template v-for="item in menuData" :key="item.index">
+                        <template v-if="item.children">
+                            <el-sub-menu :index="item.index" v-permiss="item.id" class="menu-submenu">
+                                <template #title>
+                                    <el-icon class="menu-icon">
+                                        <component :is="item.icon"></component>
+                                    </el-icon>
+                                    <span class="menu-title">{{ item.title }}</span>
+                                </template>
+                                <template v-for="subItem in item.children" :key="subItem.index">
+                                    <el-menu-item :index="subItem.index" v-permiss="subItem.id" class="menu-item-sub">
+                                        <span class="sub-menu-dot"></span>
+                                        <span class="sub-menu-title">{{ subItem.title }}</span>
+                                    </el-menu-item>
+                                </template>
+                            </el-sub-menu>
                         </template>
-                        <template v-for="subItem in item.children" :key="subItem.index">
-                            <el-menu-item :index="subItem.index" v-permiss="subItem.id">
-                                <span class="sub-menu-title">{{ subItem.title }}</span>
+                        <template v-else>
+                            <el-menu-item :index="item.index" v-permiss="item.id" class="menu-item">
+                                <el-icon class="menu-icon">
+                                    <component :is="item.icon"></component>
+                                </el-icon>
+                                <template #title>
+                                    <span class="menu-title">{{ item.title }}</span>
+                                </template>
                             </el-menu-item>
                         </template>
-                    </el-sub-menu>
-                </template>
-                <template v-else>
-                    <el-menu-item :index="item.index" v-permiss="item.id">
-                        <el-icon class="menu-icon">
-                            <component :is="item.icon"></component>
-                        </el-icon>
-                        <template #title>
-                            <span class="menu-title">{{ item.title }}</span>
-                        </template>
-                    </el-menu-item>
-                </template>
-            </template>
-        </el-menu>
+                    </template>
+                </el-menu>
+            </el-scrollbar>
+        </div>
 
-        <!-- 底部操作区 -->
+        <!-- 底部用户信息 -->
         <div class="sidebar-footer">
-            <el-menu
-                class="footer-menu"
-                background-color="transparent"
-                text-color="#6b7280"
-                router
-            >
-                <el-menu-item index="/theme">
-                    <el-icon class="menu-icon"><Setting /></el-icon>
-                    <template #title>
-                        <span class="menu-title">Settings</span>
-                    </template>
-                </el-menu-item>
-                <el-menu-item index="signout" class="signout-item" @click="handleSignOut">
-                    <el-icon class="menu-icon"><Right /></el-icon>
-                    <template #title>
-                        <span class="menu-title">Sign Out</span>
-                    </template>
-                </el-menu-item>
-            </el-menu>
+            <div class="user-panel" @click="handleSignOut">
+                <el-avatar :size="sidebar.collapse ? 32 : 36" class="user-avatar">
+                    {{ username?.charAt(0) }}
+                </el-avatar>
+                <transition name="fade">
+                    <div class="user-info" v-if="!sidebar.collapse">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-action">
+                            <el-icon><SwitchButton /></el-icon>
+                            <span>退出登录</span>
+                        </div>
+                    </div>
+                </transition>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useSidebarStore } from '../store/sidebar';
 import { useRoute, useRouter } from 'vue-router';
 import { menuData } from '@/components/menu';
-import { Briefcase, Setting, Right } from '@element-plus/icons-vue';
+import { SwitchButton } from '@element-plus/icons-vue';
 import { useUserStore } from '@/store/user';
 import { ElMessage } from 'element-plus';
+import { getMyEmployee } from '@/api';
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
 
 const onRoutes = computed(() => {
     return route.path;
 });
 
 const sidebar = useSidebarStore();
+
+onMounted(async () => {
+    try {
+        const empRes = await getMyEmployee();
+        const emp = empRes?.data?.data || {};
+        username.value = emp.realName || emp.name || username.value;
+    } catch (e) {
+        console.error(e);
+    }
+});
 
 function handleSignOut() {
     localStorage.removeItem('authToken');
@@ -101,155 +122,294 @@ function handleSignOut() {
 </script>
 
 <style scoped>
-.sidebar {
+.sidebar-container {
     display: flex;
     flex-direction: column;
-    width: 240px;
+    width: clamp(200px, 14vw, 240px);
     height: 100%;
-    background: #ffffff;
+    background: var(--bg-card);
     border-right: 1px solid var(--border-color);
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 10;
-    flex-shrink: 0; /* Prevent shrinking */
-}
-
-.sidebar.is-collapse {
-    width: 64px;
-}
-
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border-color);
-    height: 64px;
-    box-sizing: border-box;
-    background-color: #ffffff;
-    /* Add a subtle brand touch */
-    color: var(--color-primary);
-}
-
-.logo-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 18px;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+    z-index: 100;
     flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
 }
 
-.logo-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1f2937;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
+.sidebar-container.is-collapse {
+    width: clamp(56px, 4vw, 64px);
+}
+
+/* Logo */
+.sidebar-logo {
+    height: clamp(56px, 8vh, 64px);
+    display: flex;
+    align-items: center;
+    padding: 0 clamp(12px, 1vw, 16px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 0.7vw, 10px);
     overflow: hidden;
 }
 
-.sidebar-el-menu {
+.logo-icon {
+    width: clamp(28px, 2.2vw, 36px);
+    height: clamp(28px, 2.2vw, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    border-radius: clamp(6px, 0.6vw, 10px);
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.logo-icon svg {
+    width: 60%;
+    height: 60%;
+}
+
+.logo-text {
+    font-size: clamp(16px, 1.2vw, 20px);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+}
+
+/* Menu Wrapper */
+.sidebar-menu-wrapper {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border-right: none;
-    padding: 12px;
+    overflow: hidden;
+    padding: clamp(8px, 1vh, 12px) clamp(6px, 0.6vw, 10px);
 }
 
-/* Custom Scrollbar */
-.sidebar-el-menu::-webkit-scrollbar {
-    width: 4px;
-}
-.sidebar-el-menu::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 2px;
-}
-
-.menu-icon {
-    font-size: 18px;
-    color: #9ca3af;
-    transition: all 0.2s ease;
-}
-
-.menu-title {
-    font-weight: 500;
-    font-size: 14px;
-    margin-left: 8px;
+.sidebar-menu {
+    border-right: none !important;
+    background: transparent !important;
 }
 
 /* Menu Items */
-:deep(.el-menu-item), :deep(.el-sub-menu__title) {
-    height: 44px;
-    line-height: 44px;
-    border-radius: 8px;
-    margin-bottom: 4px;
-    color: #4b5563 !important;
+.menu-item,
+.menu-submenu :deep(.el-sub-menu__title) {
+    height: clamp(40px, 5vh, 48px) !important;
+    line-height: clamp(40px, 5vh, 48px) !important;
+    margin: clamp(2px, 0.4vh, 6px) 0;
+    border-radius: clamp(6px, 0.6vw, 10px);
+    transition: all 0.2s ease;
+    color: var(--text-secondary) !important;
 }
 
-:deep(.el-menu-item:hover), :deep(.el-sub-menu__title:hover) {
-    background-color: #f3f4f6 !important;
-    color: #1f2937 !important;
+.menu-item:hover,
+.menu-submenu :deep(.el-sub-menu__title:hover) {
+    background: var(--bg-hover) !important;
+    color: var(--text-main) !important;
 }
 
-:deep(.el-menu-item.is-active) {
-    background-color: #eef2ff !important;
-    color: #4f46e5 !important;
+.menu-item.is-active {
+    background: var(--color-primary-light) !important;
+    color: var(--color-primary) !important;
     font-weight: 600;
 }
 
-:deep(.el-menu-item.is-active .menu-icon) {
-    color: #4f46e5;
+.menu-item.is-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: clamp(2px, 0.2vw, 3px);
+    height: clamp(16px, 1.3vw, 20px);
+    background: var(--color-primary);
+    border-radius: 0 clamp(2px, 0.2vw, 3px) clamp(2px, 0.2vw, 3px) 0;
 }
 
-/* Submenu */
-:deep(.el-sub-menu .el-menu-item) {
-    padding-left: 48px !important;
-    height: 40px;
-    line-height: 40px;
+.menu-icon {
+    font-size: clamp(16px, 1.2vw, 20px) !important;
+    width: clamp(16px, 1.2vw, 20px);
+    margin-right: clamp(8px, 0.7vw, 12px);
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.menu-item.is-active .menu-icon,
+.menu-item:hover .menu-icon {
+    color: var(--color-primary);
+}
+
+.menu-title {
+    font-size: clamp(13px, 0.95vw, 15px);
+    font-weight: 500;
+}
+
+/* Sub Menu */
+.menu-item-sub {
+    height: clamp(36px, 2.5vh, 44px) !important;
+    line-height: clamp(36px, 2.5vh, 44px) !important;
+    margin: clamp(1px, 0.2vh, 4px) 0;
+    padding-left: clamp(40px, 3vw, 52px) !important;
+    border-radius: clamp(6px, 0.5vw, 10px);
+    color: var(--text-secondary) !important;
+}
+
+.menu-item-sub:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-main) !important;
+}
+
+.menu-item-sub.is-active {
+    background: var(--color-primary-light) !important;
+    color: var(--color-primary) !important;
+}
+
+.sub-menu-dot {
+    width: clamp(5px, 0.4vw, 6px);
+    height: clamp(5px, 0.4vw, 6px);
+    border-radius: 50%;
+    background: var(--text-muted);
+    margin-right: clamp(8px, 0.7vw, 10px);
+    transition: all 0.2s;
+}
+
+.menu-item-sub.is-active .sub-menu-dot,
+.menu-item-sub:hover .sub-menu-dot {
+    background: var(--color-primary);
+    transform: scale(1.2);
+}
+
+.sub-menu-title {
+    font-size: clamp(12px, 0.85vw, 14px);
 }
 
 /* Footer */
 .sidebar-footer {
+    padding: clamp(8px, 1vh, 12px) clamp(8px, 0.8vw, 12px);
     border-top: 1px solid var(--border-color);
-    padding: 12px;
-    background-color: #ffffff;
 }
 
-.footer-menu {
-    border: none;
+.user-panel {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 0.8vw, 12px);
+    padding: clamp(8px, 1vh, 12px) clamp(8px, 0.8vw, 12px);
+    border-radius: clamp(8px, 0.7vw, 12px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-hover);
 }
 
-.signout-item :deep(.el-menu-item) {
-    color: #ef4444 !important;
+.user-panel:hover {
+    background: var(--color-primary-light);
 }
 
-.signout-item :deep(.el-menu-item:hover) {
-    background-color: #fef2f2 !important;
+.user-avatar {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: clamp(12px, 0.9vw, 14px);
+    flex-shrink: 0;
+    width: clamp(28px, 2.2vw, 36px) !important;
+    height: clamp(28px, 2.2vw, 36px) !important;
 }
 
-.signout-item :deep(.menu-icon) {
-    color: #ef4444;
+.user-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
-/* Collapse adjustments */
-.sidebar.is-collapse .sidebar-logo {
+.user-name {
+    font-size: clamp(12px, 0.85vw, 14px);
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-action {
+    display: flex;
+    align-items: center;
+    gap: clamp(3px, 0.3vw, 6px);
+    font-size: clamp(11px, 0.75vw, 13px);
+    color: var(--text-muted);
+    margin-top: clamp(1px, 0.2vh, 4px);
+}
+
+.user-action:hover {
+    color: var(--color-danger);
+}
+
+/* Collapse State */
+.sidebar-container.is-collapse .sidebar-logo {
     justify-content: center;
     padding: 0;
 }
-.sidebar.is-collapse .logo-text {
-    display: none;
+
+.sidebar-container.is-collapse .user-panel {
+    justify-content: center;
+    padding: clamp(8px, 0.7vw, 10px);
 }
-:deep(.el-menu--collapse .el-menu-item),
-:deep(.el-menu--collapse .el-sub-menu__title) {
+
+.sidebar-container.is-collapse .menu-item,
+.sidebar-container.is-collapse .menu-submenu :deep(.el-sub-menu__title) {
     padding: 0 !important;
     justify-content: center;
 }
-:deep(.el-menu--collapse .menu-icon) {
-    margin: 0;
+
+.sidebar-container.is-collapse .menu-icon {
+    margin-right: 0;
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* Scrollbar */
+:deep(.el-scrollbar__bar.is-vertical) {
+    width: clamp(3px, 0.3vw, 4px);
+}
+
+:deep(.el-scrollbar__thumb) {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+:deep(.el-scrollbar__thumb:hover) {
+    background: var(--text-muted);
+}
+
+/* 响应式布局 - 移动端抽屉式 */
+@media (max-width: 768px) {
+    .sidebar-container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 70vw;
+        max-width: 280px;
+        z-index: 1001;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .sidebar-container:not(.is-collapse) {
+        transform: translateX(0);
+    }
+    
+    .sidebar-container.is-collapse {
+        transform: translateX(-100%);
+    }
 }
 </style>
+

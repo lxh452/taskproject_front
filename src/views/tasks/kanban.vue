@@ -477,7 +477,7 @@ onMounted(async () => {
 <style scoped>
 .kanban-page {
     padding: 24px;
-    background: #f9fafb;
+    background: var(--bg-page);
     min-height: calc(100vh - 64px);
     overflow-x: hidden;
 }
@@ -486,10 +486,10 @@ onMounted(async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 16px 24px;
     border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 16px;
@@ -516,7 +516,7 @@ onMounted(async () => {
     flex: 1;
     min-width: 300px;
     max-width: 350px;
-    background: #f3f4f6;
+    background: var(--bg-base);
     border-radius: 12px;
     padding: 12px;
     display: flex;
@@ -528,24 +528,24 @@ onMounted(async () => {
     align-items: center;
     justify-content: space-between;
     padding: 0 4px 12px 4px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 12px;
 }
 
 .column-title {
     font-size: 14px;
     font-weight: 600;
-    color: #4b5563;
+    color: var(--text-secondary);
     margin: 0;
 }
 
 .column-count {
-    background: #e5e7eb;
+    background: var(--bg-hover);
     padding: 2px 8px;
     border-radius: 10px;
     font-size: 12px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .column-content {
@@ -556,23 +556,23 @@ onMounted(async () => {
 
 /* Task Card */
 .task-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 12px;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color);
 }
 
 .task-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
 }
 
-.task-card-main { border-left: 3px solid #3b82f6; }
-.task-node-card { border-left: 3px solid #10b981; }
+.task-card-main { border-left: 3px solid var(--color-primary); }
+.task-node-card { border-left: 3px solid var(--color-success); }
 
 .task-badges {
     display: flex;
@@ -585,22 +585,22 @@ onMounted(async () => {
     height: 8px;
     border-radius: 50%;
 }
-.priority-dot.critical { background: #ef4444; }
-.priority-dot.high { background: #f59e0b; }
-.priority-dot.medium { background: #3b82f6; }
-.priority-dot.low { background: #10b981; }
+.priority-dot.critical { background: var(--color-danger); }
+.priority-dot.high { background: var(--color-warning); }
+.priority-dot.medium { background: var(--color-primary); }
+.priority-dot.low { background: var(--color-success); }
 
 .task-title {
     font-size: 14px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-main);
     margin: 0 0 6px 0;
     line-height: 1.4;
 }
 
 .task-description {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-secondary);
     margin-bottom: 12px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -619,17 +619,22 @@ onMounted(async () => {
     align-items: center;
     gap: 4px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-muted);
 }
 
 /* Drawer Styles */
 :deep(.modern-drawer) {
-    background: #ffffff !important;
+    background: var(--bg-card) !important;
 }
 :deep(.modern-drawer .el-drawer__header) {
     margin-bottom: 0;
     padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+:deep(.modern-drawer .el-drawer__body) {
+    background: var(--bg-card);
+    color: var(--text-main);
 }
 .drawer-form {
     padding: 20px;
@@ -637,8 +642,9 @@ onMounted(async () => {
 .full-width { width: 100%; }
 .drawer-footer {
     padding: 16px 24px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
+    background: var(--bg-card);
 }
 </style>

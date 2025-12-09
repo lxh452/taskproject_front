@@ -48,7 +48,6 @@
                 style="width: 100%" 
                 v-loading="loading"
                 class="tasknodes-table"
-                :header-cell-style="{ background: '#f9fafb', color: '#6b7280', fontWeight: '600' }"
             >
                 <el-table-column prop="nodeName" label="节点名称" min-width="220">
                     <template #default="{ row }">
@@ -197,8 +196,19 @@ onMounted(async () => {
         const responseData = resp.data?.data || resp.data || {};
         
         const leaderTasks = responseData.leader_task || [];
+        const executorTasks = responseData.executor_task || [];
         
-        const validNodes = leaderTasks.filter((n: any) => {
+        // 合并并去重
+        const allNodes = [...leaderTasks, ...executorTasks];
+        const uniqueNodesMap = new Map();
+        allNodes.forEach((n: any) => {
+            const id = n.id || n.taskNodeId;
+            if (id && !uniqueNodesMap.has(id)) {
+                uniqueNodesMap.set(id, n);
+            }
+        });
+        
+        const validNodes = Array.from(uniqueNodesMap.values()).filter((n: any) => {
             const nodeId = n.id || n.taskNodeId;
             const nodeName = n.nodeName || n.taskNodeName || n.NodeName;
             return nodeId && nodeName && nodeName.trim() !== '';
@@ -238,7 +248,7 @@ onMounted(async () => {
 <style scoped>
 .tasknodes-page {
     padding: 24px;
-    background: #f9fafb;
+    background: var(--bg-page);
     min-height: calc(100vh - 64px);
 }
 
@@ -247,10 +257,10 @@ onMounted(async () => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 16px 24px;
     border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     flex-wrap: wrap;
     gap: 16px;
 }
@@ -268,16 +278,27 @@ onMounted(async () => {
 .date-picker { width: 260px; }
 
 .table-container {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     padding: 4px;
 }
 
 .tasknodes-table {
-    --el-table-border-color: #f3f4f6;
-    --el-table-header-bg-color: #f9fafb;
+    /* 强制使用透明背景，由父容器控制背景色，避免黑块 */
+    --el-table-bg-color: transparent !important;
+    --el-table-tr-bg-color: transparent !important;
+    --el-table-header-bg-color: var(--bg-base) !important;
+    --el-table-row-hover-bg-color: var(--bg-hover) !important;
+    --el-table-border-color: var(--border-color) !important;
+    --el-table-text-color: var(--text-main) !important;
+    --el-table-header-text-color: var(--text-secondary) !important;
+}
+
+/* 修复表格内部单元格背景可能导致的遮挡 */
+.tasknodes-table :deep(.el-table__cell) {
+    background-color: transparent !important;
 }
 
 .node-name-cell {
@@ -289,12 +310,12 @@ onMounted(async () => {
 .node-icon {
     width: 32px;
     height: 32px;
-    background: #eff6ff;
+    background: var(--color-primary-light);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3b82f6;
+    color: var(--color-primary);
     font-size: 16px;
     flex-shrink: 0;
 }
@@ -302,7 +323,7 @@ onMounted(async () => {
 .node-name {
     font-weight: 600;
     font-size: 14px;
-    color: #1f2937;
+    color: var(--text-main);
 }
 
 .task-link {
@@ -311,7 +332,7 @@ onMounted(async () => {
 }
 
 .info-text {
-    color: #4b5563;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
@@ -319,7 +340,7 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -331,9 +352,9 @@ onMounted(async () => {
     font-weight: 600;
 }
 
-.status-badge.success { background: #ecfdf5; color: #10b981; }
-.status-badge.warning { background: #fffbeb; color: #f59e0b; }
-.status-badge.info { background: #f3f4f6; color: #6b7280; }
+.status-badge.success { background: var(--color-success-light, #ecfdf5); color: var(--color-success); }
+.status-badge.warning { background: var(--color-warning-light, #fffbeb); color: var(--color-warning); }
+.status-badge.info { background: var(--bg-base); color: var(--text-secondary); }
 
 .status-dot {
     display: inline-block;
@@ -342,7 +363,7 @@ onMounted(async () => {
     border-radius: 50%;
     margin-right: 6px;
 }
-.status-dot.success { background: #10b981; }
-.status-dot.warning { background: #f59e0b; }
-.status-dot.info { background: #6b7280; }
+.status-dot.success { background: var(--color-success); }
+.status-dot.warning { background: var(--color-warning); }
+.status-dot.info { background: var(--text-secondary); }
 </style>

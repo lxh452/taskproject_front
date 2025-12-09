@@ -17,7 +17,7 @@
                 <div class="action-card" :class="{ active: mode === 'join' }" @click="mode = 'join'">
                     <el-icon class="card-icon"><OfficeBuilding /></el-icon>
                     <div class="card-title">加入公司</div>
-                    <div class="card-desc">搜索并申请加入已存在的企业团队</div>
+                    <div class="card-desc">使用邀请码申请加入企业团队</div>
                 </div>
 
                 <!-- 创建公司 -->
@@ -31,50 +31,83 @@
             <!-- 加入公司表单 -->
             <div class="form-section" v-if="mode === 'join'">
                 <el-form :model="joinForm" :rules="joinRules" ref="joinRef" size="large">
-                    <el-form-item prop="keyword">
+                    <!-- 邀请码输入 -->
+                    <el-form-item prop="inviteCode">
                         <el-input 
-                            v-model="joinForm.keyword" 
-                            placeholder="请输入公司名称或代码搜索"
-                            prefix-icon="Search"
+                            v-model="joinForm.inviteCode" 
+                            placeholder="请输入邀请码"
+                            maxlength="8"
+                            :formatter="(value: string) => value.toUpperCase()"
+                            class="invite-code-input"
                         >
+                            <template #prefix>
+                                <el-icon><Ticket /></el-icon>
+                            </template>
                             <template #append>
-                                <el-button @click="handleSearch" :loading="searching">搜索</el-button>
+                                <el-button @click="handleParseInviteCode" :loading="parsing">
+                                    验证
+                                </el-button>
                             </template>
                         </el-input>
                     </el-form-item>
                     
-                    <div class="company-list" v-if="companyList.length > 0">
-                        <div 
-                            v-for="company in companyList" 
-                            :key="company.id" 
-                            class="company-item"
-                            :class="{ selected: selectedCompany?.id === company.id }"
-                            @click="selectCompany(company)"
-                        >
-                            <div class="company-info">
-                                <div class="company-name">{{ company.name }}</div>
-                                <div class="company-meta">
-                                    <span class="meta-item">负责人: {{ company.owner || '未知' }}</span>
-                                    <span class="meta-item">电话: {{ company.phone || '-' }}</span>
-                                </div>
-                            </div>
-                            <el-icon v-if="selectedCompany?.id === company.id" class="check-icon"><Check /></el-icon>
+                    <!-- 公司信息预览 -->
+                    <div class="company-preview" v-if="companyInfo">
+                        <div class="preview-header">
+                            <el-icon class="preview-icon"><CircleCheckFilled /></el-icon>
+                            <span>邀请码有效</span>
                         </div>
+                        <div class="preview-card">
+                            <div class="preview-row">
+                                <span class="label">公司名称</span>
+                                <span class="value company-name">{{ companyInfo.companyName }}</span>
+                            </div>
+                            <div class="preview-row" v-if="companyInfo.description">
+                                <span class="label">公司简介</span>
+                                <span class="value">{{ companyInfo.description }}</span>
+                            </div>
+                            <div class="preview-row" v-if="companyInfo.address">
+                                <span class="label">公司地址</span>
+                                <span class="value">{{ companyInfo.address }}</span>
+                                </div>
+                            <div class="preview-row">
+                                <span class="label">过期时间</span>
+                                <span class="value">{{ companyInfo.expireAt }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 申请理由 -->
+                        <el-form-item prop="applyReason" style="margin-top: 16px;">
+                            <el-input 
+                                v-model="joinForm.applyReason" 
+                                type="textarea"
+                                :rows="2"
+                                placeholder="请输入申请理由（选填）"
+                            />
+                        </el-form-item>
                     </div>
-                    <div class="empty-result" v-else-if="searched">
-                        未找到相关公司
+
+                    <!-- 无效邀请码提示 -->
+                    <div class="invalid-code" v-if="inviteCodeError">
+                        <el-icon><CircleCloseFilled /></el-icon>
+                        <span>{{ inviteCodeError }}</span>
                     </div>
 
                     <el-button 
                         class="submit-btn" 
                         type="primary" 
                         size="large" 
-                        :disabled="!selectedCompany"
+                        :disabled="!companyInfo"
                         :loading="submitting"
-                        @click="handleJoin"
+                        @click="handleApplyJoin"
                     >
-                        申请加入
+                        提交申请
                     </el-button>
+                    
+                    <div class="join-tips">
+                        <el-icon><InfoFilled /></el-icon>
+                        <span>提交后需等待公司管理员审批</span>
+                    </div>
                 </el-form>
             </div>
 
@@ -97,6 +130,21 @@
                             :rows="3" 
                             placeholder="请输入简单的公司介绍" 
                         />
+                    </el-form-item>
+                    
+                    <!-- 模板选择 -->
+                    <el-form-item label="初始化选项">
+                        <div class="template-option">
+                            <el-checkbox v-model="createForm.useTemplate" size="large">
+                                <span class="option-label">使用推荐的组织结构模板</span>
+                            </el-checkbox>
+                            <div class="option-desc" v-if="createForm.useTemplate">
+                                将自动创建常用部门（人力、研发、市场、销售、财务、行政、运维）及默认职位
+                            </div>
+                            <div class="option-desc minimal" v-else>
+                                仅创建「总裁办」部门和您的创始人身份，后续可手动添加部门
+                            </div>
+                        </div>
                     </el-form-item>
                     
                     <el-button 
@@ -123,27 +171,30 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
-import { OfficeBuilding, Plus, Check, Search } from '@element-plus/icons-vue';
-import { listCompanies, createCompany, joinCompany } from '@/api';
+import { OfficeBuilding, Plus, Ticket, CircleCheckFilled, CircleCloseFilled, InfoFilled } from '@element-plus/icons-vue';
+import { createCompany, parseInviteCode, applyJoinCompany } from '@/api';
 import { useUserStore } from '@/store/user';
 
 const router = useRouter();
 const userStore = useUserStore();
 const mode = ref<'join' | 'create'>('join');
 const submitting = ref(false);
-const searching = ref(false);
-const searched = ref(false);
+const parsing = ref(false);
 
 // 加入公司相关
 const joinRef = ref<FormInstance>();
 const joinForm = reactive({
-    keyword: ''
+    inviteCode: '',
+    applyReason: ''
 });
-const companyList = ref<any[]>([]);
-const selectedCompany = ref<any>(null);
+const companyInfo = ref<any>(null);
+const inviteCodeError = ref('');
 
 const joinRules: FormRules = {
-    keyword: [{ required: true, message: '请输入搜索关键词', trigger: 'blur' }]
+    inviteCode: [
+        { required: true, message: '请输入邀请码', trigger: 'blur' },
+        { min: 6, max: 10, message: '邀请码长度为6-10位', trigger: 'blur' }
+    ]
 };
 
 // 创建公司相关
@@ -153,7 +204,10 @@ const createForm = reactive({
     phone: '',
     email: '',
     address: '',
-    description: ''
+    description: '',
+    companyAttributes: 1,
+    companyBusiness: 1,
+    useTemplate: true,
 });
 
 const createRules: FormRules = {
@@ -161,50 +215,71 @@ const createRules: FormRules = {
     phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
 };
 
-// 搜索公司
-const handleSearch = async () => {
-    if (!joinForm.keyword) return;
-    searching.value = true;
-    searched.value = true;
-    selectedCompany.value = null;
+// 解析邀请码
+const handleParseInviteCode = async () => {
+    if (!joinForm.inviteCode || joinForm.inviteCode.length < 6) {
+        ElMessage.warning('请输入有效的邀请码');
+        return;
+    }
+    
+    parsing.value = true;
+    companyInfo.value = null;
+    inviteCodeError.value = '';
+    
     try {
-        const res = await listCompanies({ 
-            page: 1, 
-            pageSize: 20, 
-            name: joinForm.keyword 
-        });
+        const res = await parseInviteCode({ inviteCode: joinForm.inviteCode.toUpperCase() });
         if (res.data.code === 200) {
-            companyList.value = res.data.data.list || [];
+            companyInfo.value = res.data.data;
+            ElMessage.success('邀请码验证成功');
+        } else {
+            inviteCodeError.value = res.data.msg || '邀请码无效或已过期';
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        ElMessage.error('搜索失败');
+        inviteCodeError.value = error.response?.data?.msg || '验证失败，请稍后重试';
     } finally {
-        searching.value = false;
+        parsing.value = false;
     }
 };
 
-const selectCompany = (company: any) => {
-    selectedCompany.value = company;
-};
-
 // 提交加入申请
-const handleJoin = async () => {
-    if (!selectedCompany.value) return;
+const handleApplyJoin = async () => {
+    if (!companyInfo.value) {
+        ElMessage.warning('请先验证邀请码');
+        return;
+    }
+    
     submitting.value = true;
     try {
-        const res = await joinCompany({ companyId: selectedCompany.value.id });
+        const res = await applyJoinCompany({ 
+            inviteCode: joinForm.inviteCode.toUpperCase(),
+            applyReason: joinForm.applyReason
+        });
         if (res.data.code === 200) {
-            ElMessage.success('申请成功，已加入公司');
-            // 更新用户信息并跳转
-            userStore.setUserInfo({ companyId: selectedCompany.value.id });
-            router.push('/dashboard');
+            await ElMessageBox.alert(
+                `<div style="line-height: 1.8;">
+                    <p><strong>🎉 申请已提交！</strong></p>
+                    <p style="margin-top: 12px; color: #666;">您的加入申请已成功提交到 <strong>${companyInfo.value.companyName}</strong></p>
+                    <p style="margin-top: 8px; color: #666;">请耐心等待公司管理员审批。</p>
+                    <p style="margin-top: 12px; color: #999; font-size: 12px;">审批通过后，系统会自动为您分配部门和职位。</p>
+                </div>`,
+                '申请已提交',
+                {
+                    dangerouslyUseHTMLString: true,
+                    confirmButtonText: '我知道了',
+                    customClass: 'welcome-dialog',
+                }
+            );
+            // 清空表单
+            joinForm.inviteCode = '';
+            joinForm.applyReason = '';
+            companyInfo.value = null;
         } else {
-            ElMessage.error(res.data.msg || '加入失败');
+            ElMessage.error(res.data.msg || '申请失败');
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        ElMessage.error('加入失败');
+        ElMessage.error(error.response?.data?.msg || '申请失败');
     } finally {
         submitting.value = false;
     }
@@ -219,12 +294,51 @@ const handleCreate = async () => {
             try {
                 const res = await createCompany(createForm);
                 if (res.data.code === 200) {
-                    ElMessage.success('创建成功');
-                    // 假设创建后自动加入或返回公司信息
-                    const companyId = res.data.data?.companyId || res.data.data?.id;
-                    if (companyId) {
-                        userStore.setUserInfo({ companyId });
+                    // 更新token
+                    const newToken = res.data.data?.token;
+                    if (newToken) {
+                        localStorage.setItem('authToken', newToken);
                     }
+                    
+                    const companyId = res.data.data?.companyId || res.data.data?.id;
+                    const employeeId = res.data.data?.employeeId;
+                    if (companyId) {
+                        userStore.setUserInfo({ companyId, employeeId });
+                    }
+                    
+                    const templateMsg = createForm.useTemplate 
+                        ? `<div style="line-height: 1.8;">
+                            <p><strong>🎉 公司创建成功！</strong></p>
+                            <p style="margin-top: 12px; color: #666;">系统已为您自动初始化以下组织结构：</p>
+                            <ul style="margin: 12px 0; padding-left: 20px; color: #666;">
+                                <li><strong>总裁办</strong> - 您作为创始人已自动加入</li>
+                                <li><strong>人力资源部、研发部、市场部、销售部、财务部、行政部、运维部</strong></li>
+                            </ul>
+                            <p style="color: #666;">每个部门下已配置默认职位：<strong>经理、高级、工程师、助理</strong></p>
+                            <p style="margin-top: 12px; color: #666;">您已被自动分配<strong style="color: #dc2626;">「超级管理员」</strong>角色，拥有所有系统权限。</p>
+                            <p style="margin-top: 12px; color: #999; font-size: 12px;">提示：您可以在「组织管理」中根据实际需要调整部门和职位。</p>
+                        </div>`
+                        : `<div style="line-height: 1.8;">
+                            <p><strong>🎉 公司创建成功！</strong></p>
+                            <p style="margin-top: 12px; color: #666;">已为您创建：</p>
+                            <ul style="margin: 12px 0; padding-left: 20px; color: #666;">
+                                <li><strong>总裁办</strong> - 您作为创始人已自动加入</li>
+                                <li><strong>超级管理员</strong>角色 - 拥有所有系统权限</li>
+                            </ul>
+                            <p style="margin-top: 12px; color: #999; font-size: 12px;">提示：您可以在「组织管理」中手动添加部门和职位。</p>
+                        </div>`;
+                    
+                    await ElMessageBox.alert(
+                        templateMsg,
+                        '欢迎使用 Task Pro',
+                        {
+                            dangerouslyUseHTMLString: true,
+                            confirmButtonText: '开始使用',
+                            customClass: 'welcome-dialog',
+                        }
+                    );
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     router.push('/dashboard');
                 } else {
                     ElMessage.error(res.data.msg || '创建失败');
@@ -446,62 +560,92 @@ const handleLogout = () => {
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-.company-list {
-    margin-top: 16px;
-    max-height: 280px;
-    overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+/* 邀请码输入框样式 */
+.invite-code-input :deep(.el-input__inner) {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
 }
 
-.company-item {
+/* 公司信息预览 */
+.company-preview {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.preview-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid #e5e7eb;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 8px;
+    color: #059669;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
 }
 
-.company-item:last-child {
-    border-bottom: none;
+.preview-icon {
+    font-size: 18px;
 }
 
-.company-item:hover {
-    background: #f9fafb;
+.preview-card {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #6ee7b7;
+    border-radius: 12px;
+    padding: 16px;
 }
 
-.company-item.selected {
-    background: #fff5f5;
-}
-
-.company-name {
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 4px;
-}
-
-.company-meta {
-    font-size: 12px;
-    color: #6b7280;
+.preview-row {
     display: flex;
-    gap: 16px;
+    margin-bottom: 10px;
 }
 
-.check-icon {
-    color: #dc2626;
-    font-size: 20px;
+.preview-row:last-child {
+    margin-bottom: 0;
 }
 
-.empty-result {
-    text-align: center;
-    color: #6b7280;
-    padding: 24px;
-    background: #f9fafb;
-    border-radius: 10px;
-    margin-top: 16px;
+.preview-row .label {
+    width: 80px;
+    color: #047857;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.preview-row .value {
+    color: #065f46;
     font-size: 13px;
+    flex: 1;
+}
+
+.preview-row .value.company-name {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* 无效邀请码提示 */
+.invalid-code {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 16px;
+}
+
+/* 加入提示 */
+.join-tips {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+    color: #9ca3af;
+    font-size: 12px;
 }
 
 .submit-btn {
@@ -542,5 +686,32 @@ const handleLogout = () => {
 
 .footer-link :deep(.el-link:hover) {
     color: #dc2626;
+}
+
+/* 模板选择样式 */
+.template-option {
+    width: 100%;
+}
+
+.option-label {
+    font-weight: 600;
+    color: #111827;
+}
+
+.option-desc {
+    margin-top: 8px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #6ee7b7;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #047857;
+    line-height: 1.5;
+}
+
+.option-desc.minimal {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-color: #d1d5db;
+    color: #6b7280;
 }
 </style>

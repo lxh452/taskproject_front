@@ -73,4 +73,18 @@ const onSubmit = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.mgb10 {
+    margin-bottom: 10px;
+}
+:deep(.el-tree) {
+    background: transparent;
+    color: var(--text-main);
+}
+:deep(.el-tree-node__content:hover) {
+    background-color: var(--bg-hover);
+}
+:deep(.el-tree-node:focus > .el-tree-node__content) {
+    background-color: var(--bg-hover);
+}
+</style>

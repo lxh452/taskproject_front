@@ -85,8 +85,30 @@ export const createCompany = (data: any) =>
 export const joinCompany = (data: { companyId: string }) =>
     request({ url: '/employee/join', method: 'post', data });
 
+// 邀请码相关 API
+export const generateInviteCode = (data?: { expireDays?: number; maxUses?: number }) =>
+    request({ url: '/company/invite/generate', method: 'post', data: data || {} });
+
+export const parseInviteCode = (data: { inviteCode: string }) =>
+    request({ url: '/company/invite/parse', method: 'post', data });
+
+export const applyJoinCompany = (data: { inviteCode: string; applyReason?: string }) =>
+    request({ url: '/employee/join/apply', method: 'post', data });
+
+export const approveJoinApplication = (data: { applicationId: string; approved: boolean; note?: string }) =>
+    request({ url: '/employee/join/approve', method: 'post', data });
+
+export const getPendingJoinApplications = (data?: { page?: number; pageSize?: number }) =>
+    request({ url: '/employee/join/pending', method: 'post', data: data || { page: 1, pageSize: 20 } });
+
 export const listDepartments = (data: any) =>
     request({ url: '/department/list', method: 'post', data });
+
+export const createDepartment = (data: any) =>
+    request({ url: '/department/create', method: 'post', data });
+
+export const updateDepartment = (data: any) =>
+    request({ url: '/department/update', method: 'put', data });
 
 export const listPositions = (data: any) =>
     request({ url: '/position/list', method: 'post', data });
@@ -198,3 +220,81 @@ export const getMyChecklist = (data?: { page?: number; pageSize?: number; isComp
 // 标记通知为已读
 export const markNotificationRead = (data: { notificationId: string }) =>
     request({ url: '/notification/read', method: 'put', data });
+
+// ===== 附件管理 API =====
+// 上传文件
+export const uploadFile = (formData: FormData) =>
+    request({ url: '/upload/file', method: 'post', data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+
+// 上传头像
+export const uploadAvatar = (formData: FormData) =>
+    request({ url: '/upload/avatar', method: 'post', data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+
+// 获取任务附件列表
+export const getTaskAttachments = (data: { taskId: string }) =>
+    request({ url: '/upload/task/attachments', method: 'post', data });
+
+// 获取任务节点附件列表
+export const getTaskNodeAttachments = (data: { taskNodeId: string }) =>
+    request({ url: '/upload/tasknode/attachments', method: 'post', data });
+
+// 删除附件
+export const deleteAttachment = (data: { fileId: string }) =>
+    request({ url: '/upload/delete', method: 'post', data });
+
+// ===== 任务评论 API (MongoDB) =====
+// 创建任务评论
+export const createTaskComment = (data: { 
+    taskId: string; 
+    taskNodeId?: string; 
+    content: string; 
+    contentHtml?: string;
+    atEmployeeIds?: string[];
+    parentId?: string;
+    attachmentIds?: string[];
+}) => request({ url: '/task/comment/create', method: 'post', data });
+
+// 获取任务评论列表
+export const getTaskComments = (data: { taskId?: string; taskNodeId?: string; page?: number; pageSize?: number }) =>
+    request({ url: '/task/comment/list', method: 'post', data });
+
+// 点赞/取消点赞评论
+export const likeTaskComment = (data: { commentId: string; isLike: boolean }) =>
+    request({ url: '/task/comment/like', method: 'post', data });
+
+// 删除任务评论
+export const deleteTaskComment = (data: { commentId: string }) =>
+    request({ url: '/task/comment/delete', method: 'post', data });
+
+// ===== 附件评论标注 API (MongoDB) =====
+// 创建附件评论
+export const createAttachmentComment = (data: {
+    fileId: string;
+    taskId?: string;
+    taskNodeId?: string;
+    content: string;
+    atEmployeeIds?: string[];
+    annotationType?: string;
+    annotationData?: {
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+        color?: string;
+        text?: string;
+    };
+    pageNumber?: number;
+    parentId?: string;
+}) => request({ url: '/upload/comment/create', method: 'post', data });
+
+// 获取附件评论列表
+export const getAttachmentComments = (data: { fileId: string; page?: number; pageSize?: number }) =>
+    request({ url: '/upload/comment/list', method: 'post', data });
+
+// 标记附件评论已解决
+export const resolveAttachmentComment = (data: { commentId: string }) =>
+    request({ url: '/upload/comment/resolve', method: 'post', data });
+
+// 删除附件评论
+export const deleteAttachmentComment = (data: { commentId: string }) =>
+    request({ url: '/upload/comment/delete', method: 'post', data });

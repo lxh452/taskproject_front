@@ -143,9 +143,9 @@ watch(
 .tabs-container {
     position: relative;
     overflow: hidden;
-    background: #fff;
+    background: var(--bg-card);
     padding: 4px 120px 0 0;
-    border-bottom: 1px solid #e4e7ed;
+    border-bottom: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -172,16 +172,18 @@ watch(
         margin-right: 4px;
         transition: all 0.3s ease;
         border: 1px solid transparent;
+        color: var(--text-secondary);
     }
 
     :deep(.el-tabs__item:hover) {
-        background: #f5f7fa;
+        background: var(--bg-hover);
+        color: var(--text-main);
     }
 
     :deep(.el-tabs__item.is-active) {
-        background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-        border-color: #e4e7ed;
-        border-bottom-color: #fff;
+        background: linear-gradient(135deg, var(--bg-hover) 0%, var(--bg-card) 100%);
+        border-color: var(--border-color);
+        border-bottom-color: var(--bg-card);
         font-weight: 600;
         color: var(--el-color-primary);
     }
@@ -196,7 +198,7 @@ watch(
     text-align: center;
     width: 110px;
     height: 40px;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff 20%);
+    background: linear-gradient(90deg, transparent 0%, var(--bg-card) 20%);
     z-index: 10;
     display: flex;
     align-items: center;
@@ -208,4 +210,90 @@ watch(
     font-size: 12px;
     padding: 6px 12px;
 }
+/* ... 响应式布局保持不变 ... */
+
+/* 响应式布局 */
+@media (max-width: 1200px) {
+    .tabs-container {
+        padding-right: 100px;
+    }
+    
+    .Tabs-close-box {
+        width: 90px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs-container {
+        padding: 4px 80px 0 0;
+    }
+    
+    .tabs :deep(.el-tabs__nav) {
+        height: 32px;
+    }
+    
+    .tabs :deep(.el-tabs__item) {
+        font-size: 12px;
+        padding: 0 12px;
+        height: 32px;
+        line-height: 32px;
+    }
+    
+    .tabs :deep(.el-tabs__nav-next),
+    .tabs :deep(.el-tabs__nav-prev) {
+        line-height: 32px;
+    }
+    
+    .tabs.el-tabs {
+        --el-tabs-header-height: 32px;
+    }
+    
+    .Tabs-close-box {
+        width: 70px;
+        height: 36px;
+    }
+    
+    .Tabs-close-box :deep(.el-button) {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tabs-container {
+        padding: 4px 60px 0 0;
+    }
+    
+    .tabs :deep(.el-tabs__item) {
+        font-size: 11px;
+        padding: 0 8px;
+        min-width: 60px;
+    }
+    
+    .tabs :deep(.el-tabs__item .el-icon-close) {
+        margin-left: 4px;
+        font-size: 12px;
+    }
+    
+    .Tabs-close-box {
+        width: 50px;
+        padding-top: 2px;
+    }
+    
+    .Tabs-close-box :deep(.el-button) {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .Tabs-close-box :deep(.el-button span) {
+        display: none;
+    }
+    
+    .Tabs-close-box :deep(.el-icon--right) {
+        margin-left: 0;
+    }
+}
+
+/* ==================== 深色模式 ==================== */
+/* 移除具体的 .dark-mode 样式，完全依赖 CSS 变量 */
 </style>

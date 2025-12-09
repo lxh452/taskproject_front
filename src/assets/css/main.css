@@ -25,6 +25,8 @@ body {
 	--bg-light: #ffffff;
 	--bg-base: #f5f7fa;
     --bg-hover: #f9fafb;
+    --bg-page: #f5f7fa;
+    --bg-card: #ffffff;
     
 	/* Primary Colors - Soft Blue & Tech */
 	--color-primary: #4f46e5; /* Indigo */
@@ -40,6 +42,7 @@ body {
 	--text-main: #1f2937;
 	--text-secondary: #6b7280;
 	--text-muted: #9ca3af;
+    --text-primary: #1f2937;
 
 	/* Borders & Shadows */
 	--border-color: #e5e7eb;
@@ -56,6 +59,62 @@ body {
 	--el-border-color: var(--border-color);
 }
 
+/* ==================== 深色模式 ==================== */
+html.dark-mode {
+    /* 深色模式 - Slate风格配色 */
+    --bg-light: #1e293b; /* 稍亮的背景，用于组件 */
+    --bg-base: #0f172a;  /* 深色背景，用于页面 */
+    --bg-hover: #334155;
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    
+    /* 调整后的主题色，降低饱和度以适应深色背景 */
+    --color-primary: #818cf8; 
+    --color-primary-light: rgba(99, 102, 241, 0.2);
+    --color-primary-hover: #a5b4fc;
+    
+    --text-main: #f1f5f9;      /* Slate 50 */
+    --text-secondary: #cbd5e1; /* Slate 300 */
+    --text-muted: #94a3b8;     /* Slate 400 */
+    --text-primary: #f1f5f9;
+    
+    --border-color: #334155;   /* Slate 700 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+    
+    /* Element Plus 变量覆盖 */
+    --el-bg-color: #1e293b;
+    --el-text-color-primary: #f1f5f9;
+    --el-text-color-regular: #cbd5e1;
+    --el-border-color: #334155;
+    --el-fill-color-blank: #1e293b;
+}
+
+html.dark-mode body {
+    background: var(--bg-page) !important;
+    color: var(--text-main) !important;
+}
+
+html.dark-mode .wrapper,
+html.dark-mode .content-box,
+html.dark-mode .content {
+    background: var(--bg-page) !important;
+}
+
+/* 移除大量具体的 .dark-mode 选择器，依靠 CSS 变量自动适配 */
+/* 仅保留少量必须手动调整的样式 */
+
+/* 深色模式滚动条 */
+html.dark-mode ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+
 /* Global Links */
 a {
 	text-decoration: none;
@@ -69,9 +128,9 @@ a:hover {
 
 /* Modern Cards */
 .container, .el-card {
-	background: #ffffff !important;
+	background: var(--bg-card) !important;
 	border: 1px solid var(--border-color) !important;
-	border-radius: 12px !important; /* 圆润的边角 */
+	border-radius: 12px !important;
 	box-shadow: var(--shadow-card);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -79,6 +138,21 @@ a:hover {
 .container:hover, .el-card:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+}
+
+/* 深色模式卡片 */
+html.dark-mode .el-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark-mode .el-card__header {
+    border-bottom-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+html.dark-mode .el-card__body {
+    color: var(--text-secondary);
 }
 
 /* Table Styling - Clean & Airy */
@@ -94,6 +168,27 @@ a:hover {
 	font-weight: 600;
     background-color: #f9fafb;
     height: 50px;
+}
+
+/* 深色模式表格 */
+html.dark-mode .el-table {
+    --el-table-header-bg-color: #1e293b !important;
+    --el-table-row-hover-bg-color: #334155 !important;
+    --el-table-bg-color: #0f172a !important;
+    --el-table-tr-bg-color: #0f172a !important;
+    --el-table-text-color: #f1f5f9 !important;
+    --el-table-border-color: #334155 !important;
+}
+
+html.dark-mode .el-table th {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+html.dark-mode .el-table td {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
 }
 
 /* Form Elements - Soft & Friendly */
@@ -124,6 +219,94 @@ a:hover {
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
+/* 深色模式表单 */
+html.dark-mode .el-input__wrapper {
+    background-color: #1e293b !important;
+    box-shadow: 0 0 0 1px #334155 inset !important;
+}
+
+html.dark-mode .el-input__inner {
+    color: #f1f5f9 !important;
+    background-color: transparent !important;
+}
+
+html.dark-mode .el-input__inner::placeholder {
+    color: #64748b !important;
+}
+
+html.dark-mode .el-textarea__inner {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+html.dark-mode .el-select__wrapper {
+    background-color: #1e293b !important;
+}
+
+html.dark-mode .el-select__placeholder {
+    color: #64748b !important;
+}
+
+html.dark-mode .el-select__selected-item {
+    color: #f1f5f9 !important;
+}
+
+/* 深色模式下拉菜单 */
+html.dark-mode .el-select-dropdown {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html.dark-mode .el-select-dropdown__item {
+    color: #f1f5f9 !important;
+}
+
+html.dark-mode .el-select-dropdown__item.hover,
+html.dark-mode .el-select-dropdown__item:hover {
+    background-color: #334155 !important;
+}
+
+/* 深色模式弹窗 */
+html.dark-mode .el-dialog {
+    background-color: #1e293b !important;
+}
+
+html.dark-mode .el-dialog__header {
+    color: #f1f5f9 !important;
+}
+
+html.dark-mode .el-dialog__body {
+    color: #94a3b8 !important;
+}
+
+/* 深色模式消息提示 */
+html.dark-mode .el-message {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html.dark-mode .el-message__content {
+    color: #f1f5f9 !important;
+}
+
+/* 深色模式标签 */
+html.dark-mode .el-tag {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    color: #a5b4fc !important;
+}
+
+/* 深色模式进度条 */
+html.dark-mode .el-progress__text {
+    color: #f1f5f9 !important;
+}
+
+/* 深色模式空状态 */
+html.dark-mode .el-empty__description {
+    color: #64748b !important;
+}
+
 /* Utility Classes */
 .flex-center {
 	display: flex;
@@ -151,4 +334,103 @@ a:hover {
 
 ::-webkit-scrollbar-thumb:hover {
 	background: #9ca3af;
+}
+
+/* 全局响应式布局 */
+@media (max-width: 1920px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 1600px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 1366px) {
+    html {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 1200px) {
+    html {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+    
+    body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 防止移动端横向滚动 */
+    * {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 13px;
+    }
+}
+
+/* 确保所有容器不会溢出 */
+.container,
+.el-card,
+.content {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 所有页面使用百分比布局，自动适应屏幕 */
+.tasks-page,
+.employees-page,
+.handovers-page,
+.departments-page,
+.positions-page,
+.roles-page,
+.dashboard-page,
+.notifications-page {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 响应式图片 */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 响应式表格 */
+@media (max-width: 768px) {
+    .el-table {
+        font-size: 12px;
+    }
+    
+    .el-table th,
+    .el-table td {
+        padding: 8px 4px;
+    }
+}
+
+/* 响应式表单 */
+@media (max-width: 768px) {
+    .el-form-item {
+        margin-bottom: 16px;
+    }
+    
+    .el-input,
+    .el-select,
+    .el-textarea {
+        width: 100% !important;
+    }
 }

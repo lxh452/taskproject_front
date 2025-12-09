@@ -185,6 +185,12 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/org/tree.vue'),
             },
             {
+                path: '/organization/join-applications',
+                name: 'organization-join-applications',
+                meta: { title: '加入申请' },
+                component: () => import('../views/org/join-applications.vue'),
+            },
+            {
                 path: '/notifications',
                 name: 'notifications',
                 meta: { title: '通知中心' },
@@ -236,6 +242,14 @@ const routes: RouteRecordRaw[] = [
             noAuth: true,
         },
         component: () => import(/* webpackChunkName: "reset-pwd" */ '../views/pages/reset-pwd.vue'),
+    },
+    {
+        path: '/file/preview/:fileId',
+        name: 'file-preview',
+        meta: {
+            title: '文件预览',
+        },
+        component: () => import('../views/file/preview.vue'),
     },
     {
         path: '/403',

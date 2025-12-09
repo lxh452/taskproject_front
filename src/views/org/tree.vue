@@ -630,7 +630,7 @@ onMounted(() => {
 .org-tree-page {
     padding: 24px;
     min-height: calc(100vh - 100px);
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: var(--bg-page);
 }
 
 /* 页面头部 */
@@ -643,9 +643,9 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-left {
@@ -655,9 +655,9 @@ onMounted(() => {
 .page-title {
     font-size: 28px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-main);
     margin: 0 0 4px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -665,7 +665,7 @@ onMounted(() => {
 
 .page-subtitle {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--text-secondary);
     margin: 0;
     font-weight: 500;
 }
@@ -682,7 +682,8 @@ onMounted(() => {
 
 .search-input :deep(.el-input__wrapper) {
     border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
+    background-color: var(--bg-base);
 }
 
 /* 主内容区域 */
@@ -695,9 +696,9 @@ onMounted(() => {
 /* 左侧树形面板 */
 .tree-panel {
     flex: 1;
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     padding: 24px;
     overflow: hidden;
     display: flex;
@@ -717,7 +718,7 @@ onMounted(() => {
     min-width: 280px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid var(--border-color);
     padding-right: 20px;
 }
 
@@ -729,13 +730,13 @@ onMounted(() => {
 .column-header {
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .column-title {
     font-size: 12px;
     font-weight: 700;
-    color: #6b7280;
+    color: var(--text-secondary);
     letter-spacing: 1px;
     text-transform: uppercase;
 }
@@ -751,17 +752,17 @@ onMounted(() => {
 }
 
 .column-content::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--bg-base);
     border-radius: 3px;
 }
 
 .column-content::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--border-color);
     border-radius: 3px;
 }
 
 .column-content::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--text-muted);
 }
 
 /* 组织卡片 */
@@ -771,8 +772,8 @@ onMounted(() => {
     gap: 12px;
     padding: 16px;
     margin-bottom: 12px;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -797,15 +798,15 @@ onMounted(() => {
 
 .org-card:hover {
     transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
 }
 
 .org-card.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    border-color: var(--color-primary);
     color: white;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
 }
 
 .org-card.active .card-title,
@@ -815,6 +816,7 @@ onMounted(() => {
 
 .org-card.active .card-icon {
     background: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .card-icon {
@@ -824,7 +826,8 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    background: rgba(102, 126, 234, 0.1);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
     border-radius: 10px;
     flex-shrink: 0;
     transition: all 0.3s ease;
@@ -842,7 +845,7 @@ onMounted(() => {
 .card-title {
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-main);
     margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -851,7 +854,7 @@ onMounted(() => {
 
 .card-subtitle {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -867,14 +870,14 @@ onMounted(() => {
 .indicator-dot {
     width: 8px;
     height: 8px;
-    background: #f59e0b;
+    background: var(--color-warning);
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
 }
 
 .card-arrow {
     font-size: 16px;
-    color: #9ca3af;
+    color: var(--text-muted);
     font-weight: 300;
 }
 
@@ -883,7 +886,7 @@ onMounted(() => {
 }
 
 .employee-card {
-    border-left: 3px solid #f5576c;
+    border-left: 3px solid var(--color-danger);
 }
 
 /* 右侧详情面板 */
@@ -891,7 +894,7 @@ onMounted(() => {
     width: 400px;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
     padding: 24px;
     overflow-y: auto;
     color: white;
@@ -1123,11 +1126,12 @@ onMounted(() => {
 .employee-hover-card {
     position: fixed;
     width: 280px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
     z-index: 9999;
     overflow: hidden;
+    border: 1px solid var(--border-color);
 }
 
 .hover-card-header {
@@ -1135,7 +1139,7 @@ onMounted(() => {
     gap: 12px;
     align-items: center;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     color: white;
 }
 
@@ -1159,7 +1163,7 @@ onMounted(() => {
     display: flex;
     gap: 12px;
     padding: 16px;
-    background: #f8fafc;
+    background: var(--bg-hover);
 }
 
 .hover-stat {
@@ -1171,13 +1175,13 @@ onMounted(() => {
     display: block;
     font-size: 20px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-main);
     margin-bottom: 4px;
 }
 
 .hover-stat-label {
     font-size: 11px;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 /* 过渡动画 */

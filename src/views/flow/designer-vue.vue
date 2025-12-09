@@ -2080,7 +2080,7 @@ const nodeTypes = {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e8ecf1 100%);
+  background: var(--bg-page);
   font-family: var(--font-family-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif);
 }
 
@@ -2089,9 +2089,9 @@ const nodeTypes = {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-bottom: 2px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .toolbar-left {
@@ -2106,17 +2106,13 @@ const nodeTypes = {
   gap: 10px;
   font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-main);
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .title-icon {
   font-size: 24px;
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .task-selector {
@@ -2137,8 +2133,8 @@ const nodeTypes = {
 .sidebar-left,
 .sidebar-right {
   width: 320px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  border-right: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2146,7 +2142,7 @@ const nodeTypes = {
 
 .sidebar-right {
   border-right: none;
-  border-left: 1px solid #e5e7eb;
+  border-left: 1px solid var(--border-color);
 }
 
 .sidebar-header {
@@ -2154,14 +2150,14 @@ const nodeTypes = {
   align-items: center;
   gap: 10px;
   padding: 20px 24px;
-  border-bottom: 2px solid #e5e7eb;
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
 }
 
 .filter-section {
   padding: 16px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-hover);
 }
 
 .department-filter {
@@ -2170,13 +2166,13 @@ const nodeTypes = {
 
 .header-icon {
   font-size: 20px;
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .header-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-main);
   letter-spacing: -0.01em;
 }
 
@@ -2194,17 +2190,17 @@ const nodeTypes = {
 }
 
 .nodes-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-hover);
   border-radius: 3px;
 }
 
 .nodes-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--text-muted);
   border-radius: 3px;
 }
 
 .nodes-list::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-secondary);
 }
 
 .empty-nodes {
@@ -2218,25 +2214,25 @@ const nodeTypes = {
 
 .empty-icon {
   font-size: 48px;
-  color: #cbd5e1;
+  color: var(--text-muted);
   margin-bottom: 16px;
 }
 
 .empty-text {
   font-size: 15px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
 .empty-hint {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .node-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 2px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2244,14 +2240,14 @@ const nodeTypes = {
 }
 
 .node-card:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .node-card.draggable {
   cursor: grab;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .node-card.draggable:active {
@@ -2282,17 +2278,17 @@ const nodeTypes = {
 }
 
 .node-type-badge.type-task {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  color: #667eea;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .node-type-badge.type-condition {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+  background: #dcfce7;
   color: #4ade80;
 }
 
 .node-type-badge.type-approval {
-  background: linear-gradient(135deg, rgba(245, 87, 108, 0.1) 0%, rgba(239, 68, 68, 0.1) 100%);
+  background: #ffe4e6;
   color: #f5576c;
 }
 
@@ -2304,7 +2300,7 @@ const nodeTypes = {
 .node-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-main);
   margin-bottom: 6px;
   letter-spacing: -0.01em;
   overflow: hidden;
@@ -2317,7 +2313,7 @@ const nodeTypes = {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .node-card-footer {
@@ -2326,7 +2322,7 @@ const nodeTypes = {
   justify-content: space-between;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
 }
 
 .prereq-tag {
@@ -2337,12 +2333,12 @@ const nodeTypes = {
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
 }
 
 .tip-text {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 4px 0;
   line-height: 1.5;
 }
@@ -2386,12 +2382,12 @@ const nodeTypes = {
 }
 
 .detail-content::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-hover);
   border-radius: 3px;
 }
 
 .detail-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--text-muted);
   border-radius: 3px;
 }
 
@@ -2402,10 +2398,10 @@ const nodeTypes = {
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-main);
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   letter-spacing: -0.01em;
 }
 
@@ -2420,9 +2416,9 @@ const nodeTypes = {
   flex-direction: column;
   gap: 6px;
   padding: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: var(--bg-hover);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
 }
 
 .detail-label {
@@ -2431,23 +2427,23 @@ const nodeTypes = {
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .detail-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-main);
 }
 
 .detail-description {
   padding: 16px;
-  background: #f9fafb;
+  background: var(--bg-hover);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   font-size: 13px;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-main);
 }
 
 .action-buttons {
@@ -2477,19 +2473,19 @@ const nodeTypes = {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: var(--bg-hover);
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
 }
 
 .executor-item:hover {
-  background: linear-gradient(135deg, #f0f4f8 0%, #f8f9fa 100%);
-  border-color: #cbd5e1;
+  background: var(--bg-card);
+  border-color: var(--border-color);
 }
 
 .executor-item.executor-requested {
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  background: #ecfdf5;
   border-color: #86efac;
 }
 
@@ -2507,7 +2503,7 @@ const nodeTypes = {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13px;
   font-style: italic;
 }
@@ -2592,40 +2588,34 @@ const nodeTypes = {
 
 .detail-empty .empty-icon {
   font-size: 48px;
-  color: #cbd5e1;
+  color: var(--text-muted);
   margin-bottom: 16px;
 }
 
 .detail-empty .empty-text {
   font-size: 15px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
 .detail-empty .empty-hint {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 /* ============================================
-   Vue Flow 连接点优化设计 (GPT 5.1 & Gemini 3 Pro)
-   ============================================
-   设计理念：
-   1. 更大的可点击区域（48px x 48px）
-   2. 清晰的视觉反馈
-   3. 节点悬停/选中时显示连接点
-   4. 平滑的交互动画
+   Vue Flow 连接点优化设计
    ============================================ */
 
-/* 基础连接点样式 - 默认隐藏，悬停/选中时显示 */
+/* 基础连接点样式 */
 :deep(.vue-flow__handle) {
   width: 24px !important;
   height: 24px !important;
   min-width: 24px !important;
   min-height: 24px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%) !important;
   border: 4px solid #ffffff !important;
   opacity: 0 !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -2635,12 +2625,10 @@ const nodeTypes = {
   z-index: 100 !important;
   position: absolute !important;
   margin: 0 !important;
-  /* 重置Vue Flow的默认定位，确保可以精确控制位置 */
   top: auto !important;
   bottom: auto !important;
 }
 
-/* 扩大可点击区域到 48px x 48px */
 :deep(.vue-flow__handle::after) {
   content: '';
   position: absolute;
@@ -2655,13 +2643,11 @@ const nodeTypes = {
   z-index: -1;
 }
 
-/* 节点悬停时显示连接点 */
 :deep(.vue-flow__node:hover .vue-flow__handle) {
   opacity: 1 !important;
   transform: scale(1);
 }
 
-/* 节点选中时显示并高亮连接点 */
 :deep(.vue-flow__node.selected .vue-flow__handle) {
   opacity: 1 !important;
   transform: scale(1.1);
@@ -2670,7 +2656,6 @@ const nodeTypes = {
   animation: handlePulse 2s ease-in-out infinite;
 }
 
-/* 连接点悬停效果 - 放大并改变颜色 */
 :deep(.vue-flow__handle:hover) {
   width: 28px !important;
   height: 28px !important;
@@ -2681,7 +2666,6 @@ const nodeTypes = {
   cursor: grabbing !important;
 }
 
-/* 连接点激活状态（正在连接） */
 :deep(.vue-flow__handle.connecting) {
   opacity: 1 !important;
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
@@ -2691,14 +2675,7 @@ const nodeTypes = {
   animation: handleConnecting 1.5s ease-in-out infinite;
 }
 
-/* ============================================
-   连接点位置优化 (Gemini 3 Pro 设计 + GPT 5.1 质检)
-   ============================================
-   目标：连接点精确位于节点卡片的两端边缘，垂直居中
-   ============================================ */
-
-/* 左侧连接点（目标节点）- 精确位于卡片左边缘中心 */
-/* 计算：节点padding 16px + 连接点半径 12px = 28px，但需要显示在边缘，所以是 -12px */
+/* 连接点位置优化 */
 :deep(.vue-flow__handle.h-left) {
   left: -12px !important;
   top: 50% !important;
@@ -2708,7 +2685,6 @@ const nodeTypes = {
   margin-left: 0 !important;
 }
 
-/* 右侧连接点（源节点）- 精确位于卡片右边缘中心 */
 :deep(.vue-flow__handle.h-right) {
   right: -12px !important;
   top: 50% !important;
@@ -2718,19 +2694,16 @@ const nodeTypes = {
   margin-right: 0 !important;
 }
 
-/* 悬停时保持垂直居中并放大 */
 :deep(.vue-flow__handle.h-left:hover),
 :deep(.vue-flow__handle.h-right:hover) {
   transform: translateY(-50%) scale(1.2) !important;
 }
 
-/* 连接时保持垂直居中 */
 :deep(.vue-flow__handle.h-left.connecting),
 :deep(.vue-flow__handle.h-right.connecting) {
   transform: translateY(-50%) !important;
 }
 
-/* 确保节点容器允许连接点显示在外部 */
 :deep(.vue-flow__node) {
   overflow: visible !important;
 }
@@ -2785,27 +2758,28 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__controls) {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   padding: 4px;
 }
 
 :deep(.vue-flow__controls-button) {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   transition: all 0.2s ease;
+  background-color: var(--bg-card);
 }
 
 :deep(.vue-flow__controls-button:hover) {
-  background: #f0f9ff;
+  background: var(--bg-hover);
 }
 
 :deep(.vue-flow__minimap) {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 

@@ -400,21 +400,22 @@ function openDesigner() {
 <style scoped>
 .create-node-page {
     padding: 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e8ecf1 100%);
+    background: var(--bg-page);
     min-height: calc(100vh - 100px);
 }
 
 .main-card {
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-lg);
     border: none;
     max-width: 1200px;
     margin: 0 auto;
+    background: var(--bg-card);
 }
 
 .main-card :deep(.el-card__header) {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border-bottom: 2px solid #e5e7eb;
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--border-color);
     padding: 20px 24px;
 }
 
@@ -433,9 +434,9 @@ function openDesigner() {
 .card-header-title {
     font-size: 22px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-main);
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -443,7 +444,7 @@ function openDesigner() {
 
 .card-header-desc {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-weight: 400;
 }
 
@@ -454,14 +455,14 @@ function openDesigner() {
 .form-section {
     margin-bottom: 32px;
     padding: 24px;
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    background: var(--bg-card);
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
 .form-section:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-md);
 }
 
 .section-header {
@@ -470,18 +471,18 @@ function openDesigner() {
     gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .section-icon {
     font-size: 20px;
-    color: #667eea;
+    color: var(--color-primary);
 }
 
 .section-title {
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-main);
     letter-spacing: -0.01em;
 }
 
@@ -491,7 +492,7 @@ function openDesigner() {
 
 .create-form :deep(.el-form-item__label) {
     font-weight: 500;
-    color: #374151;
+    color: var(--text-main);
     font-size: 14px;
 }
 
@@ -499,22 +500,24 @@ function openDesigner() {
 .create-form :deep(.el-select .el-input__inner),
 .create-form :deep(.el-textarea__inner) {
     border-radius: 8px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     font-size: 14px;
+    background-color: var(--bg-card);
+    color: var(--text-main);
 }
 
 .create-form :deep(.el-input__inner:hover),
 .create-form :deep(.el-select .el-input__inner:hover),
 .create-form :deep(.el-textarea__inner:hover) {
-    border-color: #667eea;
+    border-color: var(--color-primary);
 }
 
 .create-form :deep(.el-input__inner:focus),
 .create-form :deep(.el-select .el-input__inner:focus),
 .create-form :deep(.el-textarea__inner:focus) {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .create-form :deep(.el-date-editor) {
@@ -528,7 +531,7 @@ function openDesigner() {
 .info-alert {
     margin: 24px 0;
     border-radius: 8px;
-    border-left: 4px solid #409eff;
+    border-left: 4px solid var(--color-info);
 }
 
 .form-actions {
@@ -537,7 +540,7 @@ function openDesigner() {
     gap: 12px;
     margin-top: 32px;
     padding-top: 24px;
-    border-top: 2px solid #e5e7eb;
+    border-top: 2px solid var(--border-color);
 }
 
 .form-actions .el-button {
@@ -548,7 +551,7 @@ function openDesigner() {
 }
 
 .form-actions .el-button--primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     border: none;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
 }
@@ -559,7 +562,7 @@ function openDesigner() {
 }
 
 .form-actions .el-button--success {
-    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, #22c55e 100%);
     border: none;
     box-shadow: 0 4px 12px rgba(74, 222, 128, 0.35);
 }

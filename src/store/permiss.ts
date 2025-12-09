@@ -42,7 +42,7 @@ export const usePermissStore = defineStore('permiss', {
                 'tasknodes','tasknodes_my','flow_designer','tasknodes_create','tasknodes_designer',
                 'handover', 'handover_list',
                 'employee', 'employee_list', 'my_nodes',
-                'org', 'company', 'department', 'position', 'role',
+                'org', 'company', 'department', 'position', 'role', 'join_applications',
                 'notify', 'settings'
             ],
             user: ['0', 'org_tree_global', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming'],
@@ -139,6 +139,7 @@ export const usePermissStore = defineStore('permiss', {
                     result.add('employee'); 
                     result.add('employee_list'); 
                     result.add('my_nodes');
+                    result.add('join_applications'); // 加入申请管理
                 }
             };
 
@@ -159,7 +160,7 @@ export const usePermissStore = defineStore('permiss', {
                     result.add('notify'); 
                 }
                 if (p.startsWith('org:') || p === 'org:*') { 
-                    ['org','company','department','position','role'].forEach(x=>result.add(x)); 
+                    ['org','company','department','position','role','join_applications'].forEach(x=>result.add(x)); 
                 }
             };
 

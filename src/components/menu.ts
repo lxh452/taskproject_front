@@ -24,7 +24,7 @@ export const menuData: Menus[] = [
         index: 'tasknodes',
         icon: 'Rank',
         children: [
-            { id: 'tasknodes_my', pid: 'tasknodes', index: '/task-nodes/my', title: '我创建的节点' },
+            { id: 'tasknodes_my', pid: 'tasknodes', index: '/task-nodes/my', title: '我的任务节点' },
             { id: 'flow_designer', pid: 'tasknodes', index: '/flow-designer', title: '流程设计器' },
         ],
     },
@@ -34,8 +34,7 @@ export const menuData: Menus[] = [
         index: 'employee',
         icon: 'User',
         children: [
-            { id: 'employee_list', pid: 'employee', index: '/employees', title: '员工列表' },
-            { id: 'my_nodes', pid: 'employee', index: '/task-nodes/my', title: '我的任务节点' }
+            { id: 'employee_list', pid: 'employee', index: '/employees', title: '员工列表' }
         ],
     },
     {
@@ -57,6 +56,8 @@ export const menuData: Menus[] = [
             { id: 'department', pid: 'org', index: '/organization/departments', title: '部门管理' },
             { id: 'position', pid: 'org', index: '/organization/positions', title: '职位管理' },
             { id: 'role', pid: 'org', index: '/organization/roles', title: '角色管理' },
+            // 加入申请已移至通知中心审批，不再单独显示菜单
+            // { id: 'join_applications', pid: 'org', index: '/organization/join-applications', title: '加入申请' },
         ],
     },
     {

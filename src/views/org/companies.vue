@@ -136,7 +136,7 @@ function loadData() {
 <style scoped>
 .companies-page {
     padding: 24px;
-    background: #f9fafb;
+    background: var(--bg-page);
     min-height: calc(100vh - 64px);
 }
 
@@ -145,10 +145,10 @@ function loadData() {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 16px 24px;
     border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     flex-wrap: wrap;
     gap: 16px;
 }
@@ -164,16 +164,16 @@ function loadData() {
 .filter-select { width: 140px; }
 
 .table-container {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     padding: 4px;
 }
 
 .companies-table {
-    --el-table-border-color: #f3f4f6;
-    --el-table-header-bg-color: #f9fafb;
+    --el-table-border-color: var(--border-color);
+    --el-table-header-bg-color: var(--bg-base);
 }
 
 .company-cell {
@@ -186,7 +186,7 @@ function loadData() {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -200,26 +200,26 @@ function loadData() {
 .company-name {
     font-weight: 600;
     font-size: 15px;
-    color: #1f2937;
+    color: var(--text-main);
 }
 
 .owner-cell {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #4b5563;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .owner-avatar {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
     font-size: 12px;
     font-weight: 600;
 }
 
 .time-cell {
-    color: #6b7280;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -231,8 +231,8 @@ function loadData() {
     font-weight: 600;
 }
 
-.status-badge.success { background: #ecfdf5; color: #10b981; }
-.status-badge.default { background: #f3f4f6; color: #6b7280; }
+.status-badge.success { background: var(--color-success-light, #ecfdf5); color: var(--color-success); }
+.status-badge.default { background: var(--bg-base); color: var(--text-secondary); }
 
 .status-dot {
     display: inline-block;
@@ -241,6 +241,6 @@ function loadData() {
     border-radius: 50%;
     margin-right: 6px;
 }
-.status-dot.success { background: #10b981; }
-.status-dot.info { background: #6b7280; }
+.status-dot.success { background: var(--color-success); }
+.status-dot.info { background: var(--text-secondary); }
 </style>
