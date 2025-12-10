@@ -138,9 +138,20 @@
                             v-for="e in employeeOptions" 
                             :key="e.id" 
                             :label="e.name" 
-                            :value="e.id" 
-                        />
+                            :value="e.id"
+                        >
+                            <span>{{ e.name }}</span>
+                            <span v-if="e.isFounder" style="color: #f56c6c; margin-left: 8px;">[创始人]</span>
+                        </el-option>
                     </el-select>
+                    <div v-if="currentEmployee?.isFounder || currentEmployee?.positionCode === 'FOUNDER'" class="form-hint">
+                        <el-icon><InfoFilled /></el-icon>
+                        作为创始人，您可以给所有人分配任务
+                    </div>
+                    <div v-else class="form-hint">
+                        <el-icon><InfoFilled /></el-icon>
+                        不能给职位级别更高或部门优先级更高的员工安排任务，但可以给自己安排
+                    </div>
                 </el-form-item>
             </div>
 
@@ -157,6 +168,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { InfoFilled } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createTaskNode, listTasks, getMyEmployee, listEmployees } from '@/api';
 import { useUserStore } from '@/store/user';
@@ -184,7 +196,9 @@ const form = ref<any>({
 
 const taskOptions = ref<{ id: string; title: string }[]>([]);
 const deptDisplay = ref<string>('');
-const employeeOptions = ref<{ id: string; name: string }[]>([]);
+const employeeOptions = ref<{ id: string; name: string; positionLevel?: number; departmentPriority?: number; isFounder?: boolean }[]>([]);
+const allEmployees = ref<{ id: string; name: string; positionLevel?: number; departmentPriority?: number; isFounder?: boolean; positionCode?: string }[]>([]);
+const currentEmployee = ref<any>(null);
 const userStore = useUserStore();
 
 const rules: FormRules = {
@@ -220,25 +234,86 @@ async function initMyDepartmentAndEmployees() {
     try {
         const me = await getMyEmployee();
         const emp = me?.data?.data || me?.data?.employee || {};
+        currentEmployee.value = emp;
         const deptId = emp.departmentId || emp.DepartmentId || '';
         const deptName = emp.departmentName || emp.DepartmentName || '';
         form.value.departmentId = String(deptId || '');
         deptDisplay.value = deptName || form.value.departmentId || '未设置';
         
-        if (!form.value.departmentId) return;
-        
         const companyId = emp.companyId || emp.CompanyId || '';
-        const resp = await listEmployees({ page: 1, pageSize: 100, companyId, departmentId: form.value.departmentId });
+        if (!companyId) return;
+        
+        // 如果是创始人，加载所有员工；否则只加载本部门员工
+        const isFounder = emp.isFounder === 1 || emp.positionCode === 'FOUNDER' || emp.roleTags?.includes('创始人');
+        const resp = await listEmployees({ 
+            page: 1, 
+            pageSize: 1000, 
+            companyId, 
+            departmentId: isFounder ? '' : form.value.departmentId 
+        });
+        
         if (resp.data?.code === 200) {
             const list = resp.data?.data?.list || resp.data?.data || [];
-            employeeOptions.value = (list as any[]).map((e: any) => ({ 
+            // 保存所有员工信息（包含职位级别、部门优先级等）
+            allEmployees.value = (list as any[]).map((e: any) => ({ 
                 id: e.id || e.employeeId, 
-                name: e.realName || e.username || '未知'
+                name: e.realName || e.username || '未知',
+                positionLevel: e.positionLevel || 0,
+                departmentPriority: e.departmentPriority || 0,
+                isFounder: e.isFounder === true || e.positionCode === 'FOUNDER',
+                positionCode: e.positionCode || '',
             }));
+            
+            // 过滤员工选项（不能以下犯上，不能给创始人安排任务，但允许给自己安排）
+            filterEmployeeOptions();
         }
     } catch (error: any) {
         console.error('加载部门员工失败:', error);
     }
+}
+
+// 过滤员工选项：不能以下犯上，不能给创始人安排任务，但允许给自己安排
+function filterEmployeeOptions() {
+    if (!currentEmployee.value) {
+        employeeOptions.value = allEmployees.value;
+        return;
+    }
+    
+    const currentEmpId = currentEmployee.value.id || currentEmployee.value.employeeId;
+    const currentLevel = currentEmployee.value.positionLevel || 0;
+    const currentDeptPriority = currentEmployee.value.departmentPriority || 0;
+    const isCurrentFounder = currentEmployee.value.isFounder === 1 || 
+                             currentEmployee.value.positionCode === 'FOUNDER' ||
+                             currentEmployee.value.roleTags?.includes('创始人');
+    
+    employeeOptions.value = allEmployees.value.filter((e: any) => {
+        // 允许给自己安排任务
+        if (e.id === currentEmpId) {
+            return true;
+        }
+        
+        // 不能给创始人安排任务（除非分配者也是创始人）
+        if (e.isFounder && !isCurrentFounder) {
+            return false;
+        }
+        
+        // 如果是创始人，可以给所有人安排任务
+        if (isCurrentFounder) {
+            return true;
+        }
+        
+        // 不能以下犯上：不能给职位级别更高的员工安排任务
+        if (e.positionLevel > currentLevel) {
+            return false;
+        }
+        
+        // 同级时，不能给部门优先级更高的员工安排任务
+        if (e.positionLevel === currentLevel && e.departmentPriority > currentDeptPriority) {
+            return false;
+        }
+        
+        return true;
+    });
 }
 
 function onTaskChange() {}
@@ -320,5 +395,18 @@ onMounted(async () => {
     justify-content: flex-end;
     gap: 12px;
     z-index: 10;
+}
+
+.form-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #909399;
+}
+
+.form-hint .el-icon {
+    font-size: 14px;
 }
 </style>

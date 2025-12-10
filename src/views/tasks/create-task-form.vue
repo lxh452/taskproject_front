@@ -38,6 +38,10 @@
                                     :value="d.id" 
                                 />
                             </el-select>
+                            <div v-if="currentEmployee?.isFounder || currentEmployee?.positionCode === 'FOUNDER'" class="form-hint">
+                                <el-icon><InfoFilled /></el-icon>
+                                作为创始人，您可以给所有部门的员工分配任务
+                            </div>
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
@@ -162,7 +166,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Plus, Search } from '@element-plus/icons-vue';
+import { Plus, Search, InfoFilled } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createTask, listDepartments, listEmployees, getMyEmployee } from '@/api';
 import { useUserStore } from '@/store/user';
@@ -183,6 +187,7 @@ const form = ref<any>({
 const departments = ref<any[]>([]);
 const employees = ref<any[]>([]);
 const employeeMap = ref<Record<string, any>>({});
+const currentEmployee = ref<any>(null);
 const userStore = useUserStore();
 
 const responsibleChooserVisible = ref(false);
@@ -218,7 +223,7 @@ async function loadDepartments() {
 async function loadEmployees() {
     try {
         const companyId = userStore.companyId || '';
-        const resp = await listEmployees({ page: 1, pageSize: 100, companyId });
+        const resp = await listEmployees({ page: 1, pageSize: 1000, companyId });
         if (resp.data?.code === 200) {
             const list = resp.data?.data?.list || resp.data?.data || [];
             employees.value = list.map((e: any) => ({
@@ -240,9 +245,17 @@ async function loadEmployees() {
 }
 
 function buildChooserTree() {
-    const selectedDeptIds = form.value.departmentIds.length > 0 
-        ? form.value.departmentIds.map((id: string) => String(id))
-        : departments.value.map((d: any) => String(d.id));
+    // 检查是否是创始人
+    const isFounder = currentEmployee.value?.isFounder === 1 || 
+                      currentEmployee.value?.positionCode === 'FOUNDER' ||
+                      currentEmployee.value?.roleTags?.includes('创始人');
+    
+    // 如果是创始人，显示所有部门；否则只显示选中的部门
+    const selectedDeptIds = isFounder 
+        ? departments.value.map((d: any) => String(d.id))
+        : (form.value.departmentIds.length > 0 
+            ? form.value.departmentIds.map((id: string) => String(id))
+            : departments.value.map((d: any) => String(d.id)));
     
     const deptMap = new Map();
     
@@ -297,7 +310,13 @@ function filterChooserTree() {
 }
 
 function openResponsibleChooser() {
-    if (form.value.departmentIds.length === 0) {
+    // 检查是否是创始人
+    const isFounder = currentEmployee.value?.isFounder === 1 || 
+                      currentEmployee.value?.positionCode === 'FOUNDER' ||
+                      currentEmployee.value?.roleTags?.includes('创始人');
+    
+    // 如果不是创始人，需要先选择部门
+    if (!isFounder && form.value.departmentIds.length === 0) {
         ElMessage.warning('请先选择部门');
         return;
     }
@@ -395,6 +414,13 @@ watch(() => form.value.departmentIds, () => {
 }, { deep: true });
 
 onMounted(async () => {
+    // 加载当前员工信息
+    try {
+        const me = await getMyEmployee();
+        currentEmployee.value = me?.data?.data || me?.data?.employee || {};
+    } catch (error: any) {
+        console.error('获取当前员工信息失败:', error);
+    }
     await Promise.all([loadDepartments(), loadEmployees()]);
 });
 </script>
@@ -472,5 +498,18 @@ onMounted(async () => {
     border: 1px solid #f3f4f6;
     border-radius: 8px;
     padding: 8px;
+}
+
+.form-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #909399;
+}
+
+.form-hint .el-icon {
+    font-size: 14px;
 }
 </style>

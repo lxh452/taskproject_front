@@ -76,7 +76,15 @@
                             <el-button text size="small" @click="openRoles(row)">
                                 <el-icon><Key /></el-icon> 权限
                             </el-button>
-                            <el-button v-if="row.status === 1" text size="small" type="danger" @click="openLeaveDialog(row)">
+                            <el-button 
+                                v-if="row.status === 1" 
+                                text 
+                                size="small" 
+                                type="danger" 
+                                @click="openLeaveDialog(row)"
+                                :disabled="row.isFounder === true || row.positionCode === 'FOUNDER'"
+                                :title="(row.isFounder === true || row.positionCode === 'FOUNDER') ? '不能给公司创始人递交离职申请' : ''"
+                            >
                                 <el-icon><CircleClose /></el-icon> 离职
                             </el-button>
                         </div>
@@ -244,6 +252,13 @@ async function openRoles(row: any) {
 
 async function openLeaveDialog(row: any) {
     if (!currentUser.value) { ElMessage.warning('无法获取当前用户信息'); return; }
+    
+    // 检查是否是创始人，不能给创始人递交离职
+    if (row.isFounder === true || row.positionCode === 'FOUNDER') {
+        ElMessage.warning('不能给公司创始人递交离职申请');
+        return;
+    }
+    
     const isSelf = currentUser.value.employeeId === row.id || currentUser.value.userId === row.userId;
     leaveForm.value = {
         employeeId: row.id,
