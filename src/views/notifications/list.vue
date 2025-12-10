@@ -330,9 +330,42 @@ async function handleApprove(notification: any, approved: boolean) {
     approveForm.value.departmentId = '';
     approveForm.value.positionId = '';
     // 预加载部门列表
-    const companyId = notification.companyId || notification.companyID || notification.CompanyId || '';
+    let companyId = notification.companyId || notification.companyID || notification.CompanyId || '';
+    
+    // 如果通知中没有 companyId，尝试从待审批申请列表中查找
+    if (!companyId) {
+        try {
+            const pendingResp = await getPendingJoinApplications({ page: 1, pageSize: 200 });
+            if (pendingResp?.data?.code === 200) {
+                const plist = pendingResp.data?.data?.list || [];
+                const app = plist.find((p: any) => 
+                    (p.id || p.ID || p.applicationId || p.ApplicationId) === applicationId
+                );
+                if (app) {
+                    companyId = app.companyId || app.CompanyId || app.companyID || '';
+                }
+            }
+        } catch (error) {
+            console.error('获取申请信息失败:', error);
+        }
+    }
+    
+    // 如果还是没有 companyId，尝试从当前员工信息中获取
+    if (!companyId) {
+        try {
+            const me = await getMyEmployee();
+            if (me?.data?.code === 200) {
+                companyId = me.data.data?.companyId || me.data.data?.CompanyId || '';
+            }
+        } catch (error) {
+            console.error('获取员工信息失败:', error);
+        }
+    }
+    
     if (companyId) {
         await loadDepartments(companyId);
+    } else {
+        ElMessage.warning('无法获取公司信息，请刷新页面重试');
     }
     approveDialogVisible.value = true;
 }
@@ -463,6 +496,7 @@ async function loadData() {
                 relatedId: p.id || p.applicationId || '',
                 relatedType: 'join_application',
                 category: 'join_application',
+                companyId: p.companyId || p.CompanyId || p.companyID || '', // 添加 companyId 字段
             }));
         }
 
