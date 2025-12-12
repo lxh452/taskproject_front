@@ -425,12 +425,36 @@ async function loadStats() {
     try {
         const resp = await getMyTaskNodes({ page: 1, pageSize: 200 });
         if (resp.data?.code === 200) {
-            const list = resp.data?.data?.list || [];
-            stats.value.totalTasks = list.length;
-            stats.value.completedTasks = list.filter((t: any) => t.status === 2).length;
-            stats.value.inProgressTasks = list.filter((t: any) => t.status === 1).length;
-            // 简单估算工作时长
-            stats.value.totalHours = Math.round(list.reduce((sum: number, t: any) => sum + (t.actualHours || 0), 0));
+            const data = resp.data?.data || {};
+            // 优先使用API返回的executor_task和leader_task
+            const executorTasks = data.executor_task || [];
+            const leaderTasks = data.leader_task || [];
+            // 合并去重
+            const allTasksMap = new Map();
+            [...executorTasks, ...leaderTasks].forEach((t: any) => {
+                const id = t.id || t.taskNodeId || t.nodeId;
+                if (id && !allTasksMap.has(id)) {
+                    allTasksMap.set(id, t);
+                }
+            });
+            const allTasks = Array.from(allTasksMap.values());
+            
+            stats.value.totalTasks = allTasks.length;
+            stats.value.completedTasks = allTasks.filter((t: any) => {
+                const status = t.status ?? t.nodeStatus ?? 0;
+                const progress = t.progress ?? 0;
+                return status === 2 || progress >= 100;
+            }).length;
+            stats.value.inProgressTasks = allTasks.filter((t: any) => {
+                const status = t.status ?? t.nodeStatus ?? 0;
+                const progress = t.progress ?? 0;
+                return status === 1 || (status === 0 && progress > 0 && progress < 100);
+            }).length;
+            // 计算实际工时（如果有的话）
+            const totalActualHours = allTasks.reduce((sum: number, t: any) => {
+                return sum + (t.actualHours || t.actual_hours || 0);
+            }, 0);
+            stats.value.totalHours = Math.round(totalActualHours);
         }
     } catch (error) {
         console.error('加载统计数据失败:', error);

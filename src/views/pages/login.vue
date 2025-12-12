@@ -37,7 +37,7 @@
                 </el-form-item>
                 <div class="pwd-tips">
                     <el-checkbox class="pwd-checkbox" v-model="checked" label="记住密码" />
-                    <el-link class="forget-pwd" @click="$router.push('/reset-pwd')">忘记密码</el-link>
+                    <el-link class="forget-pwd" @click="$router.push('/forgot-password')">忘记密码</el-link>
                 </div>
                 <el-button class="login-btn" type="primary" size="large" @click="submitForm(login)">
                     <span class="btn-text">登录系统</span>
@@ -84,8 +84,12 @@ const rules: FormRules = {
             message: '请输入用户名',
             trigger: 'blur',
         },
+        { min: 3, max: 20, message: '用户名长度3-20位', trigger: 'blur' },
     ],
-    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+    password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 8, max: 32, message: '密码长度8-32位', trigger: 'blur' },
+    ],
 };
 const permiss = usePermissStore();
 const userStore = useUserStore();

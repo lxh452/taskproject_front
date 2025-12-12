@@ -4,8 +4,16 @@ import request from '../utils/request';
 export const apiLogin = (data: { username: string; password: string; }) =>
     request({ url: '/auth/login', method: 'post', data });
 
-export const apiRegister = (data: { username: string; password: string; email: string; realName: string }) =>
+export const apiRegister = (data: { username: string; password: string; email: string; realName: string; verificationCode?: string }) =>
     request({ url: '/auth/register', method: 'post', data });
+
+// 发送验证码
+export const sendVerificationCode = (data: { email: string; type: string }) =>
+    request({ url: '/auth/send-code', method: 'post', data });
+
+// 重置密码
+export const resetPassword = (data: { email: string; verificationCode: string; newPassword: string }) =>
+    request({ url: '/auth/reset-password', method: 'post', data });
 
 // Mock helpers for legacy views
 export const fetchData = () =>
@@ -39,6 +47,10 @@ export const getTask = (data: { taskId: string }) =>
 
 export const updateTaskProgress = (data: any) =>
     request({ url: '/task/progress', method: 'put', data });
+
+// 更新任务信息
+export const updateTask = (data: any) =>
+    request({ url: '/task/update', method: 'put', data });
 
 // Handover
 export const getHandoverList = (data?: any) =>

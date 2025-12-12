@@ -84,14 +84,17 @@
                                 </div>
                             </div>
                             <div class="card-actions">
-                                <el-button text type="primary" size="small" @click="handleEdit(row)">
-                                    <el-icon><Edit /></el-icon>编辑
+                                <el-button type="primary" size="default" @click="handleEdit(row)" class="action-btn">
+                                    <el-icon><Edit /></el-icon>
+                                    <span>编辑</span>
                                 </el-button>
-                                <el-button text type="info" size="small" @click="handleAssignEmployee(row)">
-                                    <el-icon><User /></el-icon>分配
+                                <el-button type="warning" size="default" @click="handleAssignEmployee(row)" class="action-btn">
+                                    <el-icon><User /></el-icon>
+                                    <span>分配</span>
                                 </el-button>
-                                <el-button text type="danger" size="small" @click="handleDelete(row)">
-                                    <el-icon><Delete /></el-icon>删除
+                                <el-button type="danger" size="default" @click="handleDelete(row)" class="action-btn">
+                                    <el-icon><Delete /></el-icon>
+                                    <span>删除</span>
                                 </el-button>
                             </div>
                         </div>
@@ -687,14 +690,25 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
 
 .card-actions {
     display: flex;
-    gap: 4px;
-    padding-top: 12px;
+    gap: 8px;
+    padding-top: 6px;
     border-top: 1px solid var(--border-color);
-    justify-content: flex-end;
+    justify-content: space-between;
 }
-.card-actions :deep(.el-button) {
+.card-actions .action-btn {
+    flex: 1;
+    height: 34px;
     font-size: 12px;
-    padding: 6px 10px;
+    font-weight: 500;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.card-actions .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .empty-positions {

@@ -206,20 +206,43 @@
                 </div>
                 
                 <div class="comments-list" ref="commentsListRef">
-                    <div v-for="comment in filteredComments" :key="comment.commentId" class="comment-card" @click="scrollToLine(comment.lineNumber)">
-                        <div class="card-line-indicator" v-if="comment.lineNumber">L{{ comment.lineNumber }}</div>
-                        <div class="card-header">
-                            <el-avatar :size="36" class="card-avatar">
-                                {{ getAvatarText(comment.userId, comment.employeeName) }}
-                            </el-avatar>
-                            <div class="card-meta">
-                                <span class="card-author">{{ comment.employeeName || getEmployeeName(comment.userId) || '匿名' }}</span>
-                                <span class="card-time">{{ formatTime(comment.createTime) }}</span>
+                    <div v-for="comment in filteredComments" :key="comment.commentId" class="comment-item" @click="scrollToLine(comment.lineNumber)">
+                        <el-avatar :size="36" class="comment-avatar">
+                            {{ getAvatarText(comment.userId, comment.employeeName) }}
+                        </el-avatar>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span class="comment-author">{{ comment.employeeName || getEmployeeName(comment.userId) || '匿名' }}</span>
+                                <el-tag 
+                                    v-if="comment.lineNumber" 
+                                    size="small" 
+                                    type="warning"
+                                    class="comment-line-tag"
+                                >
+                                    <el-icon><Document /></el-icon>
+                                    第{{ comment.lineNumber }}行
+                                </el-tag>
+                                <el-tag 
+                                    v-if="comment.taskNodeId" 
+                                    size="small" 
+                                    type="info"
+                                    class="comment-node-tag"
+                                >
+                                    <el-icon><List /></el-icon>
+                                    {{ getNodeName(comment.taskNodeId) }}
+                                </el-tag>
+                                <span class="comment-time">{{ formatTime(comment.createTime) }}</span>
                             </div>
-                        </div>
-                        <div class="card-body" v-html="renderCommentContent(comment.content)"></div>
-                        <div class="card-tags" v-if="comment.taskNodeId">
-                            <el-tag size="small" type="info">{{ getNodeName(comment.taskNodeId) }}</el-tag>
+                            <div class="comment-text" v-html="renderCommentContent(comment.content)"></div>
+                            <div class="comment-footer">
+                                <el-button link size="small" @click.stop>
+                                    <el-icon><Star /></el-icon>
+                                    {{ comment.likeCount || 0 }}
+                                </el-button>
+                                <el-button link size="small" @click.stop>
+                                    回复
+                                </el-button>
+                            </div>
                         </div>
                     </div>
                     <el-empty v-if="filteredComments.length === 0" description="暂无评论" :image-size="80" />
@@ -280,7 +303,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon } from '@element-plus/icons-vue';
+import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, Star, List } from '@element-plus/icons-vue';
 import { getTask, getAttachmentComments, createAttachmentComment, listEmployees, getMyEmployee } from '@/api';
 import { useUserStore } from '@/store/user';
 import request from '@/utils/request';
@@ -827,19 +850,105 @@ onMounted(() => { initTheme(); loadFileInfo(); loadComments(); loadTaskNodes(); 
 
 .comments-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-.comment-card { position: relative; padding: 16px; background: var(--bg-hover); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-.comment-card:hover { border-color: var(--accent-color); transform: translateX(4px); box-shadow: var(--shadow); }
+.comment-card { 
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px; 
+    background: var(--bg-hover); 
+    border-radius: var(--radius-sm); 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    border: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+.comment-card:hover { 
+    border-color: var(--accent-color); 
+    transform: translateX(4px); 
+    box-shadow: var(--shadow); 
+}
 
-.card-line-indicator { position: absolute; top: -8px; left: -8px; background: var(--accent-color); color: white; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
+/* 评论项 - 与任务详情评论样式一致 */
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    transition: background 0.2s;
+    cursor: pointer;
+}
 
-.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.card-avatar { background: var(--accent-color); color: white; font-size: 13px; font-weight: 600; flex-shrink: 0; }
-.card-meta { flex: 1; }
-.card-author { display: block; font-weight: 600; color: var(--text-primary); font-size: 14px; }
-.card-time { display: block; color: var(--text-muted); font-size: 12px; }
+.comment-item:hover {
+    background: var(--bg-hover);
+}
 
-.card-body { color: var(--text-secondary); font-size: 14px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.card-tags { margin-top: 10px; }
+.comment-avatar {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #7c3aed 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.comment-author {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comment-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.comment-line-tag,
+.comment-node-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.comment-line-tag .el-icon,
+.comment-node-tag .el-icon {
+    font-size: 12px;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    padding: 12px 16px;
+    border-radius: 0 12px 12px 12px;
+    border: 1px solid var(--border-color);
+}
+
+.comment-text :deep(.mention) {
+    color: var(--accent-color);
+    font-weight: 500;
+    background: var(--accent-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.comment-footer {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+}
 
 /* 评论输入框 */
 .comment-input-box { padding: 16px; border-top: 1px solid var(--border-color); background: var(--bg-hover); }

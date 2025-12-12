@@ -81,6 +81,49 @@
             </div>
         </div>
 
+        <!-- 待处理节点快捷入口 -->
+        <div class="pending-section" v-if="pendingNodes.length > 0">
+            <div class="section-header">
+                <div class="section-title">
+                    <el-icon><Clock /></el-icon>
+                    <span>待处理节点</span>
+                    <el-tag type="warning" size="small" effect="dark" round>{{ pendingNodes.length }}</el-tag>
+                </div>
+                <el-button link type="primary" @click="$router.push('/task/my')">查看全部</el-button>
+            </div>
+            <div class="pending-list">
+                <div 
+                    v-for="node in pendingNodes.slice(0, 6)" 
+                    :key="node.id || node.taskNodeId" 
+                    class="pending-item"
+                    @click="goToTask(node)"
+                >
+                    <div class="pending-icon" :class="`priority-${node.priority || 3}`">
+                        <el-icon><Document /></el-icon>
+                    </div>
+                    <div class="pending-content">
+                        <div class="pending-title">{{ node.nodeName || node.taskTitle || '未命名节点' }}</div>
+                        <div class="pending-meta">
+                            <span v-if="node.taskTitle" class="task-name">{{ node.taskTitle }}</span>
+                            <span v-if="node.nodeDeadline" class="deadline" :class="{ overdue: isOverdue(node.nodeDeadline) }">
+                                <el-icon><Calendar /></el-icon>
+                                {{ formatDeadline(node.nodeDeadline) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="pending-progress">
+                        <el-progress 
+                            :percentage="node.progress || 0" 
+                            :status="node.progress >= 100 ? 'success' : undefined"
+                            :stroke-width="6"
+                            :show-text="false"
+                        />
+                        <span class="progress-text">{{ node.progress || 0 }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 图表区域 -->
         <div class="charts-grid">
             <div class="chart-card">
@@ -141,14 +184,17 @@ import { PieChart as EchartsPie, BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
-import { DataLine, Clock, Check, Warning, Top, PieChart, Histogram, MoreFilled } from '@element-plus/icons-vue';
+import { DataLine, Clock, Check, Warning, Top, PieChart, Histogram, MoreFilled, Document, Calendar } from '@element-plus/icons-vue';
 import { getHandoverList, listTasks, getMyEmployee, getMyTaskNodes } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useRouter } from 'vue-router';
 
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart]);
 
+const router = useRouter();
 const userStore = useUserStore();
 const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
+const pendingNodes = ref<any[]>([]);
 
 const currentDate = ref('');
 const currentWeek = ref('');
@@ -234,6 +280,21 @@ async function loadData() {
             const executorTasks = responseData.executor_task || [];
             const leaderTasks = responseData.leader_task || [];
             const allTasks = [...executorTasks, ...leaderTasks];
+
+            // 过滤出待处理节点（状态为0或1且进度<100）
+            pendingNodes.value = allTasks.filter((node: any) => {
+                const status = node.status ?? node.nodeStatus ?? 0;
+                const progress = node.progress ?? 0;
+                return status < 2 && progress < 100;
+            }).sort((a: any, b: any) => {
+                // 按优先级和截止时间排序
+                const priorityA = a.priority ?? a.nodeType ?? 3;
+                const priorityB = b.priority ?? b.nodeType ?? 3;
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                const deadlineA = a.nodeDeadline || a.deadline || '';
+                const deadlineB = b.nodeDeadline || b.deadline || '';
+                return new Date(deadlineA).getTime() - new Date(deadlineB).getTime();
+            });
 
             metrics.value.totalTasks = allTasks.length;
             metrics.value.completed = allTasks.filter((it: any) => {
@@ -404,6 +465,35 @@ function buildPriorityChart(data: any) {
     };
 }
 
+// 跳转到任务详情
+function goToTask(node: any) {
+    const taskId = node.taskId || node.task_id;
+    if (taskId) {
+        router.push(`/tasks/detail/${taskId}`);
+    }
+}
+
+// 判断是否过期
+function isOverdue(deadline: string): boolean {
+    if (!deadline) return false;
+    return new Date(deadline) < new Date();
+}
+
+// 格式化截止时间
+function formatDeadline(deadline: string): string {
+    if (!deadline) return '';
+    const date = new Date(deadline);
+    const now = new Date();
+    const diff = date.getTime() - now.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    if (days < 0) return `已逾期${Math.abs(days)}天`;
+    if (days === 0) return '今天';
+    if (days === 1) return '明天';
+    if (days <= 7) return `${days}天后`;
+    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+}
+
 onMounted(() => {
     initDate();
     loadData();
@@ -566,6 +656,147 @@ onMounted(() => {
 
 .footer-hint.warning {
     color: #d97706;
+}
+
+/* 待处理节点区域 */
+.pending-section {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.section-title .el-icon {
+    color: #f59e0b;
+}
+
+.pending-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+}
+
+.pending-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--bg-hover);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pending-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
+
+.pending-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.pending-icon.priority-1 {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.pending-icon.priority-2 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.pending-icon.priority-3 {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.pending-icon.priority-4 {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.pending-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.pending-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.pending-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.pending-meta .task-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pending-meta .deadline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pending-meta .deadline.overdue {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.pending-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.pending-progress .el-progress {
+    width: 60px;
+}
+
+.pending-progress .progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+    min-width: 36px;
 }
 
 /* Charts Grid */

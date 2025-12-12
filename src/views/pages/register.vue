@@ -39,6 +39,26 @@
                         </template>
                     </el-input>
                 </el-form-item>
+                <el-form-item prop="verificationCode">
+                    <div class="code-input-wrapper">
+                        <el-input v-model="param.verificationCode" placeholder="邮箱验证码" maxlength="6">
+                            <template #prepend>
+                                <el-icon>
+                                    <Key />
+                                </el-icon>
+                            </template>
+                        </el-input>
+                        <el-button 
+                            type="primary" 
+                            :disabled="codeSending || codeCountdown > 0"
+                            :loading="codeSending"
+                            @click="sendVerificationCode"
+                            class="send-code-btn"
+                        >
+                            {{ codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码' }}
+                        </el-button>
+                    </div>
+                </el-form-item>
                 <el-form-item prop="password">
                     <el-input
                         type="password"
@@ -69,27 +89,132 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Register } from '@/types/user';
-import { apiRegister } from '@/api';
-import { User, Message, Lock, UserFilled } from '@element-plus/icons-vue';
+import { apiRegister, sendVerificationCode as sendCode } from '@/api';
+import { User, Message, Lock, UserFilled, Key } from '@element-plus/icons-vue';
 
 const router = useRouter();
-const param = reactive<Register>({
+const param = reactive<Register & { verificationCode: string }>({
     username: '',
     password: '',
     email: '',
     realName: '',
+    verificationCode: '',
 });
 const loading = ref(false);
+const codeSending = ref(false);
+const codeCountdown = ref(0);
+let countdownTimer: number | null = null;
+
+// 发送验证码
+const sendVerificationCode = async () => {
+    // 先验证邮箱
+    if (!param.email) {
+        ElMessage.warning('请先输入邮箱');
+        return;
+    }
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(param.email)) {
+        ElMessage.warning('请输入有效的邮箱地址');
+        return;
+    }
+    
+    codeSending.value = true;
+    try {
+        const res = await sendCode({ email: param.email, type: 'register' });
+        if (res.data.code === 200) {
+            ElMessage.success('验证码已发送到您的邮箱');
+            // 开始倒计时
+            codeCountdown.value = 60;
+            countdownTimer = window.setInterval(() => {
+                if (codeCountdown.value > 0) {
+                    codeCountdown.value--;
+                } else {
+                    if (countdownTimer) {
+                        clearInterval(countdownTimer);
+                        countdownTimer = null;
+                    }
+                }
+            }, 1000);
+        } else {
+            ElMessage.error(res.data.msg || '发送验证码失败');
+        }
+    } catch (error: any) {
+        console.error('发送验证码错误:', error);
+        ElMessage.error(error.response?.data?.msg || '发送验证码失败');
+    } finally {
+        codeSending.value = false;
+    }
+};
+
+// 密码强度验证器
+const validatePassword = (rule: any, value: string, callback: any) => {
+    if (!value) {
+        callback(new Error('请输入密码'));
+        return;
+    }
+    if (value.length < 8) {
+        callback(new Error('密码长度至少8位'));
+        return;
+    }
+    if (value.length > 32) {
+        callback(new Error('密码长度不能超过32位'));
+        return;
+    }
+    // 检查是否包含数字
+    if (!/\d/.test(value)) {
+        callback(new Error('密码必须包含数字'));
+        return;
+    }
+    // 检查是否包含字母
+    if (!/[a-zA-Z]/.test(value)) {
+        callback(new Error('密码必须包含字母'));
+        return;
+    }
+    // 检查是否包含特殊字符（可选，但推荐）
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+        callback(new Error('密码必须包含特殊字符(!@#$%^&*等)'));
+        return;
+    }
+    callback();
+};
+
+// 邮箱验证器
+const validateEmail = (rule: any, value: string, callback: any) => {
+    if (!value) {
+        callback(new Error('请输入邮箱'));
+        return;
+    }
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(value)) {
+        callback(new Error('请输入有效的邮箱地址'));
+        return;
+    }
+    callback();
+};
 
 const rules: FormRules = {
     username: [
         { required: true, message: '请输入用户名', trigger: 'blur' },
+        { min: 3, max: 20, message: '用户名长度3-20位', trigger: 'blur' },
+        { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线', trigger: 'blur' },
     ],
     realName: [
         { required: true, message: '请输入真实姓名', trigger: 'blur' },
+        { min: 2, max: 20, message: '姓名长度2-20位', trigger: 'blur' },
     ],
-    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-    email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
+    password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { validator: validatePassword, trigger: 'blur' },
+    ],
+    email: [
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { validator: validateEmail, trigger: 'blur' },
+    ],
+    verificationCode: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
+        { len: 6, message: '验证码为6位数字', trigger: 'blur' },
+        { pattern: /^\d{6}$/, message: '验证码为6位数字', trigger: 'blur' },
+    ],
 };
 const register = ref<FormInstance>();
 const submitForm = (formEl: FormInstance | undefined) => {
@@ -293,5 +418,35 @@ const submitForm = (formEl: FormInstance | undefined) => {
 .register-link:hover {
     color: #b91c1c;
     text-decoration: underline;
+}
+
+.code-input-wrapper {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.code-input-wrapper .el-input {
+    flex: 1;
+}
+
+.send-code-btn {
+    min-width: 110px;
+    height: 44px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border: none;
+    color: #fff;
+}
+
+.send-code-btn:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+}
+
+.send-code-btn:not(:disabled):hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
 }
 </style>

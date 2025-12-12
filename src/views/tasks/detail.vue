@@ -8,7 +8,18 @@
                     <span>返回</span>
                         </el-button>
                 <div class="hero-title">
-                    <h1 class="task-title">{{ taskInfo?.taskTitle || '任务详情' }}</h1>
+                    <div class="title-row">
+                        <h1 class="task-title">{{ taskInfo?.taskTitle || '任务详情' }}</h1>
+                        <el-button 
+                            v-if="canEditTask" 
+                            type="primary" 
+                            :icon="Edit"
+                            @click="openEditDialog"
+                            class="edit-task-btn"
+                        >
+                            编辑任务
+                        </el-button>
+                    </div>
                     <div class="hero-meta">
                         <el-tag :type="priorityType" size="large" class="hero-tag" effect="dark">
                             <el-icon class="tag-icon"><WarningFilled v-if="taskInfo?.priority === 1" /><ArrowUp v-else-if="taskInfo?.priority === 2" /><Minus v-else-if="taskInfo?.priority === 3" /><ArrowDown v-else /></el-icon>
@@ -617,6 +628,65 @@
         </div>
 
         <el-empty v-if="!loading && !taskInfo" description="任务不存在或已被删除" />
+
+        <!-- 编辑任务对话框 -->
+        <el-dialog 
+            v-model="showEditDialog" 
+            title="编辑任务" 
+            width="600px"
+            :close-on-click-modal="false"
+        >
+            <el-form 
+                ref="editFormRef"
+                :model="editForm" 
+                :rules="editRules"
+                label-width="100px"
+            >
+                <el-form-item label="任务标题" prop="taskTitle">
+                    <el-input v-model="editForm.taskTitle" placeholder="请输入任务标题" />
+                </el-form-item>
+                <el-form-item label="任务描述" prop="taskDescription">
+                    <el-input 
+                        v-model="editForm.taskDescription" 
+                        type="textarea" 
+                        :rows="4" 
+                        placeholder="请输入任务描述" 
+                    />
+                </el-form-item>
+                <el-form-item label="优先级" prop="priority">
+                    <el-select v-model="editForm.priority" style="width: 100%">
+                        <el-option label="紧急" :value="1" />
+                        <el-option label="高" :value="2" />
+                        <el-option label="中" :value="3" />
+                        <el-option label="低" :value="4" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="截止时间" prop="deadline">
+                    <el-date-picker 
+                        v-model="editForm.deadline" 
+                        type="datetime" 
+                        placeholder="选择截止时间"
+                        format="YYYY-MM-DD HH:mm"
+                        value-format="YYYY-MM-DDTHH:mm:ssZ"
+                        style="width: 100%"
+                    />
+                </el-form-item>
+                <el-form-item label="预计工时" prop="estimatedHours">
+                    <el-input-number 
+                        v-model="editForm.estimatedHours" 
+                        :min="0" 
+                        :max="1000" 
+                        style="width: 100%" 
+                    />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="showEditDialog = false">取消</el-button>
+                <el-button type="primary" @click="submitEdit" :loading="submittingEdit">
+                    保存修改
+                </el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
@@ -627,13 +697,14 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { 
     ArrowLeft, Document, Calendar, Timer, Clock, User, Connection, List,
     WarningFilled, ArrowUp, Minus, ArrowDown, CircleCheck, Loading,
-    Folder, Upload, Download, Delete, ChatDotRound, Star, Plus, Close
+    Folder, Upload, Download, Delete, ChatDotRound, Star, Plus, Close, Edit
 } from '@element-plus/icons-vue';
 import { 
     getTask, updateTaskProgress, getMyEmployee, listEmployees, autoDispatchTask,
     getTaskAttachments, deleteAttachment, getTaskComments, createTaskComment, likeTaskComment,
-    uploadFile, getAttachmentComments, createAttachmentComment
+    uploadFile, getAttachmentComments, createAttachmentComment, updateTask
 } from '@/api';
+import type { FormInstance, FormRules } from 'element-plus';
 import TaskChecklist from '@/components/TaskChecklist.vue';
 import { useUserStore } from '@/store/user';
 import * as echarts from 'echarts';
@@ -686,6 +757,32 @@ const submittingFileComment = ref(false);
 // 日志分页
 const logPage = ref(1);
 const logPageSize = ref(20);
+
+// 编辑任务相关
+const showEditDialog = ref(false);
+const submittingEdit = ref(false);
+const editFormRef = ref<FormInstance>();
+const editForm = ref({
+    taskId: '',
+    taskTitle: '',
+    taskDescription: '',
+    priority: 3,
+    deadline: '',
+    estimatedHours: 0
+});
+const editRules: FormRules = {
+    taskTitle: [
+        { required: true, message: '请输入任务标题', trigger: 'blur' },
+        { min: 2, max: 100, message: '标题长度2-100个字符', trigger: 'blur' }
+    ]
+};
+
+// 判断是否可以编辑任务（任务负责人）
+const canEditTask = computed(() => {
+    if (!taskInfo.value || !currentEmployeeId.value) return false;
+    const leaderId = taskInfo.value.leaderId || taskInfo.value.LeaderId || '';
+    return leaderId === currentEmployeeId.value;
+});
 
 // 工具提示
 const tooltipVisible = ref(false);
@@ -850,6 +947,54 @@ function getOperatorName(operatorId: string | number): string {
 
 function goBack() {
     router.go(-1);
+}
+
+// 打开编辑对话框
+function openEditDialog() {
+    if (!taskInfo.value) return;
+    editForm.value = {
+        taskId: taskInfo.value.id || '',
+        taskTitle: taskInfo.value.taskTitle || '',
+        taskDescription: taskInfo.value.taskDescription || '',
+        priority: taskInfo.value.priority || 3,
+        deadline: taskInfo.value.deadline || '',
+        estimatedHours: taskInfo.value.estimatedHours || 0
+    };
+    showEditDialog.value = true;
+}
+
+// 提交编辑
+async function submitEdit() {
+    if (!editFormRef.value) return;
+    
+    await editFormRef.value.validate(async (valid) => {
+        if (!valid) return;
+        
+        submittingEdit.value = true;
+        try {
+            const resp = await updateTask({
+                taskId: editForm.value.taskId,
+                taskTitle: editForm.value.taskTitle,
+                taskDescription: editForm.value.taskDescription,
+                priority: editForm.value.priority,
+                deadline: editForm.value.deadline,
+                estimatedHours: editForm.value.estimatedHours
+            });
+            
+            if (resp.data?.code === 200) {
+                ElMessage.success('任务更新成功');
+                showEditDialog.value = false;
+                loadTaskDetail();
+            } else {
+                ElMessage.error(resp.data?.msg || '更新失败');
+            }
+        } catch (error: any) {
+            console.error('更新任务失败:', error);
+            ElMessage.error('更新任务失败');
+        } finally {
+            submittingEdit.value = false;
+        }
+    });
 }
 
 // 自动派发任务节点
@@ -1826,9 +1971,14 @@ onMounted(async () => {
     }
     
     await loadEmployees();
-    loadTaskDetail();
+    await loadTaskDetail();
     loadAttachments();
     loadComments();
+    
+    // 检查URL参数，如果有edit参数则自动打开编辑对话框
+    if (route.query.edit === 'true' && canEditTask.value) {
+        openEditDialog();
+    }
 });
 
 watch(() => taskInfo.value?.nodes, () => {
@@ -1890,6 +2040,13 @@ watch(() => taskInfo.value?.nodes, () => {
     gap: 20px;
 }
 
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 .task-title {
     font-size: 36px;
     font-weight: 800;
@@ -1897,6 +2054,20 @@ watch(() => taskInfo.value?.nodes, () => {
     letter-spacing: -0.02em;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     line-height: 1.2;
+}
+
+.edit-task-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.edit-task-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-2px);
 }
 
 .hero-meta {

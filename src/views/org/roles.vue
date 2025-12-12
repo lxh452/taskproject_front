@@ -57,9 +57,18 @@
                         </div>
 
                         <div class="card-footer">
-                            <el-button text size="small" @click="openEdit(row)"><el-icon><Edit /></el-icon> 编辑</el-button>
-                            <el-button text size="small" @click="openAssign(row)"><el-icon><Share /></el-icon> 分配</el-button>
-                            <el-button text size="small" type="danger" @click="onDelete(row)"><el-icon><Delete /></el-icon> 删除</el-button>
+                            <el-button type="primary" size="default" @click="openEdit(row)" class="action-btn">
+                                <el-icon><Edit /></el-icon>
+                                <span>编辑</span>
+                            </el-button>
+                            <el-button type="warning" size="default" @click="openAssign(row)" class="action-btn">
+                                <el-icon><Share /></el-icon>
+                                <span>分配</span>
+                            </el-button>
+                            <el-button type="danger" size="default" @click="onDelete(row)" class="action-btn">
+                                <el-icon><Delete /></el-icon>
+                                <span>删除</span>
+                            </el-button>
                         </div>
                     </div>
                 </div>
@@ -412,7 +421,28 @@ onMounted(load);
 .no-perms { font-size: 12px; color: var(--text-muted); font-style: italic; }
 .debug-icon { margin-left: 6px; color: var(--color-warning); font-size: 14px; cursor: help; }
 
-.card-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.card-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    gap: 8px; 
+    padding-top: 16px; 
+    border-top: 1px solid var(--border-color); 
+}
+.card-footer .action-btn {
+    flex: 1;
+    height: 34px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.card-footer .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
 .empty-state { padding: 60px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
 
 .perm-tree-wrapper { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; background: var(--bg-base); max-height: 360px; overflow-y: auto; }

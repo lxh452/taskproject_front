@@ -283,7 +283,7 @@ const uncompletedChecklistCount = ref(0);
 const myChecklists = ref<any[]>([]);
 const checklistLoading = ref(false);
 const checklistPopoverVisible = ref(false);
-const checklistFilter = ref(0);
+const checklistFilter = ref(-1);
 
 // 邀请码相关
 const canGenerateInvite = ref(false);
@@ -530,10 +530,57 @@ const handleGenerateCode = async () => {
     }
 };
 
-const copyInviteCode = () => {
-    if (generatedCode.value) {
-        navigator.clipboard.writeText(generatedCode.value);
-        ElMessage.success('邀请码已复制到剪贴板');
+const copyInviteCode = async () => {
+    if (!generatedCode.value) {
+        ElMessage.warning('没有可复制的邀请码');
+        return;
+    }
+    
+    try {
+        // 优先使用 Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(generatedCode.value);
+            ElMessage.success('邀请码已复制到剪贴板');
+        } else {
+            // 降级方案：使用 execCommand
+            const textArea = document.createElement('textarea');
+            textArea.value = generatedCode.value;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            if (successful) {
+                ElMessage.success('邀请码已复制到剪贴板');
+            } else {
+                ElMessage.error('复制失败，请手动复制');
+            }
+        }
+    } catch (err) {
+        console.error('复制失败:', err);
+        // 最后的降级方案
+        const textArea = document.createElement('textarea');
+        textArea.value = generatedCode.value;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            ElMessage.success('邀请码已复制到剪贴板');
+        } catch {
+            ElMessage.error('复制失败，请手动复制邀请码: ' + generatedCode.value);
+        } finally {
+            document.body.removeChild(textArea);
+        }
     }
 };
 

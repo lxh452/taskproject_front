@@ -229,6 +229,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import(/* webpackChunkName: "register" */ '../views/pages/register.vue'),
     },
     {
+        path: '/forgot-password',
+        meta: {
+            title: '忘记密码',
+            noAuth: true,
+        },
+        component: () => import(/* webpackChunkName: "forgot-password" */ '../views/pages/forgot-password.vue'),
+    },
+    {
         path: '/join-company',
         meta: {
             title: '加入或创建公司',

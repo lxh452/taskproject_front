@@ -94,14 +94,17 @@
                         </div>
 
                         <div class="card-actions">
-                            <el-button text size="small" @click.stop="viewDetail(row.id)">
+                            <el-button type="primary" size="default" @click.stop="viewDetail(row.id)" class="action-btn">
                                 <el-icon><View /></el-icon>
+                                <span>查看</span>
                             </el-button>
-                            <el-button text size="small" @click.stop="editTask(row.id)">
+                            <el-button type="warning" size="default" @click.stop="editTask(row.id)" class="action-btn">
                                 <el-icon><Edit /></el-icon>
+                                <span>编辑</span>
                             </el-button>
-                            <el-button text size="small" @click.stop="openCreateNodeDialog(row)">
+                            <el-button type="success" size="default" @click.stop="openCreateNodeDialog(row)" class="action-btn">
                                 <el-icon><Plus /></el-icon>
+                                <span>节点</span>
                             </el-button>
                         </div>
                     </div>
@@ -205,7 +208,8 @@ function viewDetail(taskId: string) {
 }
 
 function editTask(taskId: string) {
-    console.log('编辑任务:', taskId);
+    // 跳转到任务详情页面进行编辑
+    router.push({ name: 'tasks-detail', params: { id: taskId }, query: { edit: 'true' } });
 }
 
 function pr(p: number) { 
@@ -500,21 +504,32 @@ onMounted(() => {
 
 .card-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 4px;
+    justify-content: space-between;
+    gap: 8px;
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border-color);
 }
 
-.card-actions .el-button {
-    color: var(--text-muted);
-    padding: 6px 8px;
+.card-actions .action-btn {
+    flex: 1;
+    height: 36px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
 
-.card-actions .el-button:hover {
-    color: var(--color-danger);
-    background: var(--bg-hover);
+.card-actions .action-btn .el-icon {
+    font-size: 14px;
+}
+
+.card-actions .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Empty State */
