@@ -27,6 +27,13 @@
                         </div>
                         <div class="node-actions">
                             <el-button 
+                                v-if="canSubmitApproval" 
+                                type="success" 
+                                @click="submitApproval"
+                            >
+                                提交审批
+                            </el-button>
+                            <el-button 
                                 v-if="canEdit" 
                                 type="primary" 
                                 :icon="Edit"
@@ -161,7 +168,8 @@ import {
     Clock, OfficeBuilding, Timer, Document, Connection 
 } from '@element-plus/icons-vue';
 import TaskChecklist from '@/components/TaskChecklist.vue';
-import { getMyEmployee, listTaskNodesByTask, getTask } from '@/api';
+import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval } from '@/api';
+import { ElMessageBox } from 'element-plus';
 
 const route = useRoute();
 const router = useRouter();
@@ -189,13 +197,38 @@ const isOverdue = computed(() => {
     return new Date(nodeInfo.value.nodeDeadline) < new Date() && nodeInfo.value.status !== 2;
 });
 
+// 是否可以提交审批：节点状态为进行中（1），进度100%，且当前用户是执行人
+const canSubmitApproval = computed(() => {
+    if (!nodeInfo.value || !currentEmployeeId.value) return false;
+    const executorId = nodeInfo.value.executorId || '';
+    const executorIds = nodeInfo.value.executorIds || [];
+    const isExecutor = executorId === currentEmployeeId.value || executorIds.includes(currentEmployeeId.value);
+    return nodeInfo.value.status === 1 && 
+           (nodeInfo.value.progress || 0) >= 100 && 
+           isExecutor;
+});
+
 // 方法
 function getStatusType(status: number) {
-    return status === 2 ? 'success' : status === 1 ? 'warning' : 'info';
+    const statusTypeMap: Record<number, string> = {
+        0: 'info',
+        1: 'warning',
+        2: 'success',
+        3: 'danger',
+        4: 'warning'
+    };
+    return statusTypeMap[status] || 'info';
 }
 
 function getStatusText(status: number) {
-    return status === 2 ? '已完成' : status === 1 ? '进行中' : '待处理';
+    const statusMap: Record<number, string> = {
+        0: '待处理',
+        1: '进行中',
+        2: '已完成',
+        3: '已逾期',
+        4: '待审批'
+    };
+    return statusMap[status] || '未知';
 }
 
 function formatDate(date: string) {
@@ -231,6 +264,35 @@ function editNode() {
 function onProgressChange(progress: number) {
     if (nodeInfo.value) {
         nodeInfo.value.progress = progress;
+    }
+}
+
+async function submitApproval() {
+    if (!nodeInfo.value) return;
+    
+    try {
+        await ElMessageBox.confirm(
+            '确定要提交任务节点完成审批吗？提交后需要等待项目负责人审批。',
+            '确认提交审批',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'info'
+            }
+        );
+
+        const resp = await submitTaskNodeCompletionApproval({ nodeId: nodeId.value });
+        if (resp.data.code === 200) {
+            ElMessage.success('提交审批成功，等待项目负责人审批');
+            await loadNodeDetail(); // 重新加载节点信息
+        } else {
+            ElMessage.error(resp.data.msg || '提交审批失败');
+        }
+    } catch (error: any) {
+        if (error !== 'cancel') {
+            console.error('提交审批失败:', error);
+            ElMessage.error('提交审批失败');
+        }
     }
 }
 

@@ -21,7 +21,7 @@
                             v-for="notification in filteredNotifications" 
                             :key="notification.id"
                             class="notification-item"
-                            :class="{ 'unread': !notification.isRead, 'has-actions': isJoinApplication(notification) }"
+                            :class="{ 'unread': !notification.isRead, 'has-actions': isJoinApplication(notification) || isTaskNodeCompletionApproval(notification) }"
                         >
                             <div class="notif-icon" :class="getIconClass(notification.type)">
                                 <el-icon><component :is="getIcon(notification.type)" /></el-icon>
@@ -37,7 +37,7 @@
                                 <div class="notif-body" v-if="notification.content">{{ notification.content }}</div>
                                 <div class="notif-time">{{ formatTime(notification.createTime) }}</div>
                             </div>
-                            <div class="notif-actions" v-if="isJoinApplication(notification) && canApprove">
+                            <div class="notif-actions" v-if="(isJoinApplication(notification) || isTaskNodeCompletionApproval(notification)) && canApprove">
                                 <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
                                 <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
                             </div>
@@ -67,7 +67,7 @@
                                 <div class="notif-body" v-if="notification.content">{{ notification.content }}</div>
                                 <div class="notif-time">{{ formatTime(notification.createTime) }}</div>
                             </div>
-                            <div class="notif-actions" v-if="isJoinApplication(notification) && canApprove">
+                            <div class="notif-actions" v-if="(isJoinApplication(notification) || isTaskNodeCompletionApproval(notification)) && canApprove">
                                 <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
                                 <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
                             </div>
@@ -244,7 +244,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Bell, Refresh, Document, Warning, InfoFilled, CircleCheckFilled, CircleCloseFilled, UserFilled, OfficeBuilding, Folder, Avatar, ChatLineSquare } from '@element-plus/icons-vue';
-import { listNotifications, markNotificationRead, approveJoinApplication, getMyEmployee, getPendingJoinApplications, listDepartments, listPositions } from '@/api';
+import { listNotifications, markNotificationRead, approveJoinApplication, getMyEmployee, getPendingJoinApplications, listDepartments, listPositions, approveTaskNodeCompletion } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 const router = useRouter();
@@ -279,6 +279,12 @@ function isJoinApplication(notification: any) {
     return notification.relatedType === 'join_application' || notification.category === 'join_application';
 }
 
+function isTaskNodeCompletionApproval(notification: any) {
+    return notification.category === 'task.node.completion.approval' || 
+           notification.title?.includes('任务节点完成审批') ||
+           notification.content?.includes('任务节点') && notification.content?.includes('完成审批');
+}
+
 function formatTime(time: string) {
     if (!time) return '-';
     let date: Date;
@@ -303,8 +309,8 @@ async function handleNotificationClick(notification: any) {
         } catch (error: any) { console.error('标记已读失败:', error); return; }
     }
     
-    // 如果是加入申请，不跳转，直接显示审批按钮
-    if (isJoinApplication(notification)) {
+    // 如果是加入申请或任务节点完成审批，不跳转，直接显示审批按钮
+    if (isJoinApplication(notification) || isTaskNodeCompletionApproval(notification)) {
         return;
     }
     
@@ -318,6 +324,34 @@ async function handleNotificationClick(notification: any) {
 }
 
 async function handleApprove(notification: any, approved: boolean) {
+    // 如果是任务节点完成审批，直接处理，不需要部门选择
+    if (isTaskNodeCompletionApproval(notification)) {
+        const approvalId = notification.relatedId || notification.relatedID || notification.related_id;
+        if (!approvalId) {
+            ElMessage.error('审批ID不存在');
+            return;
+        }
+        
+        try {
+            const resp = await approveTaskNodeCompletion({
+                approvalId: approvalId,
+                approved: approved ? 1 : 2,
+                comment: ''
+            });
+            if (resp.data.code === 200) {
+                ElMessage.success(approved ? '审批通过' : '审批拒绝');
+                await loadData();
+            } else {
+                ElMessage.error(resp.data.msg || '审批失败');
+            }
+        } catch (error: any) {
+            console.error('审批失败:', error);
+            ElMessage.error('审批失败');
+        }
+        return;
+    }
+    
+    // 加入申请的审批逻辑
     const applicationId = notification.relatedId || notification.relatedID || notification.related_id;
     if (!applicationId) {
         ElMessage.error('申请ID不存在');

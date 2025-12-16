@@ -229,6 +229,14 @@ export const batchCompleteChecklist = (data: { checklistIds: string[]; isComplet
 export const getMyChecklist = (data?: { page?: number; pageSize?: number; isCompleted?: number }) =>
     request({ url: '/checklist/my', method: 'post', data: data || { page: 1, pageSize: 50 } });
 
+// 提交任务节点完成审批
+export const submitTaskNodeCompletionApproval = (data: { nodeId: string }) =>
+    request({ url: '/checklist/submit/approval', method: 'post', data });
+
+// 审批任务节点完成
+export const approveTaskNodeCompletion = (data: { approvalId: string; approved: number; comment?: string }) =>
+    request({ url: '/checklist/approve/completion', method: 'post', data });
+
 // 标记通知为已读
 export const markNotificationRead = (data: { notificationId: string }) =>
     request({ url: '/notification/read', method: 'put', data });

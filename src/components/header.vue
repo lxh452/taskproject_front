@@ -31,7 +31,7 @@
                 popper-class="vben-popover"
             >
                 <template #reference>
-                    <div class="header-action" :class="{ 'has-badge': uncompletedChecklistCount > 0 }">
+                    <div class="header-action checklist-action" :class="{ 'has-badge': uncompletedChecklistCount > 0, 'has-pending': uncompletedChecklistCount > 0 }">
                         <el-badge :value="uncompletedChecklistCount" :hidden="uncompletedChecklistCount === 0" :max="99">
                             <el-icon :size="18"><List /></el-icon>
                         </el-badge>
@@ -72,8 +72,15 @@
                                 />
                                 <div class="item-content">
                                     <div class="item-text">{{ item.content }}</div>
-                                    <div class="item-link" @click="goToTaskNode(item)">
-                                        {{ item.taskTitle }} · {{ item.taskNodeName }}
+                                    <div class="item-meta" v-if="item.taskTitle || item.taskNodeName">
+                                        <div class="task-info" @click.stop="goToTaskNode(item)">
+                                            <el-icon class="meta-icon"><Document /></el-icon>
+                                            <span class="task-title">{{ item.taskTitle || '未知任务' }}</span>
+                                        </div>
+                                        <div class="node-info" @click.stop="goToTaskNode(item)">
+                                            <el-icon class="meta-icon"><Connection /></el-icon>
+                                            <span class="node-name">{{ item.taskNodeName || '未知节点' }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -97,7 +104,7 @@
                 popper-class="vben-popover"
             >
                 <template #reference>
-                    <div class="header-action" :class="{ 'has-badge': unreadCount > 0 }">
+                    <div class="header-action notification-action" :class="{ 'has-badge': unreadCount > 0, 'has-unread': unreadCount > 0 }">
                         <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
                             <el-icon :size="18"><Bell /></el-icon>
                         </el-badge>
@@ -233,7 +240,7 @@ import { useUserStore } from '../store/user';
 import { 
     Fold, Expand, Search, Bell, List, FullScreen, 
     ArrowDown, User, SwitchButton, InfoFilled, DocumentChecked,
-    Sunny, Moon, Ticket, DocumentCopy
+    Sunny, Moon, Ticket, DocumentCopy, Document, Connection
 } from '@element-plus/icons-vue';
 import { getMyEmployee, listNotifications, getMyChecklist, updateChecklist, markNotificationRead, generateInviteCode, getPendingJoinApplications } from '@/api';
 import { ElMessage } from 'element-plus';
@@ -443,7 +450,9 @@ const goToNotifications = () => {
 
 const goToTaskNode = (item: any) => {
     checklistPopoverVisible.value = false;
-    if (item.taskId) {
+    if (item.taskNodeId) {
+        router.push(`/task-nodes/detail/${item.taskNodeId}?taskId=${item.taskId || ''}`);
+    } else if (item.taskId) {
         router.push(`/tasks/detail/${item.taskId}`);
     }
 };
@@ -698,6 +707,52 @@ onUnmounted(() => {
     color: #dc2626;
 }
 
+.header-action.checklist-action {
+    position: relative;
+}
+
+.header-action.checklist-action.has-pending {
+    color: #f59e0b;
+    animation: pulse-checklist 2s ease-in-out infinite;
+}
+
+.header-action.checklist-action.has-pending:hover {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.header-action.notification-action {
+    position: relative;
+}
+
+.header-action.notification-action.has-unread {
+    color: #dc2626;
+    animation: pulse-notification 2s ease-in-out infinite;
+}
+
+.header-action.notification-action.has-unread:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+@keyframes pulse-checklist {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes pulse-notification {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
 .header-action.theme-toggle {
     color: #f59e0b;
 }
@@ -799,8 +854,27 @@ onUnmounted(() => {
 }
 
 .popover-body {
-    max-height: clamp(300px, 25vh, 360px);
+    max-height: clamp(320px, 28vh, 400px);
     overflow-y: auto;
+    padding: clamp(4px, 0.3vw, 6px) 0;
+}
+
+.popover-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.popover-body::-webkit-scrollbar-track {
+    background: var(--bg-hover);
+    border-radius: 3px;
+}
+
+.popover-body::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+}
+
+.popover-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 .popover-footer {
@@ -825,17 +899,27 @@ onUnmounted(() => {
     display: flex;
     align-items: flex-start;
     gap: clamp(10px, 0.8vw, 12px);
-    padding: clamp(10px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
-    transition: background 0.2s;
+    padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
+    transition: all 0.2s;
     cursor: default;
+    border-left: 3px solid transparent;
+    border-radius: clamp(4px, 0.3vw, 6px);
+    margin: clamp(2px, 0.2vw, 3px) 0;
 }
 
 .checklist-item:hover {
     background: var(--bg-hover);
+    border-left-color: var(--color-primary);
+    transform: translateX(2px);
 }
 
 .checklist-item.completed {
-    opacity: 0.6;
+    opacity: 0.65;
+    border-left-color: #10b981;
+}
+
+.checklist-item.completed:hover {
+    border-left-color: #059669;
 }
 
 .item-content {
@@ -844,14 +928,17 @@ onUnmounted(() => {
 }
 
 .item-text {
-    font-size: clamp(12px, 0.9vw, 14px);
+    font-size: clamp(13px, 0.95vw, 15px);
     color: var(--text-main);
-    line-height: 1.5;
+    line-height: 1.6;
+    font-weight: 500;
+    margin-bottom: clamp(2px, 0.2vw, 3px);
 }
 
 .checklist-item.completed .item-text {
     text-decoration: line-through;
     color: var(--text-muted);
+    font-weight: 400;
 }
 
 .item-link {
@@ -870,43 +957,56 @@ onUnmounted(() => {
 .notification-item {
     display: flex;
     gap: clamp(10px, 0.8vw, 12px);
-    padding: clamp(10px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
+    padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     position: relative;
+    border-left: 3px solid transparent;
+    border-radius: clamp(4px, 0.3vw, 6px);
+    margin: clamp(2px, 0.2vw, 3px) 0;
 }
 
 .notification-item:hover {
     background: var(--bg-hover);
+    border-left-color: var(--color-primary);
+    transform: translateX(2px);
 }
 
 .notification-item.unread {
-    background: var(--color-primary-light);
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
+    border-left-color: #3b82f6;
 }
 
 .notif-icon {
-    width: clamp(32px, 2.5vw, 36px);
-    height: clamp(32px, 2.5vw, 36px);
-    border-radius: clamp(6px, 0.5vw, 8px);
+    width: clamp(36px, 2.8vw, 40px);
+    height: clamp(36px, 2.8vw, 40px);
+    border-radius: clamp(8px, 0.6vw, 10px);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.notification-item:hover .notif-icon {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .notif-icon.type-task {
-    background: var(--bg-hover);
-    color: var(--color-danger);
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
 }
 
 .notif-icon.type-warning {
-    background: var(--bg-hover);
-    color: var(--color-warning);
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #d97706;
 }
 
 .notif-icon.type-info {
-    background: var(--bg-hover);
-    color: var(--text-secondary);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #2563eb;
 }
 
 .notif-content {
@@ -915,8 +1015,9 @@ onUnmounted(() => {
 }
 
 .notif-title {
-    font-size: clamp(12px, 0.9vw, 14px);
-    font-weight: 500;
+    font-size: clamp(13px, 0.95vw, 15px);
+    font-weight: 600;
+    margin-bottom: clamp(3px, 0.3vw, 4px);
     color: var(--text-main);
     margin-bottom: clamp(3px, 0.3vw, 4px);
 }
