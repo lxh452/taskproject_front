@@ -831,6 +831,10 @@ onUnmounted(() => {
 /* Popover Styles */
 .popover-container {
     margin: -12px;
+    max-width: 380px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .popover-header {
@@ -839,6 +843,10 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: clamp(10px, 0.8vw, 12px);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
 }
 
 .popover-title {
@@ -856,7 +864,11 @@ onUnmounted(() => {
 .popover-body {
     max-height: clamp(320px, 28vh, 400px);
     overflow-y: auto;
+    overflow-x: hidden;
     padding: clamp(4px, 0.3vw, 6px) 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .popover-body::-webkit-scrollbar {
@@ -881,6 +893,9 @@ onUnmounted(() => {
     padding: clamp(10px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
     border-top: 1px solid var(--border-color);
     text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .empty-placeholder {
@@ -905,6 +920,9 @@ onUnmounted(() => {
     border-left: 3px solid transparent;
     border-radius: clamp(4px, 0.3vw, 6px);
     margin: clamp(2px, 0.2vw, 3px) 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .checklist-item:hover {
@@ -925,6 +943,7 @@ onUnmounted(() => {
 .item-content {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .item-text {
@@ -933,6 +952,13 @@ onUnmounted(() => {
     line-height: 1.6;
     font-weight: 500;
     margin-bottom: clamp(2px, 0.2vw, 3px);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .checklist-item.completed .item-text {
@@ -953,6 +979,65 @@ onUnmounted(() => {
     color: var(--color-primary);
 }
 
+.item-meta {
+    margin-top: clamp(6px, 0.5vw, 8px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 0.3vw, 5px);
+    overflow: hidden;
+}
+
+.task-info,
+.node-info {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.3vw, 6px);
+    font-size: clamp(11px, 0.8vw, 12px);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: clamp(2px, 0.2vw, 3px) 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.task-info:hover,
+.node-info:hover {
+    color: var(--color-primary);
+}
+
+.task-info:hover .meta-icon,
+.node-info:hover .meta-icon {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.meta-icon {
+    font-size: clamp(12px, 0.9vw, 14px);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.task-title,
+.node-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    word-break: break-all;
+}
+
+.task-title {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.node-name {
+    color: var(--text-muted);
+}
+
 /* Notification Item */
 .notification-item {
     display: flex;
@@ -964,6 +1049,9 @@ onUnmounted(() => {
     border-left: 3px solid transparent;
     border-radius: clamp(4px, 0.3vw, 6px);
     margin: clamp(2px, 0.2vw, 3px) 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .notification-item:hover {
@@ -1012,6 +1100,7 @@ onUnmounted(() => {
 .notif-content {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .notif-title {
@@ -1019,7 +1108,13 @@ onUnmounted(() => {
     font-weight: 600;
     margin-bottom: clamp(3px, 0.3vw, 4px);
     color: var(--text-main);
-    margin-bottom: clamp(3px, 0.3vw, 4px);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
 }
 
 .notif-desc {
@@ -1133,6 +1228,35 @@ onUnmounted(() => {
     border: 1px solid var(--border-color) !important;
     padding: 0 !important;
     background: var(--bg-card) !important;
+    max-width: 380px !important;
+    width: 380px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.vben-popover * {
+    box-sizing: border-box;
+}
+
+.vben-popover .popover-header :deep(.el-radio-group) {
+    width: 100% !important;
+    display: flex !important;
+    box-sizing: border-box !important;
+}
+
+.vben-popover .popover-header :deep(.el-radio-button) {
+    flex: 1 !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+}
+
+.vben-popover .popover-header :deep(.el-radio-button__inner) {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 0 clamp(8px, 0.6vw, 12px) !important;
 }
 
 /* 移除硬编码的 dark-mode 样式，完全依赖 CSS 变量 */

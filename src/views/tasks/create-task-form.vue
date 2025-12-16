@@ -379,12 +379,15 @@ async function handleSubmit() {
                     taskDeadline = deadlineDate.toISOString().split('T')[0];
                 }
                 
+                // 根据部门数量确定任务类型：1-单部门，2-跨部门
+                const taskType = (form.value.departmentIds?.length || 0) > 1 ? 2 : 1;
+                
                 const resp = await createTask({
                     companyId: companyId,
                     taskTitle: form.value.title,
                     taskDetail: form.value.description || '',
                     taskPriority: form.value.priority,
-                    taskType: 0,
+                    taskType: taskType,
                     taskDeadline: taskDeadline,
                     departmentIds: form.value.departmentIds || [],
                     responsibleEmployeeIds: form.value.responsibles || [],
