@@ -26,11 +26,18 @@ function isRelativePath(url: string): boolean {
 }
 
 /**
- * 将文件URL转换为完整的COS域名URL
+ * 将文件URL转换为代理URL（通过后端代理，解决CORS问题）
  * @param fileUrl 后端返回的文件URL（可能是相对路径、本地路径或完整URL）
- * @returns 完整的COS域名URL
+ * @param fileId 文件ID（如果提供，则使用代理接口）
+ * @returns 代理URL或完整的COS域名URL
  */
-export function getFileUrl(fileUrl: string | null | undefined): string {
+export function getFileUrl(fileUrl: string | null | undefined, fileId?: string | null): string {
+    // 如果提供了fileId，使用代理接口（解决CORS问题）
+    if (fileId) {
+        // 使用相对路径，避免跨域问题
+        return `/api/v1/upload/file/proxy?fileId=${fileId}`;
+    }
+    
     if (!fileUrl) return '';
     
     const trimmed = fileUrl.trim();

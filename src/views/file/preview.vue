@@ -50,12 +50,12 @@
             <section class="content-section">
                 <!-- 图片预览 -->
                 <div v-if="isImage" class="preview-image">
-                    <img :src="getFileUrl(fileInfo?.fileUrl)" :alt="fileInfo?.fileName" />
+                    <img :src="getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" :alt="fileInfo?.fileName" />
                 </div>
                 
                 <!-- PDF预览 -->
                 <div v-else-if="isPdf" class="preview-pdf">
-                    <iframe :src="getFileUrl(fileInfo?.fileUrl)" frameborder="0"></iframe>
+                    <iframe :src="getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" frameborder="0"></iframe>
                 </div>
 
                 <!-- Markdown预览 -->
@@ -448,9 +448,9 @@ function formatFileSize(bytes: number) {
 
 function goBack() { router.go(-1); }
 function downloadFile() {
-    if (fileInfo.value?.fileUrl) {
+    if (fileInfo.value?.fileId) {
         const link = document.createElement('a');
-        link.href = getFileUrl(fileInfo.value.fileUrl);
+        link.href = getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId);
         link.download = fileInfo.value.fileName;
         link.click();
     }
@@ -545,9 +545,8 @@ async function loadFileInfo() {
         const resp = await request({ url: '/upload/file/detail', method: 'post', data: { fileId } });
         if (resp.data?.code === 200) {
             fileInfo.value = resp.data.data;
-            // 处理文件URL，转换为COS域名完整URL
-            if (fileInfo.value.fileUrl) {
-                fileInfo.value.fileUrl = getFileUrl(fileInfo.value.fileUrl);
+            // 使用fileId通过代理接口访问（解决CORS问题）
+            if (fileInfo.value.fileId) {
                 if (isMarkdown.value) await loadMarkdown();
                 else if (isWord.value) await loadWord();
                 else if (isExcel.value) await loadExcel();
@@ -558,15 +557,15 @@ async function loadFileInfo() {
 }
 
 async function loadText() {
-    if (!fileInfo.value?.fileUrl) return;
-    try { fileContent.value = await (await fetch(getFileUrl(fileInfo.value.fileUrl))).text(); }
+    if (!fileInfo.value?.fileId) return;
+    try { fileContent.value = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text(); }
     catch { fileContent.value = '// 无法加载文件内容'; }
 }
 
 async function loadMarkdown() {
-    if (!fileInfo.value?.fileUrl) return;
+    if (!fileInfo.value?.fileId) return;
     try {
-        const txt = await (await fetch(getFileUrl(fileInfo.value.fileUrl))).text();
+        const txt = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text();
         fileContent.value = txt;
         marked.setOptions({ breaks: true, gfm: true });
         markdownHtml.value = marked.parse(txt) as string;
@@ -574,20 +573,20 @@ async function loadMarkdown() {
 }
 
 async function loadWord() {
-    if (!fileInfo.value?.fileUrl) return;
+    if (!fileInfo.value?.fileId) return;
     wordLoading.value = true; wordError.value = '';
     try {
-        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl))).arrayBuffer();
+        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
         const res = await mammoth.convertToHtml({ arrayBuffer: buf });
         wordHtml.value = res.value;
     } catch { wordError.value = '无法解析此文档'; } finally { wordLoading.value = false; }
 }
 
 async function loadExcel() {
-    if (!fileInfo.value?.fileUrl) return;
+    if (!fileInfo.value?.fileId) return;
     excelLoading.value = true; excelError.value = '';
     try {
-        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl))).arrayBuffer();
+        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
         excelWorkbook.value = wb; excelSheets.value = wb.SheetNames;
         if (wb.SheetNames.length > 0) { currentSheet.value = wb.SheetNames[0]; loadSheetData(wb.SheetNames[0]); }
