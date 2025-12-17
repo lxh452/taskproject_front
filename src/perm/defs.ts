@@ -172,7 +172,7 @@ export const PERM_TREE = [
     ],
   },
   {
-    label: '交接管理',
+    label: '审批管理',
     value: 'handover',
     children: [
       { label: '查看', value: PERM.HANDOVER_READ },

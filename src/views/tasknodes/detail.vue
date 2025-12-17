@@ -329,7 +329,22 @@ async function loadNodeDetail() {
                     n.id === nodeId.value || n.taskNodeId === nodeId.value
                 );
                 if (node) {
-                    nodeInfo.value = node;
+                    // 统一字段映射，确保字段名称一致
+                    nodeInfo.value = {
+                        ...node,
+                        nodeName: node.nodeName || node.NodeName || node.name || '',
+                        status: node.status !== undefined ? node.status : (node.Status !== undefined ? node.Status : (node.nodeStatus !== undefined ? node.nodeStatus : 0)),
+                        progress: node.progress !== undefined ? node.progress : (node.Progress !== undefined ? node.Progress : 0),
+                        executorId: node.executorId || node.executorID || node.ExecutorID || '',
+                        executorIds: Array.isArray(node.executorIds) ? node.executorIds : (node.executorId ? [node.executorId] : []),
+                        leaderId: node.leaderId || node.leaderID || node.LeaderID || '',
+                        nodeStartTime: node.nodeStartTime || node.NodeStartTime || node.startTime || '',
+                        nodeDeadline: node.nodeDeadline || node.NodeDeadline || node.deadline || '',
+                        nodeDetail: node.nodeDetail || node.NodeDetail || node.detail || '',
+                        departmentName: node.departmentName || node.DepartmentName || '',
+                        estimatedDays: node.estimatedDays || node.EstimatedDays || 0,
+                        taskId: node.taskId || node.TaskId || taskId || ''
+                    };
                     
                     // 加载关联任务信息
                     const taskResp = await getTask({ taskId });

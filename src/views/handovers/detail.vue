@@ -4,7 +4,7 @@
         <div class="page-header">
             <div class="header-left">
                 <el-button :icon="ArrowLeft" text @click="goBack">返回</el-button>
-                <h1>交接详情</h1>
+                <h1>审批详情</h1>
                 <el-tag :type="statusInfo.type" size="large" class="status-tag">{{ statusInfo.text }}</el-tag>
             </div>
         </div>

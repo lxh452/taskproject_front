@@ -707,6 +707,7 @@ import {
 import type { FormInstance, FormRules } from 'element-plus';
 import TaskChecklist from '@/components/TaskChecklist.vue';
 import { useUserStore } from '@/store/user';
+import { getFileUrl, processFileUrls } from '@/utils/fileUrl';
 import * as echarts from 'echarts';
 
 const route = useRoute();
@@ -1225,7 +1226,8 @@ async function loadAttachments() {
     try {
         const resp = await getTaskAttachments({ taskId });
         if (resp.data?.code === 200) {
-            attachments.value = resp.data?.data?.list || [];
+            // 处理文件URL，转换为COS域名完整URL
+            attachments.value = processFileUrls(resp.data?.data?.list || []);
         }
     } catch (error: any) {
         console.error('加载附件失败:', error);
@@ -1355,7 +1357,8 @@ function getAnnotationTypeText(type: string): string {
 function downloadFile(file: any) {
     if (file.fileUrl) {
         const link = document.createElement('a');
-        link.href = file.fileUrl;
+        // 使用文件URL工具函数处理COS域名
+        link.href = getFileUrl(file.fileUrl);
         link.download = file.fileName;
         link.click();
     }

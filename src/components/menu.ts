@@ -39,7 +39,7 @@ export const menuData: Menus[] = [
     },
     {
         id: 'handover',
-        title: '交接管理',
+        title: '审批管理',
         index: 'handover',
         icon: 'Switch',
         children: [

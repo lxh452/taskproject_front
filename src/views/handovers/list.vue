@@ -3,11 +3,11 @@
         <!-- 页面头部 -->
         <div class="page-header">
             <div class="header-left">
-                <h1 class="page-title">交接管理</h1>
+                <h1 class="page-title">审批管理</h1>
                 <p class="page-desc">管理任务交接申请与审批流程</p>
             </div>
             <el-button type="primary" :icon="Plus" @click="createHandover" class="create-btn">
-                发起交接
+                发起审批
             </el-button>
         </div>
 

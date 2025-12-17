@@ -139,19 +139,19 @@ const routes: RouteRecordRaw[] = [
             {
                 path: '/handovers',
                 name: 'handovers',
-                meta: { title: '交接管理' },
+                meta: { title: '审批管理' },
                 component: () => import('../views/handovers/list.vue'),
             },
             {
                 path: '/handovers/create',
                 name: 'handovers-create',
-                meta: { title: '发起交接' },
+                meta: { title: '发起审批' },
                 component: () => import('../views/handovers/create.vue'),
             },
             {
                 path: '/handovers/detail/:id',
                 name: 'handovers-detail',
-                meta: { title: '交接详情' },
+                meta: { title: '审批详情' },
                 component: () => import('../views/handovers/detail.vue'),
             },
             {
