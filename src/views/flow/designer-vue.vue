@@ -1793,7 +1793,7 @@ async function saveRoles() {
     await updateTaskNode({
       nodeId: nodeId,
       leaderId: formLeader.value,
-      executorId: Array.isArray(formExecutors.value) ? formExecutors.value : [],
+      executorIds: Array.isArray(formExecutors.value) ? formExecutors.value : [],
     })
     
     // 更新节点数据
