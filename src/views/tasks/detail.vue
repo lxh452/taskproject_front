@@ -1354,13 +1354,47 @@ function getAnnotationTypeText(type: string): string {
 }
 
 // 下载文件
-function downloadFile(file: any) {
-    if (file.fileUrl) {
+async function downloadFile(file: any) {
+    if (!file.fileId && !file.fileUrl) return;
+    
+    try {
+        // 获取认证token
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            ElMessage.warning('请先登录');
+            return;
+        }
+        
+        // 构建URL（如果有fileId则使用代理接口）
+        const url = getFileUrl(file.fileUrl, file.fileId);
+        
+        // 通过fetch获取文件内容（携带token）
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            ElMessage.error('下载文件失败');
+            return;
+        }
+        
+        // 创建blob并下载
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        // 使用文件URL工具函数处理COS域名
-        link.href = getFileUrl(file.fileUrl);
+        link.href = blobUrl;
         link.download = file.fileName;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        
+        // 清理blob URL
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+        console.error('下载文件失败:', error);
+        ElMessage.error('下载文件失败');
     }
 }
 

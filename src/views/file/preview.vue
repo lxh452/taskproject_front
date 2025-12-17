@@ -457,12 +457,34 @@ function formatFileSize(bytes: number) {
 }
 
 function goBack() { router.go(-1); }
-function downloadFile() {
-    if (fileInfo.value?.fileId) {
+async function downloadFile() {
+    if (!fileInfo.value?.fileId) return;
+    
+    try {
+        // 通过fetch获取文件内容（携带token）
+        const url = getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId);
+        const response = await fetchWithToken(url);
+        
+        if (!response.ok) {
+            ElMessage.error('下载文件失败');
+            return;
+        }
+        
+        // 创建blob并下载
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId);
+        link.href = blobUrl;
         link.download = fileInfo.value.fileName;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        
+        // 清理blob URL
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+        console.error('下载文件失败:', error);
+        ElMessage.error('下载文件失败');
     }
 }
 
@@ -577,15 +599,21 @@ function getAuthToken(): string | null {
 // 带token的fetch请求
 async function fetchWithToken(url: string, options: RequestInit = {}): Promise<Response> {
     const token = getAuthToken();
-    const headers = new Headers(options.headers);
-    if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-        console.log('fetchWithToken: 已添加Authorization header, token长度:', token.length);
-    } else {
-        console.warn('fetchWithToken: 未找到token');
+    if (!token) {
+        console.error('fetchWithToken: 未找到token，无法发送请求');
+        throw new Error('未找到认证token，请先登录');
     }
-    console.log('fetchWithToken: 请求URL:', url);
-    console.log('fetchWithToken: 请求headers:', Object.fromEntries(headers.entries()));
+    
+    const headers = new Headers(options.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    
+    // 调试日志
+    if (import.meta.env.DEV) {
+        console.log('fetchWithToken: 请求URL:', url);
+        console.log('fetchWithToken: 已添加Authorization header, token长度:', token.length);
+        console.log('fetchWithToken: Authorization header值:', `Bearer ${token.substring(0, 20)}...`);
+    }
+    
     return fetch(url, { ...options, headers });
 }
 
