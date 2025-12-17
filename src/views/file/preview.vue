@@ -50,12 +50,12 @@
             <section class="content-section">
                 <!-- 图片预览 -->
                 <div v-if="isImage" class="preview-image">
-                    <img :src="getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" :alt="fileInfo?.fileName" />
+                    <img :src="imageBlobUrl || getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" :alt="fileInfo?.fileName" />
                 </div>
                 
                 <!-- PDF预览 -->
                 <div v-else-if="isPdf" class="preview-pdf">
-                    <iframe :src="getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" frameborder="0"></iframe>
+                    <iframe :src="pdfBlobUrl || getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" frameborder="0"></iframe>
                 </div>
 
                 <!-- Markdown预览 -->
@@ -300,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, Star, List } from '@element-plus/icons-vue';
@@ -342,6 +342,8 @@ const fileContent = ref('');
 const allComments = ref<any[]>([]);
 const taskNodes = ref<any[]>([]);
 const employeesMap = ref<Record<string, any>>({});
+const imageBlobUrl = ref<string>('');
+const pdfBlobUrl = ref<string>('');
 
 // 文档解析
 const markdownHtml = ref('');
@@ -547,7 +549,10 @@ async function loadFileInfo() {
             fileInfo.value = resp.data.data;
             // 使用fileId通过代理接口访问（解决CORS问题）
             if (fileInfo.value.fileId) {
-                if (isMarkdown.value) await loadMarkdown();
+                // 对于图片和PDF，需要先加载为blob URL以携带token
+                if (isImage.value) await loadImage();
+                else if (isPdf.value) await loadPdf();
+                else if (isMarkdown.value) await loadMarkdown();
                 else if (isWord.value) await loadWord();
                 else if (isExcel.value) await loadExcel();
                 else if (isTextFile.value) await loadText();
@@ -556,16 +561,67 @@ async function loadFileInfo() {
     } catch (e) { console.error('加载文件失败:', e); } finally { loading.value = false; }
 }
 
+// 获取认证token
+function getAuthToken(): string | null {
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+}
+
+// 带token的fetch请求
+async function fetchWithToken(url: string, options: RequestInit = {}): Promise<Response> {
+    const token = getAuthToken();
+    const headers = new Headers(options.headers);
+    if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+    }
+    return fetch(url, { ...options, headers });
+}
+
+// 加载图片为blob URL
+async function loadImage() {
+    if (!fileInfo.value?.fileId) return;
+    try {
+        const response = await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId));
+        if (response.ok) {
+            const blob = await response.blob();
+            // 释放之前的blob URL
+            if (imageBlobUrl.value) {
+                URL.revokeObjectURL(imageBlobUrl.value);
+            }
+            imageBlobUrl.value = URL.createObjectURL(blob);
+        }
+    } catch (error) {
+        console.error('加载图片失败:', error);
+    }
+}
+
+// 加载PDF为blob URL
+async function loadPdf() {
+    if (!fileInfo.value?.fileId) return;
+    try {
+        const response = await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId));
+        if (response.ok) {
+            const blob = await response.blob();
+            // 释放之前的blob URL
+            if (pdfBlobUrl.value) {
+                URL.revokeObjectURL(pdfBlobUrl.value);
+            }
+            pdfBlobUrl.value = URL.createObjectURL(blob);
+        }
+    } catch (error) {
+        console.error('加载PDF失败:', error);
+    }
+}
+
 async function loadText() {
     if (!fileInfo.value?.fileId) return;
-    try { fileContent.value = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text(); }
+    try { fileContent.value = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text(); }
     catch { fileContent.value = '// 无法加载文件内容'; }
 }
 
 async function loadMarkdown() {
     if (!fileInfo.value?.fileId) return;
     try {
-        const txt = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text();
+        const txt = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text();
         fileContent.value = txt;
         marked.setOptions({ breaks: true, gfm: true });
         markdownHtml.value = marked.parse(txt) as string;
@@ -576,7 +632,7 @@ async function loadWord() {
     if (!fileInfo.value?.fileId) return;
     wordLoading.value = true; wordError.value = '';
     try {
-        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
+        const buf = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
         const res = await mammoth.convertToHtml({ arrayBuffer: buf });
         wordHtml.value = res.value;
     } catch { wordError.value = '无法解析此文档'; } finally { wordLoading.value = false; }
@@ -586,7 +642,7 @@ async function loadExcel() {
     if (!fileInfo.value?.fileId) return;
     excelLoading.value = true; excelError.value = '';
     try {
-        const buf = await (await fetch(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
+        const buf = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
         excelWorkbook.value = wb; excelSheets.value = wb.SheetNames;
         if (wb.SheetNames.length > 0) { currentSheet.value = wb.SheetNames[0]; loadSheetData(wb.SheetNames[0]); }
@@ -643,6 +699,16 @@ async function loadEmployees() {
 }
 
 onMounted(() => { initTheme(); loadFileInfo(); loadComments(); loadTaskNodes(); loadEmployees(); });
+
+// 清理blob URL
+onBeforeUnmount(() => {
+    if (imageBlobUrl.value) {
+        URL.revokeObjectURL(imageBlobUrl.value);
+    }
+    if (pdfBlobUrl.value) {
+        URL.revokeObjectURL(pdfBlobUrl.value);
+    }
+});
 </script>
 
 <style scoped>
