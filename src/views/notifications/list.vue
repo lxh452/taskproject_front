@@ -326,17 +326,60 @@ async function handleNotificationClick(notification: any) {
 async function handleApprove(notification: any, approved: boolean) {
     // 如果是任务节点完成审批，直接处理，不需要部门选择
     if (isTaskNodeCompletionApproval(notification)) {
-        const approvalId = notification.relatedId || notification.relatedID || notification.related_id;
+        // 尝试从通知的relatedId获取审批ID，如果没有则从meta中获取
+        let approvalId = notification.relatedId || notification.relatedID || notification.related_id;
+        
+        // 如果relatedId是节点ID，需要查询审批记录
+        if (!approvalId || approvalId.startsWith('node_')) {
+            // 从通知内容或meta中提取审批ID
+            // 通知的RelatedID应该是审批ID，但如果是节点ID，需要查询最新的待审批记录
+            const nodeId = approvalId || notification.nodeId || notification.nodeID;
+            if (nodeId) {
+                try {
+                    // 调用API获取节点详情，从中获取审批列表
+                    const nodeResp = await request({ 
+                        url: '/tasknode/get', 
+                        method: 'post', 
+                        data: { taskNodeId: nodeId } 
+                    });
+                    if (nodeResp.data.code === 200) {
+                        const data = nodeResp.data.data || {};
+                        const approvals = data.approvals || [];
+                        // 找到最新的待审批记录（approvalType === 0）
+                        const pendingApproval = approvals.find((a: any) => a.approvalType === 0);
+                        if (pendingApproval) {
+                            approvalId = pendingApproval.approvalId;
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取审批记录失败:', error);
+                }
+            }
+        }
+        
         if (!approvalId) {
-            ElMessage.error('审批ID不存在');
+            ElMessage.error('无法找到审批记录，请刷新页面重试');
             return;
         }
         
+        // 显示确认对话框，允许输入审批意见
         try {
+            const { value: comment } = await ElMessageBox.prompt(
+                approved ? '确定要通过此任务节点的完成审批吗？' : '确定要拒绝此任务节点的完成审批吗？',
+                approved ? '审批通过' : '审批拒绝',
+                {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    inputType: 'textarea',
+                    inputPlaceholder: '请输入审批意见（可选）',
+                    inputValidator: () => true,
+                }
+            ).catch(() => ({ value: '' }));
+            
             const resp = await approveTaskNodeCompletion({
                 approvalId: approvalId,
                 approved: approved ? 1 : 2,
-                comment: ''
+                comment: comment || ''
             });
             if (resp.data.code === 200) {
                 ElMessage.success(approved ? '审批通过' : '审批拒绝');
@@ -345,8 +388,10 @@ async function handleApprove(notification: any, approved: boolean) {
                 ElMessage.error(resp.data.msg || '审批失败');
             }
         } catch (error: any) {
-            console.error('审批失败:', error);
-            ElMessage.error('审批失败');
+            if (error !== 'cancel') {
+                console.error('审批失败:', error);
+                ElMessage.error('审批失败');
+            }
         }
         return;
     }

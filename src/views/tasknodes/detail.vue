@@ -171,7 +171,7 @@ import {
     Clock, OfficeBuilding, Timer, Document, Connection 
 } from '@element-plus/icons-vue';
 import TaskChecklist from '@/components/TaskChecklist.vue';
-import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval } from '@/api';
+import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval, request } from '@/api';
 import { ElMessageBox } from 'element-plus';
 
 const route = useRoute();
@@ -217,8 +217,7 @@ function getStatusType(status: number) {
         0: 'info',
         1: 'warning',
         2: 'success',
-        3: 'danger',
-        4: 'warning'
+        3: 'danger'
     };
     return statusTypeMap[status] || 'info';
 }
@@ -228,8 +227,7 @@ function getStatusText(status: number) {
         0: '待处理',
         1: '进行中',
         2: '已完成',
-        3: '已逾期',
-        4: '待审批'
+        3: '已逾期'
     };
     return statusMap[status] || '未知';
 }
@@ -325,42 +323,45 @@ async function loadNodeDetail() {
 
     loading.value = true;
     try {
-        // 通过taskNodeId查找节点信息
-        // 注意：需要先通过某种方式获取taskId，这里假设从路由query中获取
-        const taskId = route.query.taskId as string;
+        // 使用新的API获取节点详情（包含审批列表）
+        const resp = await request({ 
+            url: '/tasknode/get', 
+            method: 'post', 
+            data: { taskNodeId: nodeId.value } 
+        });
         
-        if (taskId) {
-            const resp = await listTaskNodesByTask({ taskId, page: 1, pageSize: 100 });
-            if (resp.data.code === 200) {
-                const nodes = resp.data.data?.list || [];
-                const node = nodes.find((n: any) => 
-                    n.id === nodeId.value || n.taskNodeId === nodeId.value
-                );
-                if (node) {
-                    // 统一字段映射，确保字段名称一致
-                    nodeInfo.value = {
-                        ...node,
-                        nodeName: node.nodeName || node.NodeName || node.name || '',
-                        status: node.status !== undefined ? node.status : (node.Status !== undefined ? node.Status : (node.nodeStatus !== undefined ? node.nodeStatus : 0)),
-                        progress: node.progress !== undefined ? node.progress : (node.Progress !== undefined ? node.Progress : 0),
-                        executorId: node.executorId || node.executorID || node.ExecutorID || '',
-                        executorIds: Array.isArray(node.executorIds) ? node.executorIds : (node.executorId ? [node.executorId] : []),
-                        leaderId: node.leaderId || node.leaderID || node.LeaderID || '',
-                        nodeStartTime: node.nodeStartTime || node.NodeStartTime || node.startTime || '',
-                        nodeDeadline: node.nodeDeadline || node.NodeDeadline || node.deadline || '',
-                        nodeDetail: node.nodeDetail || node.NodeDetail || node.detail || '',
-                        departmentName: node.departmentName || node.DepartmentName || '',
-                        estimatedDays: node.estimatedDays || node.EstimatedDays || 0,
-                        taskId: node.taskId || node.TaskId || taskId || ''
-                    };
-                    
-                    // 加载关联任务信息
-                    const taskResp = await getTask({ taskId });
-                    if (taskResp.data.code === 200) {
-                        taskInfo.value = taskResp.data.data;
-                    }
+        if (resp.data.code === 200) {
+            const data = resp.data.data || {};
+            const taskNode = data.taskNode || data;
+            const approvals = data.approvals || [];
+            
+            // 统一字段映射，确保字段名称一致
+            nodeInfo.value = {
+                ...taskNode,
+                nodeName: taskNode.nodeName || taskNode.NodeName || taskNode.name || '',
+                status: taskNode.status !== undefined ? taskNode.status : (taskNode.Status !== undefined ? taskNode.Status : (taskNode.nodeStatus !== undefined ? taskNode.nodeStatus : 0)),
+                progress: taskNode.progress !== undefined ? taskNode.progress : (taskNode.Progress !== undefined ? taskNode.Progress : 0),
+                executorId: taskNode.executorId || taskNode.executorID || taskNode.ExecutorID || '',
+                executorIds: Array.isArray(taskNode.executorIds) ? taskNode.executorIds : (taskNode.executorId ? taskNode.executorId.split(',').filter((id: string) => id.trim()) : []),
+                leaderId: taskNode.leaderId || taskNode.leaderID || taskNode.LeaderID || '',
+                nodeStartTime: taskNode.nodeStartTime || taskNode.NodeStartTime || taskNode.startTime || '',
+                nodeDeadline: taskNode.nodeDeadline || taskNode.NodeDeadline || taskNode.deadline || '',
+                nodeDetail: taskNode.nodeDetail || taskNode.NodeDetail || taskNode.detail || '',
+                departmentName: taskNode.departmentName || taskNode.DepartmentName || '',
+                estimatedDays: taskNode.estimatedDays || taskNode.EstimatedDays || 0,
+                taskId: taskNode.taskId || taskNode.TaskId || '',
+                approvals: approvals // 保存审批列表
+            };
+            
+            // 如果有taskId，加载关联任务信息
+            if (nodeInfo.value.taskId) {
+                const taskResp = await getTask({ taskId: nodeInfo.value.taskId });
+                if (taskResp.data.code === 200) {
+                    taskInfo.value = taskResp.data.data;
                 }
             }
+        } else {
+            ElMessage.error(resp.data.msg || '加载节点详情失败');
         }
     } catch (error: any) {
         console.error('加载节点详情失败:', error);
@@ -473,6 +474,11 @@ onMounted(async () => {
 .status-indicator.status-2 {
     background: #10b981;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-indicator.status-3 {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
 
 @keyframes pulse {

@@ -186,7 +186,7 @@ const props = defineProps<{
     taskNodeId: string;
     currentEmployeeId: string;
     canAdd?: boolean;
-    nodeStatus?: number; // 节点状态：0-待处理，1-进行中，2-已完成，3-已逾期，4-待审批
+    nodeStatus?: number; // 节点状态：0-待处理，1-进行中，2-已完成，3-已逾期
     nodeProgress?: number; // 节点进度
 }>();
 
