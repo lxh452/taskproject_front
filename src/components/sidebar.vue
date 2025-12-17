@@ -156,10 +156,17 @@ function handleSignOut() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    background: transparent;
     border-radius: clamp(6px, 0.6vw, 10px);
-    color: #ffffff;
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+.logo-icon .logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .logo-icon svg {
