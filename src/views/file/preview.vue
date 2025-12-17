@@ -50,12 +50,20 @@
             <section class="content-section">
                 <!-- 图片预览 -->
                 <div v-if="isImage" class="preview-image">
-                    <img :src="imageBlobUrl || getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" :alt="fileInfo?.fileName" />
+                    <div v-if="!imageBlobUrl" class="loading-state">
+                        <el-icon class="loading-spinner"><Loading /></el-icon>
+                        <span>正在加载图片...</span>
+                    </div>
+                    <img v-else :src="imageBlobUrl" :alt="fileInfo?.fileName" />
                 </div>
                 
                 <!-- PDF预览 -->
                 <div v-else-if="isPdf" class="preview-pdf">
-                    <iframe :src="pdfBlobUrl || getFileUrl(fileInfo?.fileUrl, fileInfo?.fileId)" frameborder="0"></iframe>
+                    <div v-if="!pdfBlobUrl" class="loading-state">
+                        <el-icon class="loading-spinner"><Loading /></el-icon>
+                        <span>正在加载PDF...</span>
+                    </div>
+                    <iframe v-else :src="pdfBlobUrl" frameborder="0"></iframe>
                 </div>
 
                 <!-- Markdown预览 -->
@@ -572,7 +580,12 @@ async function fetchWithToken(url: string, options: RequestInit = {}): Promise<R
     const headers = new Headers(options.headers);
     if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+        console.log('fetchWithToken: 已添加Authorization header, token长度:', token.length);
+    } else {
+        console.warn('fetchWithToken: 未找到token');
     }
+    console.log('fetchWithToken: 请求URL:', url);
+    console.log('fetchWithToken: 请求headers:', Object.fromEntries(headers.entries()));
     return fetch(url, { ...options, headers });
 }
 
