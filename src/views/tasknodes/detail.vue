@@ -128,7 +128,10 @@
                         :task-node-id="nodeId"
                         :current-employee-id="currentEmployeeId"
                         :can-add="canEdit"
+                        :node-status="nodeInfo?.status"
+                        :node-progress="nodeInfo?.progress"
                         @progress-change="onProgressChange"
+                        @approval-submitted="handleApprovalSubmitted"
                         ref="checklistRef"
                     />
                 </el-card>
@@ -265,6 +268,11 @@ function onProgressChange(progress: number) {
     if (nodeInfo.value) {
         nodeInfo.value.progress = progress;
     }
+}
+
+function handleApprovalSubmitted() {
+    // 审批提交后重新加载节点信息
+    loadNodeDetail();
 }
 
 async function submitApproval() {

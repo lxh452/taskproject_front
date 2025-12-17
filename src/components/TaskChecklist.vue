@@ -17,6 +17,16 @@
                     :stroke-width="6"
                     class="progress-bar"
                 />
+                <!-- 提交审批按钮：当清单100%完成且节点状态为进行中时显示 -->
+                <el-button 
+                    v-if="canSubmitApproval"
+                    type="success" 
+                    size="small" 
+                    @click="handleSubmitApproval"
+                    class="submit-btn"
+                >
+                    提交审批
+                </el-button>
                 <el-button 
                     type="primary" 
                     size="small" 
@@ -160,14 +170,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { List, Plus, Edit, Delete, Lock } from '@element-plus/icons-vue';
 import { 
     getChecklistList, 
     createChecklist, 
     updateChecklist, 
-    deleteChecklist 
+    deleteChecklist,
+    submitTaskNodeCompletionApproval
 } from '@/api';
 
 // Props
@@ -175,11 +186,14 @@ const props = defineProps<{
     taskNodeId: string;
     currentEmployeeId: string;
     canAdd?: boolean;
+    nodeStatus?: number; // 节点状态：0-待处理，1-进行中，2-已完成，3-已逾期，4-待审批
+    nodeProgress?: number; // 节点进度
 }>();
 
 // Emits
 const emit = defineEmits<{
     (e: 'progress-change', progress: number): void;
+    (e: 'approval-submitted'): void; // 审批提交后触发
 }>();
 
 // 状态
@@ -191,6 +205,18 @@ const stats = ref({
     totalCount: 0,
     completedCount: 0,
     progress: 0
+});
+
+// 是否可以提交审批：节点状态为进行中（1），进度100%，且当前用户是执行人
+const canSubmitApproval = computed(() => {
+    if (!props.currentEmployeeId) return false;
+    // 检查清单进度是否100%
+    if (stats.value.progress < 100 || stats.value.totalCount === 0) return false;
+    // 检查节点状态是否为进行中（1）
+    if (props.nodeStatus !== undefined && props.nodeStatus !== 1) return false;
+    // 检查节点进度是否100%（如果有传入）
+    if (props.nodeProgress !== undefined && props.nodeProgress < 100) return false;
+    return true;
 });
 const addForm = ref({
     content: ''
@@ -362,6 +388,39 @@ async function deleteItem(item: any) {
     }
 }
 
+// 提交审批
+async function handleSubmitApproval() {
+    if (!props.taskNodeId) {
+        ElMessage.error('任务节点ID不能为空');
+        return;
+    }
+
+    try {
+        await ElMessageBox.confirm(
+            '确定要提交任务节点完成审批吗？提交后需要等待项目负责人审批。',
+            '确认提交审批',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'info'
+            }
+        );
+
+        const resp = await submitTaskNodeCompletionApproval({ nodeId: props.taskNodeId });
+        if (resp.data.code === 200) {
+            ElMessage.success('提交审批成功，等待项目负责人审批');
+            emit('approval-submitted');
+        } else {
+            ElMessage.error(resp.data.msg || '提交审批失败');
+        }
+    } catch (error: any) {
+        if (error !== 'cancel') {
+            console.error('提交审批失败:', error);
+            ElMessage.error('提交审批失败');
+        }
+    }
+}
+
 // 监听taskNodeId变化
 watch(() => props.taskNodeId, (newVal) => {
     if (newVal) {
@@ -427,6 +486,11 @@ defineExpose({
 
 .add-btn {
     border-radius: 6px;
+}
+
+.submit-btn {
+    border-radius: 6px;
+    margin-right: 8px;
 }
 
 .checklist-content {
