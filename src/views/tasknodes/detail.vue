@@ -171,7 +171,8 @@ import {
     Clock, OfficeBuilding, Timer, Document, Connection 
 } from '@element-plus/icons-vue';
 import TaskChecklist from '@/components/TaskChecklist.vue';
-import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval, request } from '@/api';
+import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval } from '@/api';
+import request from '@/utils/request';
 import { ElMessageBox } from 'element-plus';
 
 const route = useRoute();
