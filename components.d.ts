@@ -8,6 +8,8 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Countup: typeof import('./src/components/countup.vue')['default']
+    DashboardKanban: typeof import('./src/components/DashboardKanban.vue')['default']
+    DepartmentGantt: typeof import('./src/components/DepartmentGantt.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
