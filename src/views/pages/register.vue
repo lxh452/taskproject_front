@@ -236,8 +236,6 @@ const submitForm = (formEl: FormInstance | undefined) => {
             } finally {
                 loading.value = false;
             }
-        } else {
-            return false;
         }
     });
 };

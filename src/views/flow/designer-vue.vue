@@ -470,7 +470,7 @@ import {
   InfoFilled, Document, User, UserFilled, Calendar, DataLine, CircleCheck, CircleCheckFilled, Clock, Check,
   OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight
 } from '@element-plus/icons-vue'
-import { VueFlow, Handle, useVueFlow, type Node, type Edge, MarkerType } from '@vue-flow/core'
+import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
 import '@vue-flow/core/dist/style.css'
 import { useFlowStore } from '@/stores/flowStore'
@@ -1454,7 +1454,7 @@ function getLeaderAvatar() {
 // 节点点击
 function onNodeClick({ node }: any) {
   store.setSelection(node?.id || null)
-  edges.value.forEach(e => { e.selected = false })
+  edges.value.forEach(e => { (e as any).selected = false })
   selectedEdge.value = null
   
   // 更新表单
@@ -1491,7 +1491,7 @@ function onEdgeClick(event: any) {
   
   // 设置边选中状态
   edges.value.forEach(e => {
-    e.selected = e.id === edge.id 
+    (e as any).selected = e.id === edge.id 
   })
   
   // 保存选中的边 - 确保保存完整的边对象
@@ -1619,7 +1619,7 @@ async function handleDeleteNode() {
 // 画布点击
 function onPaneClick() {
   store.setSelection(null)
-  edges.value.forEach(e => { e.selected = false })
+  edges.value.forEach(e => { (e as any).selected = false })
   selectedEdge.value = null
 }
 
@@ -1869,7 +1869,7 @@ const StartNode = defineComponent({
       h('div', props.data?.label || '开始'),
       h(Handle, { 
         type: 'source', 
-        position: 'right', 
+        position: Position.Right, 
         class: 'h-right'
       })
     ])
@@ -1900,7 +1900,7 @@ const EndNode = defineComponent({
       h('div', props.data?.label || '结束'),
       h(Handle, { 
         type: 'target', 
-        position: 'left', 
+        position: Position.Left, 
         class: 'h-left'
       })
     ])
@@ -2056,12 +2056,12 @@ const TaskNode = defineComponent({
       ]),
       h(Handle, { 
         type: 'target', 
-        position: 'left', 
+        position: Position.Left, 
         class: 'h-left'
       }),
       h(Handle, { 
         type: 'source', 
-        position: 'right', 
+        position: Position.Right, 
         class: 'h-right'
       })
     ])

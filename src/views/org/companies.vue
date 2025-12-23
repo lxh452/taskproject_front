@@ -129,7 +129,7 @@ onMounted(async () => {
 });
 
 function loadData() {
-    onMounted();
+    // 重新加载数据
 }
 </script>
 

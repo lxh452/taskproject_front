@@ -34,7 +34,7 @@ service.interceptors.request.use(
         }
         
         // 调试日志
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env?.DEV) {
             console.log('发送请求:', {
                 url: config.url,
                 method: config.method,

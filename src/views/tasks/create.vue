@@ -366,7 +366,7 @@ async function submit() {
             const url = e?.response?.config?.url || '';
             const status = e?.response?.status;
             const msg = e?.response?.data?.msg || e?.message || '提交失败';
-            console.error('创建任务失败:', { url, status, msg, payload });
+            console.error('创建任务失败:', { url, status, msg });
             ElMessage.error(`${msg}${url ? ' (' + url + ')' : ''}`);
         } finally {
             submitting.value = false;

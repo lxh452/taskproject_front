@@ -107,7 +107,7 @@ export const parseInviteCode = (data: { inviteCode: string }) =>
 export const applyJoinCompany = (data: { inviteCode: string; applyReason?: string }) =>
     request({ url: '/employee/join/apply', method: 'post', data });
 
-export const approveJoinApplication = (data: { applicationId: string; approved: boolean; note?: string }) =>
+export const approveJoinApplication = (data: { applicationId: string; approved: boolean; note?: string; departmentId?: string; positionId?: string }) =>
     request({ url: '/employee/join/approve', method: 'post', data });
 
 export const getPendingJoinApplications = (data?: { page?: number; pageSize?: number }) =>
@@ -302,6 +302,7 @@ export const createAttachmentComment = (data: {
         height?: number;
         color?: string;
         text?: string;
+        lineNumber?: number;
     };
     pageNumber?: number;
     parentId?: string;

@@ -98,7 +98,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     formEl.validate(async (valid: boolean) => {
         if (!valid) {
-            return false;
+            return;
         }
         try {
             const res = await apiLogin({ username: param.username, password: param.password });

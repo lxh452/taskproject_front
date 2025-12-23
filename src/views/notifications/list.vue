@@ -82,7 +82,7 @@
                             v-for="notification in readNotifications" 
                             :key="notification.id"
                             class="notification-item read"
-                            @click="markAsRead(notification)"
+                            @click="viewNotification(notification)"
                         >
                             <div class="notif-icon" :class="getIconClass(notification.type)">
                                 <el-icon><component :is="getIcon(notification.type)" /></el-icon>
@@ -315,6 +315,17 @@ async function handleNotificationClick(notification: any) {
         return;
     }
     
+    const relatedId = notification.relatedId || notification.relatedID || notification.related_id;
+    const relatedType = notification.relatedType || notification.related_type;
+    if (relatedId) {
+        if (relatedType === 'task' || relatedType === 'Task') router.push(`/tasks/detail/${relatedId}`);
+        else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') router.push(`/task-nodes/detail/${relatedId}`);
+        else if (relatedType === 'handover' || relatedType === 'Handover') router.push(`/handovers`);
+    }
+}
+
+// 查看已读通知详情
+function viewNotification(notification: any) {
     const relatedId = notification.relatedId || notification.relatedID || notification.related_id;
     const relatedType = notification.relatedType || notification.related_type;
     if (relatedId) {
