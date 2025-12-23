@@ -13,8 +13,6 @@ export const menuData: Menus[] = [
         index: 'task',
         icon: 'Collection',
         children: [
-            { id: 'task_overview', pid: 'task', index: '/tasks-overview', title: '任务概览' },
-            { id: 'task_kanban', pid: 'task', index: '/tasks-kanban', title: '看板视图' },
             { id: 'task_list_page', pid: 'task', index: '/tasks', title: '任务列表' },
         ],
     },

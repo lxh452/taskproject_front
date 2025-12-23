@@ -333,194 +333,199 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
 
 <style scoped>
 .employees-page {
-    padding: clamp(16px, 1.5vw, 24px);
-    background: var(--bg-page);
-    min-height: calc(100vh - clamp(56px, 8vh, 64px));
-    width: 100%;
-    box-sizing: border-box;
+    padding: 20px;
+    background: #f9fafb;
+    min-height: calc(100vh - 64px);
 }
 
+/* 页面头部 */
 .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: clamp(16px, 1.5vw, 24px);
+    align-items: flex-start;
+    margin-bottom: 20px;
 }
 
 .page-title {
-    font-size: clamp(20px, 1.5vw, 24px);
-    font-weight: 700;
-    color: var(--text-main);
-    margin: 0 0 clamp(4px, 0.3vw, 8px);
+    font-size: 22px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px;
 }
 
 .page-desc {
-    font-size: clamp(13px, 0.95vw, 15px);
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: #6b7280;
     margin: 0;
 }
 
+/* 筛选栏 */
 .filter-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: clamp(12px, 1vw, 16px) clamp(16px, 1.3vw, 20px);
-    background: var(--bg-card);
-    border-radius: clamp(10px, 0.8vw, 12px);
-    border: 1px solid var(--border-color);
-    margin-bottom: clamp(16px, 1.5vw, 24px);
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
 }
 
 .filter-left {
     display: flex;
-    gap: clamp(10px, 0.8vw, 12px);
+    gap: 12px;
     align-items: center;
 }
 
-.search-input { width: clamp(180px, 13vw, 220px); }
-.filter-select { width: clamp(120px, 9vw, 160px); }
-.filter-select-sm { width: clamp(90px, 7vw, 120px); }
+.search-input { width: 200px; }
+.filter-select { width: 140px; }
+.filter-select-sm { width: 100px; }
 
 .filter-right {
     display: flex;
-    gap: clamp(6px, 0.5vw, 8px);
+    gap: 8px;
 }
 
+/* 员工网格 */
 .employees-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 20vw, 320px), 1fr));
-    gap: clamp(12px, 1.2vw, 20px);
-    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
 }
 
+/* 员工卡片 */
 .employee-card {
-    background: var(--bg-card);
-    border-radius: clamp(12px, 1vw, 16px);
-    border: 1px solid var(--border-color);
-    padding: clamp(16px, 1.3vw, 24px);
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 18px;
     position: relative;
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
+    transition: box-shadow 0.15s;
 }
 
 .employee-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .employee-card.is-resigned {
-    opacity: 0.65;
+    opacity: 0.6;
 }
 
 .card-status {
     position: absolute;
-    top: clamp(12px, 1vw, 16px);
-    right: clamp(12px, 1vw, 16px);
-    font-size: clamp(10px, 0.75vw, 12px);
+    top: 14px;
+    right: 14px;
+    font-size: 11px;
     font-weight: 500;
-    padding: clamp(3px, 0.3vw, 5px) clamp(8px, 0.7vw, 12px);
-    border-radius: clamp(16px, 1.3vw, 20px);
+    padding: 3px 10px;
+    border-radius: 10px;
 }
 
-.card-status.active { background: var(--bg-hover); color: var(--color-success); }
-.card-status.inactive { background: var(--bg-hover); color: var(--text-secondary); }
+.card-status.active { background: #d1fae5; color: #059669; }
+.card-status.inactive { background: #f3f4f6; color: #6b7280; }
 
 .card-header {
     display: flex;
     align-items: center;
-    gap: clamp(12px, 1vw, 14px);
-    margin-bottom: clamp(16px, 1.3vw, 20px);
-    padding-bottom: clamp(16px, 1.3vw, 20px);
-    border-bottom: 1px solid var(--border-color);
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
 }
 
 .employee-avatar {
-    background: linear-gradient(135deg, var(--color-danger) 0%, #b91c1c 100%);
+    background: #4f46e5;
     color: #fff;
     font-weight: 600;
-    font-size: clamp(18px, 1.3vw, 22px);
-    flex-shrink: 0;
+    font-size: 18px;
 }
 
+.employee-info { flex: 1; min-width: 0; }
+
 .employee-name {
-    font-size: clamp(15px, 1.1vw, 17px);
+    font-size: 15px;
     font-weight: 600;
-    color: var(--text-main);
-    margin: 0 0 clamp(3px, 0.3vw, 5px);
+    color: #1f2937;
+    margin: 0 0 2px;
 }
 
 .employee-position {
-    font-size: clamp(12px, 0.9vw, 14px);
-    color: var(--text-secondary);
+    font-size: 12px;
+    color: #6b7280;
     margin: 0;
 }
 
 .card-body {
     display: flex;
     flex-direction: column;
-    gap: clamp(10px, 0.8vw, 12px);
+    gap: 10px;
 }
 
 .info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: clamp(12px, 0.9vw, 14px);
+    font-size: 12px;
 }
 
-.info-label { color: var(--text-muted); }
-.info-value { color: var(--text-main); font-weight: 500; }
-.info-value.email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info-label { color: #9ca3af; }
+.info-value { color: #1f2937; font-weight: 500; }
+.info-value.email { 
+    max-width: 140px; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+}
 
 .card-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f3f4f6;
 }
 
+/* 空状态 */
 .empty-state {
     padding: 60px;
-    background: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
-/* Drawer */
+/* 抽屉 */
 .drawer-loading, .drawer-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 200px;
-    color: var(--text-secondary);
-    gap: 12px;
+    height: 180px;
+    color: #6b7280;
+    gap: 10px;
 }
 
 .roles-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .role-item {
-    background: var(--bg-hover);
-    border-radius: 10px;
-    padding: 16px;
-    border: 1px solid var(--border-color);
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
 }
 
 .role-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
-.role-name { font-weight: 600; color: var(--text-main); }
+.role-name { font-weight: 600; color: #1f2937; font-size: 14px; }
 
 .perm-tags {
     display: flex;
@@ -528,63 +533,26 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
     gap: 6px;
 }
 
-/* Dialog */
+/* 对话框 */
 .dialog-user-info {
-    background: var(--bg-hover);
-    padding: 12px 16px;
-    border-radius: 8px;
+    background: #f9fafb;
+    padding: 12px 14px;
+    border-radius: 6px;
     margin-bottom: 20px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
-.dialog-user-info .label { color: var(--text-secondary); }
-.dialog-user-info .value { font-weight: 600; color: var(--text-main); }
+.dialog-user-info .label { color: #6b7280; }
+.dialog-user-info .value { font-weight: 600; color: #1f2937; }
 
-.error-tip { color: var(--color-danger); font-size: 12px; margin-top: 4px; }
-
-/* 响应式布局 - 保持比例 */
-@media (max-width: 1024px) {
-    .employees-grid {
-        grid-template-columns: repeat(auto-fill, minmax(22vw, 1fr));
-    }
-}
+.error-tip { color: #ef4444; font-size: 12px; margin-top: 4px; }
 
 @media (max-width: 768px) {
-    .employees-page {
-        padding: 4vw;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2vw;
-    }
-    
-    .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1.5vw;
-    }
-    
-    .filter-left {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .search-input,
-    .filter-select,
-    .filter-select-sm {
-        width: 100%;
-    }
-    
-    .filter-right {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .employees-grid {
-        grid-template-columns: 1fr;
-        gap: 3vw;
-    }
+    .employees-page { padding: 16px; }
+    .filter-bar { flex-direction: column; gap: 10px; }
+    .filter-left { flex-direction: column; width: 100%; }
+    .search-input, .filter-select, .filter-select-sm { width: 100%; }
+    .filter-right { width: 100%; justify-content: space-between; }
+    .employees-grid { grid-template-columns: 1fr; }
 }
 </style>

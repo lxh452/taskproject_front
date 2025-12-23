@@ -144,13 +144,20 @@
                             </div>
                             <div class="avatar-editor">
                                 <div class="crop-container" v-if="activeName === 'avatar'">
-                            <vueCropper
-                                ref="cropper"
-                                :img="imgSrc"
-                                :autoCrop="true"
-                                :centerBox="true"
-                                :full="true"
-                                mode="contain"
+                                    <vueCropper
+                                        ref="cropper"
+                                        :img="imgSrc"
+                                        :autoCrop="true"
+                                        :autoCropWidth="200"
+                                        :autoCropHeight="200"
+                                        :centerBox="true"
+                                        :fixed="true"
+                                        :fixedNumber="[1, 1]"
+                                        :full="true"
+                                        :canMove="true"
+                                        :canMoveBox="true"
+                                        :canScale="true"
+                                        mode="contain"
                                         outputType="png"
                                     />
                                 </div>
@@ -479,7 +486,6 @@ function setImage(e: Event) {
     const reader = new FileReader();
     reader.onload = (event: any) => {
         imgSrc.value = event.target.result;
-        cropper.value?.replace(event.target.result);
     };
     reader.readAsDataURL(file);
 }
@@ -493,16 +499,10 @@ async function saveAvatar() {
 
     uploading.value = true;
     try {
-        const canvas = cropper.value.getCroppedCanvas();
-        if (!canvas) {
-            ElMessage.warning('请先选择并裁剪图片');
-            uploading.value = false;
-            return;
-        }
-
-        canvas.toBlob(async (blob: Blob | null) => {
+        // vue-cropper 使用 getCropBlob 方法获取裁剪后的图片
+        cropper.value.getCropBlob((blob: Blob) => {
             if (!blob) {
-                ElMessage.error('图片处理失败');
+                ElMessage.warning('请先选择并裁剪图片');
                 uploading.value = false;
                 return;
             }
@@ -510,8 +510,7 @@ async function saveAvatar() {
             const formData = new FormData();
             formData.append('avatar', blob, 'avatar.png');
 
-            try {
-                const resp = await uploadAvatar(formData);
+            uploadAvatar(formData).then((resp: any) => {
                 if (resp.data?.code === 200 && resp.data?.data?.avatarUrl) {
                     userInfo.value.avatar = resp.data.data.avatarUrl;
                     ElMessage.success('头像更新成功');
@@ -521,13 +520,13 @@ async function saveAvatar() {
                 } else {
                     ElMessage.error(resp.data?.msg || '头像更新失败');
                 }
-            } catch (error: any) {
+            }).catch((error: any) => {
                 console.error('上传头像失败:', error);
                 ElMessage.error('上传头像失败');
-            } finally {
+            }).finally(() => {
                 uploading.value = false;
-            }
-        }, 'image/png');
+            });
+        });
     } catch (error: any) {
         console.error('处理头像失败:', error);
         ElMessage.error('处理头像失败');

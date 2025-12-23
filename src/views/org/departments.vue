@@ -263,129 +263,74 @@ onMounted(() => { loadData(); });
 
 <style scoped>
 .departments-page { 
-    padding: clamp(16px, 1.5vw, 24px); 
-    background: var(--bg-page); 
-    min-height: calc(100vh - clamp(56px, 4vh, 64px));
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+    padding: 20px; 
+    background: #f9fafb; 
+    min-height: calc(100vh - 64px);
 }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: clamp(16px, 1.5vw, 24px); }
-.page-title { font-size: clamp(20px, 1.5vw, 24px); font-weight: 700; color: var(--text-main); margin: 0 0 clamp(4px, 0.3vw, 8px); }
-.page-desc { font-size: clamp(13px, 0.95vw, 15px); color: var(--text-secondary); margin: 0; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 600; color: #1f2937; margin: 0 0 4px; }
+.page-desc { font-size: 14px; color: #6b7280; margin: 0; }
+
+.toolbar { margin-bottom: 16px; }
 
 .departments-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 20vw, 320px), 1fr)); 
-    gap: clamp(12px, 1.2vw, 20px);
-    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 16px;
 }
 
 .dept-card {
-    background: var(--bg-card);
-    border-radius: clamp(12px, 0.9vw, 14px);
-    border: 1px solid var(--border-color);
-    padding: clamp(16px, 1.3vw, 20px);
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 18px;
+    transition: box-shadow 0.15s;
 }
 
-.dept-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.dept-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: clamp(12px, 1vw, 16px); }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 
 .dept-icon {
-    width: clamp(40px, 3vw, 48px); 
-    height: clamp(40px, 3vw, 48px); 
-    border-radius: clamp(10px, 0.8vw, 12px);
-    background: var(--bg-hover); 
-    color: var(--color-danger);
+    width: 40px; 
+    height: 40px; 
+    border-radius: 8px;
+    background: #fef2f2; 
+    color: #ef4444;
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: clamp(18px, 1.3vw, 22px);
+    font-size: 18px;
 }
 
-.status-tag { font-size: clamp(10px, 0.75vw, 12px); font-weight: 500; padding: clamp(3px, 0.3vw, 5px) clamp(10px, 0.8vw, 12px); border-radius: clamp(16px, 1.3vw, 20px); }
-.status-tag.active { background: var(--bg-hover); color: var(--color-success); }
-.status-tag.inactive { background: var(--bg-hover); color: var(--text-secondary); }
+.status-tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 10px; }
+.status-tag.active { background: #d1fae5; color: #059669; }
+.status-tag.inactive { background: #f3f4f6; color: #6b7280; }
 
-.card-body { margin-bottom: 16px; }
-.dept-name { font-size: 16px; font-weight: 600; color: var(--text-main); margin: 0 0 8px; }
+.card-body { margin-bottom: 14px; }
+.dept-name { font-size: 15px; font-weight: 600; color: #1f2937; margin: 0 0 8px; }
 .dept-code { font-family: monospace; }
 
-.card-info { background: var(--bg-hover); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+.card-info { background: #f9fafb; border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; }
 .info-row { display: flex; justify-content: space-between; align-items: center; }
-.info-label { font-size: 13px; color: var(--text-muted); }
-.manager-info { display: flex; align-items: center; gap: 8px; }
-.manager-avatar { background: var(--bg-hover); color: var(--color-danger); font-size: 10px; font-weight: 600; }
-.manager-name { font-size: 13px; font-weight: 500; color: var(--text-main); }
+.info-label { font-size: 12px; color: #9ca3af; }
+.manager-info { display: flex; align-items: center; gap: 6px; }
+.manager-avatar { background: #fef2f2; color: #ef4444; font-size: 10px; font-weight: 600; }
+.manager-name { font-size: 12px; font-weight: 500; color: #1f2937; }
 
-.card-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border-color); }
-.empty-state { padding: 60px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
+.card-footer { display: flex; justify-content: flex-end; gap: 6px; padding-top: 14px; border-top: 1px solid #f3f4f6; }
+.empty-state { padding: 60px; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; }
 
-/* 查看详情样式 */
-.view-content {
-    padding: 0;
-}
-
-.view-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.view-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.view-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.view-value {
-    font-size: 14px;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-}
-
-.view-textarea {
-    white-space: pre-wrap;
-    word-break: break-word;
-    line-height: 1.6;
-    padding: 12px;
-    background: var(--bg-base);
-    border-radius: 8px;
-    min-height: 60px;
-}
-
-/* 响应式布局 - 保持比例 */
-@media (max-width: 1024px) {
-    .departments-grid {
-        grid-template-columns: repeat(auto-fill, minmax(22vw, 1fr));
-    }
-}
+.view-content { padding: 0; }
+.view-section { display: flex; flex-direction: column; gap: 16px; }
+.view-item { display: flex; flex-direction: column; gap: 6px; }
+.view-label { font-size: 12px; color: #6b7280; font-weight: 500; }
+.view-value { font-size: 14px; color: #1f2937; display: flex; align-items: center; }
+.view-textarea { white-space: pre-wrap; word-break: break-word; line-height: 1.5; padding: 10px; background: #f9fafb; border-radius: 6px; min-height: 50px; }
 
 @media (max-width: 768px) {
-    .departments-page {
-        padding: 4vw;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2vw;
-    }
-    
-    .departments-grid {
-        grid-template-columns: 1fr;
-        gap: 3vw;
-    }
+    .departments-page { padding: 16px; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .departments-grid { grid-template-columns: 1fr; }
 }
 </style>

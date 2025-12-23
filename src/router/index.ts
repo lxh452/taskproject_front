@@ -57,44 +57,6 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "system-menu" */ '../views/system/menu.vue'),
             },
             {
-                path: '/tasks-overview',
-                name: 'tasks-overview',
-                meta: {
-                    title: '任务概览',
-                },
-                component: () => import('../views/task/overview.vue'),
-            },
-            {
-                path: '/tasks-gantt',
-                name: 'tasks-gantt',
-                meta: {
-                    title: '任务甘特图',
-                },
-                component: () => import('../views/task/gantt.vue'),
-            },
-            {
-                path: '/tasks-timeline',
-                name: 'tasks-timeline',
-                meta: {
-                    title: '任务时间轴',
-                },
-                component: () => import('../views/task/timeline.vue'),
-            },
-            {
-                path: '/tasks-upcoming',
-                name: 'tasks-upcoming',
-                meta: {
-                    title: '即将到期任务',
-                },
-                component: () => import('../views/task/upcoming.vue'),
-            },
-            {
-                path: '/tasks-kanban',
-                name: 'tasks-kanban',
-                meta: { title: 'Project Tasks' },
-                component: () => import('../views/tasks/kanban.vue'),
-            },
-            {
                 path: '/tasks',
                 name: 'tasks',
                 meta: { title: '任务管理' },
