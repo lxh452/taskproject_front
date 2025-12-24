@@ -1,11 +1,24 @@
 <template>
     <div class="login-bg">
+        <!-- 顶部弹幕：从右往左滚动 task task task -->
+        <div class="marquee-container marquee-top">
+            <div class="marquee-content marquee-rtl">
+                <span v-for="i in 20" :key="'top-'+i" class="marquee-text">TASK</span>
+            </div>
+            <div class="marquee-content marquee-rtl" aria-hidden="true">
+                <span v-for="i in 20" :key="'top2-'+i" class="marquee-text">TASK</span>
+            </div>
+        </div>
+
+        <!-- 背景大字 TASK -->
         <div class="task-bg-text">
             <span class="task-letter">T</span>
             <span class="task-letter">A</span>
             <span class="task-letter">S</span>
             <span class="task-letter">K</span>
         </div>
+
+        <!-- 登录卡片 -->
         <div class="login-container">
             <div class="login-header">
                 <div class="login-title">TASK MANAGEMENT</div>
@@ -46,6 +59,16 @@
                     没有账号？<span class="register-link" @click="$router.push('/register')">立即注册</span>
                 </div>
             </el-form>
+        </div>
+
+        <!-- 底部弹幕：从左往右滚动 任务 -->
+        <div class="marquee-container marquee-bottom">
+            <div class="marquee-content marquee-ltr">
+                <span v-for="i in 30" :key="'bottom-'+i" class="marquee-text-cn">任务</span>
+            </div>
+            <div class="marquee-content marquee-ltr" aria-hidden="true">
+                <span v-for="i in 30" :key="'bottom2-'+i" class="marquee-text-cn">任务</span>
+            </div>
         </div>
     </div>
 </template>
@@ -223,11 +246,89 @@ tabs.clearTabs();
     justify-content: center;
     width: 100%;
     height: 100vh;
-    background: #f1f5f9;
+    background: #f8f9fa;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
     position: relative;
     overflow: hidden;
 }
 
+/* 弹幕容器 */
+.marquee-container {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+}
+
+.marquee-top {
+    top: 30px;
+}
+
+.marquee-bottom {
+    bottom: 30px;
+}
+
+.marquee-content {
+    display: flex;
+    gap: 40px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* 从右往左滚动 */
+.marquee-rtl {
+    animation: scrollRTL 25s linear infinite;
+}
+
+/* 从左往右滚动 */
+.marquee-ltr {
+    animation: scrollLTR 30s linear infinite;
+}
+
+@keyframes scrollRTL {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes scrollLTR {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.marquee-text {
+    font-size: 24px;
+    font-weight: 900;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(220, 38, 38, 0.25);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+}
+
+.marquee-text-cn {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: rgba(220, 38, 38, 0.15);
+    letter-spacing: 12px;
+}
+
+/* 背景大字 TASK */
 .task-bg-text {
     position: absolute;
     display: flex;
@@ -241,51 +342,90 @@ tabs.clearTabs();
 }
 
 .task-letter {
-    font-size: 25vw;
+    font-size: 28vw;
     font-weight: 900;
-    font-family: 'Inter', 'Arial Black', sans-serif;
+    font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 1px rgba(99, 102, 241, 0.08);
+    -webkit-text-stroke: 2px rgba(220, 38, 38, 0.15);
+    text-shadow: 
+        0 0 80px rgba(220, 38, 38, 0.1),
+        0 0 120px rgba(220, 38, 38, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
+    animation: letterPulse 4s ease-in-out infinite;
 }
 
+.task-letter:nth-child(1) { animation-delay: 0s; }
+.task-letter:nth-child(2) { animation-delay: 0.5s; }
+.task-letter:nth-child(3) { animation-delay: 1s; }
+.task-letter:nth-child(4) { animation-delay: 1.5s; }
+
+@keyframes letterPulse {
+    0%, 100% { 
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+/* 登录卡片 */
 .login-container {
     width: 400px;
-    border-radius: 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    padding: 40px 36px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 48px 40px;
     box-sizing: border-box;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
     position: relative;
     z-index: 1;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .login-header {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
     text-align: center;
 }
 
 .login-title {
-    font-size: 20px;
-    color: #1f2937;
-    font-weight: 700;
+    font-size: 22px;
+    color: #111827;
+    font-weight: 800;
     margin-bottom: 8px;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
 .login-subtitle {
-    font-size: 12px;
+    font-size: 11px;
     color: #9ca3af;
-    letter-spacing: 3px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .login-form :deep(.el-input__wrapper) {
     background-color: #f9fafb;
     border: 1px solid #e5e7eb;
     box-shadow: none;
-    transition: all 0.15s;
+    transition: all 0.2s;
     border-radius: 8px;
 }
 
@@ -294,13 +434,13 @@ tabs.clearTabs();
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
     background-color: #fff;
 }
 
 .login-form :deep(.el-input__inner) {
-    color: #1f2937;
+    color: #111827;
     height: 44px;
     font-size: 14px;
 }
@@ -330,12 +470,12 @@ tabs.clearTabs();
 }
 
 .login-form :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-    background-color: #4f46e5;
-    border-color: #4f46e5;
+    background-color: #dc2626;
+    border-color: #dc2626;
 }
 
 .login-form :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
-    color: #4f46e5;
+    color: #dc2626;
 }
 
 .forget-pwd {
@@ -344,7 +484,7 @@ tabs.clearTabs();
 }
 
 .forget-pwd:hover {
-    color: #4f46e5;
+    color: #dc2626;
 }
 
 .login-btn {
@@ -353,14 +493,19 @@ tabs.clearTabs();
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: #4f46e5;
-    color: #fff;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff;
     border: none;
-    transition: background 0.15s;
+    transition: all 0.3s;
+    letter-spacing: 3px;
+    position: relative;
+    overflow: hidden;
 }
 
 .login-btn:hover {
-    background: #4338ca;
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
 }
 
 .login-text {
@@ -373,16 +518,19 @@ tabs.clearTabs();
 }
 
 .register-link {
-    color: #4f46e5;
+    color: #dc2626;
     cursor: pointer;
     margin-left: 4px;
-    font-weight: 500;
+    font-weight: 600;
+    transition: color 0.3s;
 }
 
 .register-link:hover {
+    color: #b91c1c;
     text-decoration: underline;
 }
 
+/* 响应式 */
 @media (max-width: 480px) {
     .login-container {
         width: 90%;
@@ -392,6 +540,22 @@ tabs.clearTabs();
     
     .task-letter {
         font-size: 30vw;
+    }
+    
+    .marquee-text {
+        font-size: 18px;
+    }
+    
+    .marquee-text-cn {
+        font-size: 16px;
+    }
+    
+    .marquee-top {
+        top: 15px;
+    }
+    
+    .marquee-bottom {
+        bottom: 15px;
     }
 }
 </style>
