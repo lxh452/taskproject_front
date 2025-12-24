@@ -1733,7 +1733,7 @@ async function submitComment() {
 async function handleLikeComment(comment: any) {
     try {
         const isLike = !comment.isLiked;
-        const resp = await likeTaskComment({ commentId: comment.commentId, isLike });
+        const resp = await likeTaskComment({ commentId: comment.commentId, isLike: isLike ? 1 : 0 });
         if (resp.data?.code === 200) {
             comment.isLiked = isLike;
             comment.likeCount = (comment.likeCount || 0) + (isLike ? 1 : -1);
