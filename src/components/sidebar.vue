@@ -6,7 +6,7 @@
                 <div class="logo-icon">
                     <img src="@/assets/img/logo.jpg" alt="Logo" class="logo-img" />
                 </div>
-                <transition name="fade">
+                <transition name="sidebar-fade">
                     <span class="logo-text" v-if="!sidebar.collapse">Task Pro</span>
                 </transition>
             </div>
@@ -21,8 +21,8 @@
                     :collapse="sidebar.collapse"
                     :collapse-transition="false"
                     background-color="transparent"
-                    text-color="#64748b"
-                    active-text-color="#dc2626"
+                    text-color="var(--text-secondary)"
+                    active-text-color="var(--color-primary)"
                     router
                 >
                     <template v-for="item in menuData" :key="item.index">
@@ -63,7 +63,7 @@
                 <el-avatar :size="sidebar.collapse ? 32 : 36" class="user-avatar">
                     {{ username?.charAt(0) }}
                 </el-avatar>
-                <transition name="fade">
+                <transition name="sidebar-fade">
                     <div class="user-info" v-if="!sidebar.collapse">
                         <div class="user-name">{{ username }}</div>
                         <div class="user-action">
@@ -118,46 +118,49 @@ function handleSignOut() {
 </script>
 
 <style scoped>
+/* ==================== Sidebar Container ==================== */
 .sidebar-container {
     display: flex;
     flex-direction: column;
-    width: clamp(200px, 14vw, 240px);
+    width: var(--sidebar-width);
     height: 100%;
     background: var(--bg-card);
     border-right: 1px solid var(--border-color);
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+    transition: width 250ms cubic-bezier(0.4, 0, 0.2, 1), 
+                background-color var(--transition-slow);
     z-index: 100;
     flex-shrink: 0;
 }
 
 .sidebar-container.is-collapse {
-    width: clamp(56px, 4vw, 64px);
+    width: var(--sidebar-collapsed-width);
 }
 
-/* Logo */
+/* ==================== Logo Section ==================== */
 .sidebar-logo {
-    height: clamp(56px, 8vh, 64px);
+    height: var(--header-height);
     display: flex;
     align-items: center;
-    padding: 0 clamp(12px, 1vw, 16px);
+    padding: 0 var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
+    transition: padding 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logo-wrapper {
     display: flex;
     align-items: center;
-    gap: clamp(8px, 0.7vw, 10px);
+    gap: var(--spacing-md);
     overflow: hidden;
 }
 
 .logo-icon {
-    width: clamp(28px, 2.2vw, 36px);
-    height: clamp(28px, 2.2vw, 36px);
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
-    border-radius: clamp(6px, 0.6vw, 10px);
+    border-radius: var(--radius-md);
     flex-shrink: 0;
     overflow: hidden;
 }
@@ -169,24 +172,19 @@ function handleSignOut() {
     display: block;
 }
 
-.logo-icon svg {
-    width: 60%;
-    height: 60%;
-}
-
 .logo-text {
-    font-size: clamp(16px, 1.2vw, 20px);
-    font-weight: 700;
-    color: var(--text-main);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
     letter-spacing: -0.5px;
     white-space: nowrap;
 }
 
-/* Menu Wrapper */
+/* ==================== Menu Wrapper ==================== */
 .sidebar-menu-wrapper {
     flex: 1;
     overflow: hidden;
-    padding: clamp(8px, 1vh, 12px) clamp(6px, 0.6vw, 10px);
+    padding: var(--spacing-md) var(--spacing-sm);
 }
 
 .sidebar-menu {
@@ -194,27 +192,35 @@ function handleSignOut() {
     background: transparent !important;
 }
 
-/* Menu Items */
+/* ==================== Menu Items - 44px height, 10px border-radius ==================== */
 .menu-item,
 .menu-submenu :deep(.el-sub-menu__title) {
-    height: clamp(40px, 5vh, 48px) !important;
-    line-height: clamp(40px, 5vh, 48px) !important;
-    margin: clamp(2px, 0.4vh, 6px) 0;
-    border-radius: clamp(6px, 0.6vw, 10px);
-    transition: all 0.2s ease;
+    height: var(--menu-item-height) !important;
+    line-height: var(--menu-item-height) !important;
+    margin: var(--spacing-xs) 0;
+    border-radius: 10px;
+    transition: all var(--transition-base);
     color: var(--text-secondary) !important;
+    position: relative;
 }
 
+/* Hover Effect */
 .menu-item:hover,
 .menu-submenu :deep(.el-sub-menu__title:hover) {
     background: var(--bg-hover) !important;
-    color: var(--text-main) !important;
+    color: var(--text-primary) !important;
 }
 
+.menu-item:hover .menu-icon,
+.menu-submenu :deep(.el-sub-menu__title:hover) .menu-icon {
+    color: var(--color-primary);
+}
+
+/* Active State with Left Border Indicator */
 .menu-item.is-active {
     background: var(--color-primary-light) !important;
     color: var(--color-primary) !important;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 .menu-item.is-active::before {
@@ -223,43 +229,45 @@ function handleSignOut() {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: clamp(2px, 0.2vw, 3px);
-    height: clamp(16px, 1.3vw, 20px);
+    width: 3px;
+    height: 20px;
     background: var(--color-primary);
-    border-radius: 0 clamp(2px, 0.2vw, 3px) clamp(2px, 0.2vw, 3px) 0;
+    border-radius: 0 3px 3px 0;
 }
 
-.menu-icon {
-    font-size: clamp(16px, 1.2vw, 20px) !important;
-    width: clamp(16px, 1.2vw, 20px);
-    margin-right: clamp(8px, 0.7vw, 12px);
-    color: var(--text-muted);
-    transition: color 0.2s;
-}
-
-.menu-item.is-active .menu-icon,
-.menu-item:hover .menu-icon {
+.menu-item.is-active .menu-icon {
     color: var(--color-primary);
 }
 
-.menu-title {
-    font-size: clamp(13px, 0.95vw, 15px);
-    font-weight: 500;
+/* Menu Icon - 20px size */
+.menu-icon {
+    font-size: 20px !important;
+    width: 20px;
+    margin-right: var(--spacing-md);
+    color: var(--text-muted);
+    transition: color var(--transition-base);
 }
 
-/* Sub Menu */
+.menu-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== Sub Menu Items ==================== */
 .menu-item-sub {
-    height: clamp(36px, 2.5vh, 44px) !important;
-    line-height: clamp(36px, 2.5vh, 44px) !important;
-    margin: clamp(1px, 0.2vh, 4px) 0;
-    padding-left: clamp(40px, 3vw, 52px) !important;
-    border-radius: clamp(6px, 0.5vw, 10px);
+    height: 40px !important;
+    line-height: 40px !important;
+    margin: 2px 0;
+    padding-left: 48px !important;
+    border-radius: 10px;
     color: var(--text-secondary) !important;
+    transition: all var(--transition-base);
 }
 
 .menu-item-sub:hover {
     background: var(--bg-hover) !important;
-    color: var(--text-main) !important;
+    color: var(--text-primary) !important;
 }
 
 .menu-item-sub.is-active {
@@ -268,12 +276,12 @@ function handleSignOut() {
 }
 
 .sub-menu-dot {
-    width: clamp(5px, 0.4vw, 6px);
-    height: clamp(5px, 0.4vw, 6px);
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--text-muted);
-    margin-right: clamp(8px, 0.7vw, 10px);
-    transition: all 0.2s;
+    margin-right: var(--spacing-sm);
+    transition: all var(--transition-base);
 }
 
 .menu-item-sub.is-active .sub-menu-dot,
@@ -283,23 +291,23 @@ function handleSignOut() {
 }
 
 .sub-menu-title {
-    font-size: clamp(12px, 0.85vw, 14px);
+    font-size: var(--font-size-sm);
 }
 
-/* Footer */
+/* ==================== Footer / User Panel ==================== */
 .sidebar-footer {
-    padding: clamp(8px, 1vh, 12px) clamp(8px, 0.8vw, 12px);
+    padding: var(--spacing-md);
     border-top: 1px solid var(--border-color);
 }
 
 .user-panel {
     display: flex;
     align-items: center;
-    gap: clamp(8px, 0.8vw, 12px);
-    padding: clamp(8px, 1vh, 12px) clamp(8px, 0.8vw, 12px);
-    border-radius: clamp(8px, 0.7vw, 12px);
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
     background: var(--bg-hover);
 }
 
@@ -307,14 +315,16 @@ function handleSignOut() {
     background: var(--color-primary-light);
 }
 
+.user-panel:hover .user-action {
+    color: var(--color-danger);
+}
+
 .user-avatar {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     color: #fff;
-    font-weight: 600;
-    font-size: clamp(12px, 0.9vw, 14px);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
     flex-shrink: 0;
-    width: clamp(28px, 2.2vw, 36px) !important;
-    height: clamp(28px, 2.2vw, 36px) !important;
 }
 
 .user-info {
@@ -324,9 +334,9 @@ function handleSignOut() {
 }
 
 .user-name {
-    font-size: clamp(12px, 0.85vw, 14px);
-    font-weight: 600;
-    color: var(--text-main);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -335,25 +345,26 @@ function handleSignOut() {
 .user-action {
     display: flex;
     align-items: center;
-    gap: clamp(3px, 0.3vw, 6px);
-    font-size: clamp(11px, 0.75vw, 13px);
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
-    margin-top: clamp(1px, 0.2vh, 4px);
+    margin-top: 2px;
+    transition: color var(--transition-base);
 }
 
-.user-action:hover {
-    color: var(--color-danger);
-}
-
-/* Collapse State */
+/* ==================== Collapse State ==================== */
 .sidebar-container.is-collapse .sidebar-logo {
     justify-content: center;
     padding: 0;
 }
 
+.sidebar-container.is-collapse .logo-wrapper {
+    justify-content: center;
+}
+
 .sidebar-container.is-collapse .user-panel {
     justify-content: center;
-    padding: clamp(8px, 0.7vw, 10px);
+    padding: var(--spacing-sm);
 }
 
 .sidebar-container.is-collapse .menu-item,
@@ -366,20 +377,33 @@ function handleSignOut() {
     margin-right: 0;
 }
 
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease;
+/* Hide text labels when collapsed */
+.sidebar-container.is-collapse .menu-title,
+.sidebar-container.is-collapse .logo-text,
+.sidebar-container.is-collapse .user-info {
+    display: none;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+/* Center icon when collapsed */
+.sidebar-container.is-collapse .menu-item .el-icon,
+.sidebar-container.is-collapse .menu-submenu :deep(.el-sub-menu__title) .el-icon {
+    margin: 0 auto;
+}
+
+/* ==================== Transitions ==================== */
+.sidebar-fade-enter-active,
+.sidebar-fade-leave-active {
+    transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-fade-enter-from,
+.sidebar-fade-leave-to {
     opacity: 0;
 }
 
-/* Scrollbar */
+/* ==================== Scrollbar ==================== */
 :deep(.el-scrollbar__bar.is-vertical) {
-    width: clamp(3px, 0.3vw, 4px);
+    width: 4px;
 }
 
 :deep(.el-scrollbar__thumb) {
@@ -391,19 +415,19 @@ function handleSignOut() {
     background: var(--text-muted);
 }
 
-/* 响应式布局 - 移动端抽屉式 */
+/* ==================== Responsive - Mobile Drawer Mode ==================== */
 @media (max-width: 768px) {
     .sidebar-container {
         position: fixed;
         left: 0;
         top: 0;
         height: 100vh;
-        width: 70vw;
-        max-width: 280px;
+        width: 280px;
+        max-width: 80vw;
         z-index: 1001;
         transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+        transition: transform var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-lg);
     }
     
     .sidebar-container:not(.is-collapse) {
@@ -412,7 +436,7 @@ function handleSignOut() {
     
     .sidebar-container.is-collapse {
         transform: translateX(-100%);
+        width: 280px;
     }
 }
 </style>
-

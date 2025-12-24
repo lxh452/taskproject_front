@@ -274,139 +274,144 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ==================== Tasks Page ==================== */
 .tasks-page {
-    padding: 20px;
-    background: #f9fafb;
-    min-height: calc(100vh - 64px);
+    padding: var(--page-padding);
+    background: var(--bg-page);
+    min-height: calc(100vh - var(--header-height));
 }
 
-/* 页面头部 */
+/* ==================== Page Header ==================== */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 20px;
+    margin-bottom: var(--card-gap);
 }
 
 .page-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 4px;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs);
 }
 
 .page-desc {
-    font-size: 14px;
-    color: #6b7280;
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
     margin: 0;
 }
 
 .create-btn {
     height: 40px;
-    padding: 0 20px;
-    font-weight: 500;
+    padding: 0 var(--spacing-xl);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-md);
 }
 
-/* 筛选栏 */
+/* ==================== Filter Bar ==================== */
 .filter-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 16px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 20px;
+    padding: var(--spacing-lg);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--card-gap);
+    box-shadow: var(--shadow-card);
 }
 
 .filter-left {
     display: flex;
-    gap: 12px;
+    gap: var(--spacing-md);
     align-items: center;
 }
 
-.search-input { width: 240px; }
-.filter-select { width: 120px; }
+.search-input { width: 260px; }
+.filter-select { width: 130px; }
 
 .priority-option {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-sm);
 }
 
 .dot {
     width: 6px;
     height: 6px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
 }
 
-.dot.danger { background: #ef4444; }
-.dot.warning { background: #f59e0b; }
-.dot.info { background: #4f46e5; }
-.dot.success { background: #10b981; }
+.dot.danger { background: var(--color-danger); }
+.dot.warning { background: var(--color-warning); }
+.dot.info { background: var(--color-primary); }
+.dot.success { background: var(--color-success); }
 
-/* 任务网格 */
+/* ==================== Tasks Grid - 16px gap, responsive ==================== */
 .tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+    gap: var(--spacing-lg);
 }
 
-/* 任务卡片 */
+/* ==================== Task Card ==================== */
 .task-card {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    padding: 18px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: var(--card-padding);
     cursor: pointer;
-    transition: box-shadow 0.15s;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    box-shadow: var(--shadow-card);
 }
 
 .task-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 14px;
+    margin-bottom: var(--spacing-lg);
 }
 
 .task-icon {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
 }
 
-.task-icon.danger { background: #fee2e2; color: #ef4444; }
-.task-icon.warning { background: #fef3c7; color: #f59e0b; }
-.task-icon.info { background: #e0e7ff; color: #4f46e5; }
-.task-icon.success { background: #d1fae5; color: #10b981; }
+.task-icon.danger { background: var(--color-danger-light); color: var(--color-danger); }
+.task-icon.warning { background: var(--color-warning-light); color: var(--color-warning); }
+.task-icon.info { background: var(--color-primary-light); color: var(--color-primary); }
+.task-icon.success { background: var(--color-success-light); color: var(--color-success); }
 
 .status-badge {
-    font-size: 11px;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: 12px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
 }
 
-.status-badge.success { background: #d1fae5; color: #059669; }
-.status-badge.warning { background: #fef3c7; color: #d97706; }
-.status-badge.default { background: #f3f4f6; color: #6b7280; }
+.status-badge.success { background: var(--color-success-light); color: var(--color-success-dark); }
+.status-badge.warning { background: var(--color-warning-light); color: var(--color-warning-dark); }
+.status-badge.default { background: var(--bg-hover); color: var(--text-secondary); }
 
-.card-body { margin-bottom: 14px; }
+.card-body { margin-bottom: var(--spacing-lg); }
 
 .task-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 10px;
-    line-height: 1.4;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md);
+    line-height: var(--line-height-snug);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -417,77 +422,85 @@ onMounted(() => {
 .task-meta {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--spacing-lg);
 }
 
 .meta-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    color: #6b7280;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
 }
 
 .meta-item.priority .dot { width: 5px; height: 5px; }
-.meta-item.priority.danger { color: #ef4444; }
-.meta-item.priority.warning { color: #f59e0b; }
-.meta-item.priority.info { color: #4f46e5; }
-.meta-item.priority.success { color: #10b981; }
+.meta-item.priority.danger { color: var(--color-danger); }
+.meta-item.priority.warning { color: var(--color-warning); }
+.meta-item.priority.info { color: var(--color-primary); }
+.meta-item.priority.success { color: var(--color-success); }
 
 .card-footer {
-    padding-top: 14px;
-    border-top: 1px solid #f3f4f6;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
 }
 
 .progress-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
 }
 
-.progress-label { font-size: 11px; color: #6b7280; }
-.progress-value { font-size: 11px; font-weight: 600; color: #1f2937; }
+.progress-label { font-size: var(--font-size-xs); color: var(--text-muted); }
+.progress-value { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--text-primary); }
 
-/* 操作按钮 */
+/* ==================== Card Actions ==================== */
 .card-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
 }
 
 .card-actions .action-btn {
     flex: 1;
     height: 34px;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-md);
 }
 
-/* 空状态 */
+/* ==================== Empty State ==================== */
 .empty-state {
-    padding: 60px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    padding: var(--spacing-5xl);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    text-align: center;
 }
 
-/* 抽屉 */
+/* ==================== Drawer Styles ==================== */
 :deep(.vben-drawer .el-drawer__header) {
-    padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.vben-drawer .el-drawer__body) {
-    padding: 20px;
+    padding: var(--spacing-xl);
 }
 
+/* ==================== Responsive Layout ==================== */
 @media (max-width: 768px) {
-    .tasks-page { padding: 16px; }
-    .page-header { flex-direction: column; gap: 12px; }
+    .tasks-page { padding: var(--spacing-lg); }
+    .page-header { flex-direction: column; gap: var(--spacing-md); }
     .create-btn { width: 100%; }
-    .filter-bar { flex-direction: column; gap: 10px; }
+    .filter-bar { flex-direction: column; gap: var(--spacing-md); }
     .filter-left { flex-direction: column; width: 100%; }
     .search-input, .filter-select { width: 100%; }
     .tasks-grid { grid-template-columns: 1fr; }
+    
+    /* Mobile: always show card actions */
+    .card-actions {
+        opacity: 1;
+    }
 }
 </style>

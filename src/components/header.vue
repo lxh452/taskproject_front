@@ -633,78 +633,88 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ==================== Header Container - 64px height, 24px padding ==================== */
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: clamp(56px, 8vh, 64px);
-    padding: 0 clamp(16px, 1.3vw, 24px);
+    height: var(--header-height);
+    padding: 0 var(--spacing-2xl);
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: background-color var(--transition-slow), border-color var(--transition-slow);
 }
 
+/* ==================== Header Left - Breadcrumb Navigation ==================== */
 .header-left {
     display: flex;
     align-items: center;
-    gap: clamp(12px, 1vw, 16px);
+    gap: var(--spacing-lg);
 }
 
 .collapse-trigger {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: clamp(32px, 2.5vw, 40px);
-    height: clamp(32px, 2.5vw, 40px);
-    border-radius: clamp(6px, 0.6vw, 10px);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .collapse-trigger:hover {
     background: var(--bg-hover);
-    color: var(--text-main);
+    color: var(--text-primary);
 }
 
 .breadcrumb {
-    font-size: clamp(13px, 0.95vw, 15px);
+    font-size: var(--font-size-base);
 }
 
 .breadcrumb :deep(.el-breadcrumb__inner) {
     color: var(--text-secondary);
+    transition: color var(--transition-base);
+}
+
+.breadcrumb :deep(.el-breadcrumb__inner:hover) {
+    color: var(--color-primary);
 }
 
 .breadcrumb :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
-    color: var(--text-main);
-    font-weight: 500;
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
 }
 
+/* ==================== Header Right - Action Icons ==================== */
 .header-right {
     display: flex;
     align-items: center;
-    gap: clamp(3px, 0.3vw, 4px);
+    gap: var(--spacing-xs);
 }
 
+/* Action Icons - 40px touch target, 10px border-radius */
 .header-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: clamp(32px, 2.5vw, 40px);
-    height: clamp(32px, 2.5vw, 40px);
-    border-radius: clamp(6px, 0.6vw, 10px);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .header-action:hover {
     background: var(--bg-hover);
-    color: var(--text-main);
+    color: var(--text-primary);
 }
 
+/* Notification Badge - Red dot indicator */
 .header-action.has-badge {
-    color: #dc2626;
+    color: var(--color-danger);
 }
 
 .header-action.checklist-action {
@@ -712,13 +722,13 @@ onUnmounted(() => {
 }
 
 .header-action.checklist-action.has-pending {
-    color: #f59e0b;
+    color: var(--color-warning);
     animation: pulse-checklist 2s ease-in-out infinite;
 }
 
 .header-action.checklist-action.has-pending:hover {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 .header-action.notification-action {
@@ -726,13 +736,13 @@ onUnmounted(() => {
 }
 
 .header-action.notification-action.has-unread {
-    color: #dc2626;
+    color: var(--color-danger);
     animation: pulse-notification 2s ease-in-out infinite;
 }
 
 .header-action.notification-action.has-unread:hover {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: var(--color-danger-light);
+    color: var(--color-danger-dark);
 }
 
 @keyframes pulse-checklist {
@@ -753,51 +763,53 @@ onUnmounted(() => {
     }
 }
 
+/* Theme Toggle with smooth transition */
 .header-action.theme-toggle {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .header-action.theme-toggle:hover {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 .header-action.invite-action {
-    color: #10b981;
+    color: var(--color-success);
 }
 
 .header-action.invite-action:hover {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
 }
 
 .header-action :deep(.el-badge__content) {
-    height: clamp(14px, 1.1vw, 16px);
-    line-height: clamp(14px, 1.1vw, 16px);
-    padding: 0 clamp(4px, 0.35vw, 5px);
-    font-size: clamp(9px, 0.7vw, 11px);
+    height: 16px;
+    line-height: 16px;
+    padding: 0 5px;
+    font-size: var(--font-size-xs);
     border: none;
+    background: var(--color-danger);
 }
 
 .search-action {
     width: auto;
-    padding: 0 clamp(10px, 0.8vw, 12px);
-    gap: clamp(4px, 0.4vw, 6px);
+    padding: 0 var(--spacing-md);
+    gap: var(--spacing-xs);
 }
 
-/* User Dropdown */
+/* ==================== User Dropdown ==================== */
 .user-dropdown {
-    margin-left: clamp(6px, 0.5vw, 8px);
+    margin-left: var(--spacing-sm);
 }
 
 .user-trigger {
     display: flex;
     align-items: center;
-    gap: clamp(6px, 0.5vw, 8px);
-    padding: clamp(3px, 0.3vw, 4px) clamp(6px, 0.5vw, 8px) clamp(3px, 0.3vw, 4px) clamp(3px, 0.3vw, 4px);
-    border-radius: clamp(6px, 0.5vw, 8px);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-xs) var(--spacing-xs);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .user-trigger:hover {
@@ -807,17 +819,17 @@ onUnmounted(() => {
 .user-avatar {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     color: #fff;
-    font-weight: 600;
-    font-size: clamp(12px, 0.9vw, 14px);
-    width: clamp(28px, 2.2vw, 36px) !important;
-    height: clamp(28px, 2.2vw, 36px) !important;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    width: 32px !important;
+    height: 32px !important;
 }
 
 .user-name {
-    font-size: clamp(13px, 0.95vw, 15px);
-    font-weight: 500;
-    color: var(--text-main);
-    max-width: clamp(80px, 7vw, 120px);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -825,10 +837,15 @@ onUnmounted(() => {
 
 .dropdown-icon {
     color: var(--text-muted);
-    font-size: clamp(11px, 0.8vw, 13px);
+    font-size: var(--font-size-xs);
+    transition: transform var(--transition-base);
 }
 
-/* Popover Styles */
+.user-trigger:hover .dropdown-icon {
+    transform: rotate(180deg);
+}
+
+/* ==================== Popover Styles ==================== */
 .popover-container {
     margin: -12px;
     max-width: 380px;
@@ -838,34 +855,34 @@ onUnmounted(() => {
 }
 
 .popover-header {
-    padding: clamp(12px, 1vw, 16px);
+    padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: clamp(10px, 0.8vw, 12px);
+    gap: var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
 }
 
 .popover-title {
     display: flex;
     align-items: center;
-    gap: clamp(6px, 0.5vw, 8px);
+    gap: var(--spacing-sm);
 }
 
 .title-text {
-    font-size: clamp(14px, 1vw, 16px);
-    font-weight: 600;
-    color: var(--text-main);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
 }
 
 .popover-body {
-    max-height: clamp(320px, 28vh, 400px);
+    max-height: 360px;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: clamp(4px, 0.3vw, 6px) 0;
+    padding: var(--spacing-xs) 0;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -890,7 +907,7 @@ onUnmounted(() => {
 }
 
 .popover-footer {
-    padding: clamp(10px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-top: 1px solid var(--border-color);
     text-align: center;
     width: 100%;
@@ -899,27 +916,27 @@ onUnmounted(() => {
 }
 
 .empty-placeholder {
-    padding: clamp(32px, 2.5vw, 40px) clamp(16px, 1.3vw, 20px);
+    padding: var(--spacing-4xl) var(--spacing-xl);
     text-align: center;
 }
 
 .empty-placeholder p {
-    margin-top: clamp(10px, 0.8vw, 12px);
+    margin-top: var(--spacing-md);
     color: var(--text-muted);
-    font-size: clamp(13px, 0.95vw, 15px);
+    font-size: var(--font-size-base);
 }
 
-/* Checklist Item */
+/* ==================== Checklist Item ==================== */
 .checklist-item {
     display: flex;
     align-items: flex-start;
-    gap: clamp(10px, 0.8vw, 12px);
-    padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
-    transition: all 0.2s;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    transition: all var(--transition-base);
     cursor: default;
     border-left: 3px solid transparent;
-    border-radius: clamp(4px, 0.3vw, 6px);
-    margin: clamp(2px, 0.2vw, 3px) 0;
+    border-radius: var(--radius-sm);
+    margin: 2px 0;
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
@@ -933,11 +950,11 @@ onUnmounted(() => {
 
 .checklist-item.completed {
     opacity: 0.65;
-    border-left-color: #10b981;
+    border-left-color: var(--color-success);
 }
 
 .checklist-item.completed:hover {
-    border-left-color: #059669;
+    border-left-color: var(--color-success-dark);
 }
 
 .item-content {
@@ -947,11 +964,11 @@ onUnmounted(() => {
 }
 
 .item-text {
-    font-size: clamp(13px, 0.95vw, 15px);
-    color: var(--text-main);
-    line-height: 1.6;
-    font-weight: 500;
-    margin-bottom: clamp(2px, 0.2vw, 3px);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: var(--line-height-relaxed);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 2px;
     word-break: break-word;
     overflow-wrap: break-word;
     overflow: hidden;
@@ -964,15 +981,15 @@ onUnmounted(() => {
 .checklist-item.completed .item-text {
     text-decoration: line-through;
     color: var(--text-muted);
-    font-weight: 400;
+    font-weight: var(--font-weight-normal);
 }
 
 .item-link {
-    font-size: clamp(11px, 0.8vw, 13px);
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
-    margin-top: clamp(3px, 0.3vw, 4px);
+    margin-top: var(--spacing-xs);
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color var(--transition-base);
 }
 
 .item-link:hover {
@@ -980,10 +997,10 @@ onUnmounted(() => {
 }
 
 .item-meta {
-    margin-top: clamp(6px, 0.5vw, 8px);
+    margin-top: var(--spacing-sm);
     display: flex;
     flex-direction: column;
-    gap: clamp(4px, 0.3vw, 5px);
+    gap: var(--spacing-xs);
     overflow: hidden;
 }
 
@@ -991,12 +1008,12 @@ onUnmounted(() => {
 .node-info {
     display: flex;
     align-items: center;
-    gap: clamp(4px, 0.3vw, 6px);
-    font-size: clamp(11px, 0.8vw, 12px);
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.2s;
-    padding: clamp(2px, 0.2vw, 3px) 0;
+    transition: all var(--transition-base);
+    padding: 2px 0;
     min-width: 0;
     overflow: hidden;
 }
@@ -1013,9 +1030,9 @@ onUnmounted(() => {
 }
 
 .meta-icon {
-    font-size: clamp(12px, 0.9vw, 14px);
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
-    transition: all 0.2s;
+    transition: all var(--transition-base);
     flex-shrink: 0;
 }
 
@@ -1030,7 +1047,7 @@ onUnmounted(() => {
 }
 
 .task-title {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
 }
 
@@ -1038,17 +1055,17 @@ onUnmounted(() => {
     color: var(--text-muted);
 }
 
-/* Notification Item */
+/* ==================== Notification Item ==================== */
 .notification-item {
     display: flex;
-    gap: clamp(10px, 0.8vw, 12px);
-    padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-base);
     position: relative;
     border-left: 3px solid transparent;
-    border-radius: clamp(4px, 0.3vw, 6px);
-    margin: clamp(2px, 0.2vw, 3px) 0;
+    border-radius: var(--radius-sm);
+    margin: 2px 0;
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
@@ -1061,40 +1078,40 @@ onUnmounted(() => {
 }
 
 .notification-item.unread {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
-    border-left-color: #3b82f6;
+    background: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.08) 0%, rgba(var(--color-primary-rgb), 0.03) 100%);
+    border-left-color: var(--color-info);
 }
 
 .notif-icon {
-    width: clamp(36px, 2.8vw, 40px);
-    height: clamp(36px, 2.8vw, 40px);
-    border-radius: clamp(8px, 0.6vw, 10px);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-xs);
 }
 
 .notification-item:hover .notif-icon {
     transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .notif-icon.type-task {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    color: #dc2626;
+    background: linear-gradient(135deg, var(--color-danger-light) 0%, #fecaca 100%);
+    color: var(--color-danger);
 }
 
 .notif-icon.type-warning {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #d97706;
+    background: linear-gradient(135deg, var(--color-warning-light) 0%, #fde68a 100%);
+    color: var(--color-warning-dark);
 }
 
 .notif-icon.type-info {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #2563eb;
+    background: linear-gradient(135deg, var(--color-info-light) 0%, #bfdbfe 100%);
+    color: var(--color-info-dark);
 }
 
 .notif-content {
@@ -1104,10 +1121,10 @@ onUnmounted(() => {
 }
 
 .notif-title {
-    font-size: clamp(13px, 0.95vw, 15px);
-    font-weight: 600;
-    margin-bottom: clamp(3px, 0.3vw, 4px);
-    color: var(--text-main);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
     word-break: break-word;
     overflow-wrap: break-word;
     overflow: hidden;
@@ -1118,9 +1135,9 @@ onUnmounted(() => {
 }
 
 .notif-desc {
-    font-size: clamp(11px, 0.8vw, 13px);
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
-    line-height: 1.4;
+    line-height: var(--line-height-snug);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1128,33 +1145,46 @@ onUnmounted(() => {
 }
 
 .notif-time {
-    font-size: clamp(10px, 0.75vw, 12px);
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
-    margin-top: clamp(3px, 0.3vw, 4px);
+    margin-top: var(--spacing-xs);
 }
 
 .unread-indicator {
     position: absolute;
-    right: clamp(12px, 1vw, 16px);
+    right: var(--spacing-lg);
     top: 50%;
     transform: translateY(-50%);
-    width: clamp(6px, 0.5vw, 8px);
-    height: clamp(6px, 0.5vw, 8px);
+    width: 8px;
+    height: 8px;
     background: var(--color-danger);
-    border-radius: 50%;
+    border-radius: var(--radius-full);
+    animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* 响应式布局 */
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateY(-50%) scale(0.9);
+    }
+}
+
+/* ==================== Responsive Layout ==================== */
 @media (max-width: 768px) {
     .header-container {
-        padding: 0 16px;
+        padding: 0 var(--spacing-lg);
         height: 56px;
     }
     
     .header-left {
-        gap: 12px;
+        gap: var(--spacing-md);
     }
     
+    /* Hide breadcrumb on mobile, show hamburger menu */
     .breadcrumb {
         display: none;
     }
@@ -1164,14 +1194,15 @@ onUnmounted(() => {
     }
     
     .header-action {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
     }
     
     .user-trigger {
         padding: 2px 4px;
     }
     
+    /* Hide non-essential elements on mobile */
     .user-name {
         display: none;
     }
@@ -1180,12 +1211,16 @@ onUnmounted(() => {
         display: none;
     }
     
+    .search-action {
+        display: none;
+    }
+    
     .popover-container {
         margin: -8px;
     }
     
     .popover-header {
-        padding: 12px;
+        padding: var(--spacing-md);
     }
     
     .popover-body {
@@ -1195,17 +1230,17 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
     .header-container {
-        padding: 0 12px;
+        padding: 0 var(--spacing-md);
     }
     
     .collapse-trigger {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
     }
     
     .header-action {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
     }
     
     .header-action :deep(.el-icon) {
@@ -1213,9 +1248,9 @@ onUnmounted(() => {
     }
     
     .user-avatar {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: var(--font-size-xs);
     }
 }
 </style>
