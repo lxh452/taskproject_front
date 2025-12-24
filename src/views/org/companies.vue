@@ -135,107 +135,110 @@ function loadData() {
 
 <style scoped>
 .companies-page {
-    padding: 20px;
-    background: #f9fafb;
-    min-height: calc(100vh - 64px);
+    padding: var(--page-padding);
+    background: var(--bg-page);
+    min-height: calc(100vh - var(--header-height));
 }
 
 .toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    background: #fff;
-    padding: 14px 20px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    margin-bottom: var(--card-gap);
+    background: var(--bg-card);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
 }
 
 .toolbar-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-md);
 }
 
-.search-input { width: 240px; }
-.filter-select { width: 120px; }
+.search-input { width: 260px; }
+.filter-select { width: 130px; }
 
 .table-container {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
     overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 
 .company-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-md);
 }
 
 .company-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: #4f46e5;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    flex-shrink: 0;
 }
 
 .company-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: #1f2937;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
 }
 
 .owner-cell {
     display: flex;
     align-items: center;
-    gap: 6px;
-    color: #6b7280;
-    font-size: 13px;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 .owner-avatar {
-    background: #e0e7ff;
-    color: #4f46e5;
-    font-size: 11px;
-    font-weight: 600;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
 }
 
 .time-cell {
-    color: #6b7280;
-    font-size: 13px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 .status-badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 500;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
 }
 
-.status-badge.success { background: #d1fae5; color: #059669; }
-.status-badge.default { background: #f3f4f6; color: #6b7280; }
+.status-badge.success { background: var(--color-success-light); color: var(--color-success-dark); }
+.status-badge.default { background: var(--bg-hover); color: var(--text-muted); }
 
 .status-dot {
     display: inline-block;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
-    margin-right: 6px;
+    border-radius: var(--radius-full);
+    margin-right: var(--spacing-sm);
 }
-.status-dot.success { background: #10b981; }
-.status-dot.info { background: #6b7280; }
+.status-dot.success { background: var(--color-success); }
+.status-dot.info { background: var(--text-muted); }
 
 @media (max-width: 768px) {
-    .companies-page { padding: 16px; }
-    .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .companies-page { padding: var(--spacing-lg); }
+    .toolbar { flex-direction: column; align-items: stretch; gap: var(--spacing-md); padding: var(--spacing-md); }
     .toolbar-left { flex-direction: column; width: 100%; }
     .search-input, .filter-select { width: 100%; }
 }

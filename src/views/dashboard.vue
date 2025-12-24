@@ -237,109 +237,150 @@ onMounted(loadData);
 </script>
 
 <style scoped>
+/* ==================== Dashboard Page ==================== */
 .dashboard {
-  padding: 20px;
-  background: #f9fafb;
+  padding: var(--page-padding);
+  background: var(--bg-page);
   min-height: 100vh;
 }
 
-/* 欢迎栏 */
+/* ==================== Welcome Bar ==================== */
 .welcome-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--card-gap);
+  padding: var(--spacing-xl) var(--spacing-2xl);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
 }
 
 .welcome-left h1 {
-  font-size: 22px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 4px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs);
+  line-height: var(--line-height-tight);
 }
 
 .welcome-left p {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .date-text {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
 }
 
-/* 统计卡片 */
+/* ==================== Stats Row - 20px gap ==================== */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--card-gap);
+  margin-bottom: var(--card-gap);
 }
 
+/* ==================== Stat Card - 44px icon container ==================== */
 .stat-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 18px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--card-padding);
   display: flex;
   align-items: center;
-  gap: 14px;
-  border: 1px solid #e5e7eb;
+  gap: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .stat-icon {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  flex-shrink: 0;
 }
 
-.stat-icon.blue { background: #eff6ff; color: #3b82f6; }
-.stat-icon.orange { background: #fff7ed; color: #f59e0b; }
-.stat-icon.green { background: #ecfdf5; color: #10b981; }
-.stat-icon.red { background: #fef2f2; color: #ef4444; }
+.stat-icon.blue { 
+  background: var(--color-info-light); 
+  color: var(--color-info); 
+}
+.stat-icon.orange { 
+  background: var(--color-warning-light); 
+  color: var(--color-warning); 
+}
+.stat-icon.green { 
+  background: var(--color-success-light); 
+  color: var(--color-success); 
+}
+.stat-icon.red { 
+  background: var(--color-danger-light); 
+  color: var(--color-danger); 
+}
+
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
 
 .stat-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
 }
 
-/* 图表区 */
+/* ==================== Charts Row ==================== */
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--card-gap);
+  margin-bottom: var(--card-gap);
 }
 
 .chart-box {
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.chart-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .box-header {
-  padding: 14px 18px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-  border-bottom: 1px solid #f3f4f6;
+  padding: var(--spacing-lg) var(--card-padding);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .box-body {
-  padding: 16px;
+  padding: var(--spacing-lg);
   min-height: 240px;
   display: flex;
   align-items: center;
@@ -351,11 +392,12 @@ onMounted(loadData);
   height: 220px;
 }
 
-/* 任务视图 */
+/* ==================== Task Section - Pill-style tabs ==================== */
 .task-section {
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -363,46 +405,53 @@ onMounted(loadData);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: var(--spacing-lg) var(--card-padding);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
+/* Pill-style view tabs */
 .view-tabs {
   display: flex;
-  gap: 4px;
-  background: #f3f4f6;
-  padding: 3px;
-  border-radius: 6px;
+  gap: var(--spacing-xs);
+  background: var(--bg-hover);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-md);
 }
 
 .view-tabs button {
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   border: none;
   background: transparent;
-  color: #6b7280;
-  border-radius: 4px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
+}
+
+.view-tabs button:hover {
+  color: var(--text-primary);
 }
 
 .view-tabs button.active {
-  background: #fff;
-  color: #1f2937;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-xs);
 }
 
 .section-body {
   min-height: 300px;
 }
 
-/* 响应式 */
+/* ==================== Responsive Layout ==================== */
+/* 1024px以下显示2列统计卡片 */
 @media (max-width: 1024px) {
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
@@ -412,9 +461,10 @@ onMounted(loadData);
   }
 }
 
-@media (max-width: 640px) {
+/* 768px以下显示1列 */
+@media (max-width: 768px) {
   .dashboard {
-    padding: 16px;
+    padding: var(--spacing-lg);
   }
   .stats-row {
     grid-template-columns: 1fr;
@@ -422,7 +472,35 @@ onMounted(loadData);
   .welcome-bar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+  }
+  .welcome-left h1 {
+    font-size: var(--font-size-2xl);
+  }
+  .stat-card {
+    padding: var(--spacing-lg);
+  }
+  .stat-value {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    padding: var(--spacing-md);
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  .view-tabs {
+    width: 100%;
+  }
+  .view-tabs button {
+    flex: 1;
+    text-align: center;
   }
 }
 </style>
