@@ -245,7 +245,7 @@ async function loadData() {
     rows.value = list.map((t: any) => {
       const pri = pr((t.priority ?? t.taskPriority ?? 3) as number);
       const deadline = t.deadline || t.taskDeadline;
-      const progress = t.progress ?? 0;
+      const progress = Math.round(t.progress ?? 0);
       const status = t.status ?? 0;
       return {
         id: t.id || t.taskId,
