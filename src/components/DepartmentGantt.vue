@@ -215,17 +215,21 @@ async function loadTasks() {
             const processTasks = (tasks: any[], role: string) => {
                 tasks.forEach((t: any) => {
                     const empId = role === 'leader' ? t.leaderId : t.executorId;
-                    const empName = role === 'leader' ? (t.leaderName || '负责人') : (t.executorName || '执行人');
+                    // 使用后端返回的姓名字段
+                    const empName = role === 'leader' ? t.leaderName : t.executorName;
                     
                     if (!empId) return;
                     
                     if (!employeeMap.has(empId)) {
                         employeeMap.set(empId, {
                             id: empId,
-                            name: empName,
+                            name: empName || `用户${String(empId).slice(-4)}`, // 如果没有名字，显示用户ID后4位
                             role,
                             tasks: []
                         });
+                    } else if (empName && employeeMap.get(empId).name.startsWith('用户')) {
+                        // 如果之前没有名字但现在有了，更新名字
+                        employeeMap.get(empId).name = empName;
                     }
                     
                     employeeMap.get(empId).tasks.push({
@@ -233,7 +237,7 @@ async function loadTasks() {
                         name: t.nodeName || t.name || t.taskNodeName || '未命名',
                         status: t.nodeStatus ?? t.status ?? 0,
                         startTime: t.nodeStartTime || t.startTime,
-                        endTime: t.nodeEndTime || t.endTime,
+                        endTime: t.nodeEndTime || t.endTime || t.nodeDeadline,
                         role
                     });
                 });
