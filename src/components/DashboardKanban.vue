@@ -233,18 +233,18 @@ onMounted(() => {
 }
 
 .column-header.pending {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
     border-color: #6366f1;
 }
 
 .column-header.in-progress {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+    border-color: #eab308;
 }
 
 .column-header.completed {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    border-color: #10b981;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-color: #22c55e;
 }
 
 .column-title {

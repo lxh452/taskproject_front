@@ -306,10 +306,10 @@ const submitReset = async () => {
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(220, 38, 38, 0.15);
+    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
     text-shadow: 
-        0 0 80px rgba(220, 38, 38, 0.1),
-        0 0 120px rgba(220, 38, 38, 0.05);
+        0 0 80px rgba(79, 70, 229, 0.1),
+        0 0 120px rgba(79, 70, 229, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;
@@ -410,7 +410,7 @@ const submitReset = async () => {
 }
 
 .step.active .step-num {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     color: white;
 }
 
@@ -426,7 +426,7 @@ const submitReset = async () => {
 }
 
 .step.active .step-text {
-    color: #dc2626;
+    color: #4f46e5;
 }
 
 .step-line {
@@ -439,7 +439,7 @@ const submitReset = async () => {
 }
 
 .step-line.active {
-    background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(90deg, #4f46e5 0%, #4338ca 100%);
 }
 
 .forgot-form :deep(.el-input__wrapper) {
@@ -451,8 +451,8 @@ const submitReset = async () => {
 }
 
 .forgot-form :deep(.el-input__wrapper.is-focus) {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     background-color: #fff;
 }
 
@@ -485,7 +485,7 @@ const submitReset = async () => {
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     border: none;
     color: #fff;
 }
@@ -496,7 +496,7 @@ const submitReset = async () => {
 }
 
 .send-code-btn:not(:disabled):hover {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
 }
 
 .password-tips {
@@ -538,7 +538,7 @@ const submitReset = async () => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     color: #ffffff;
     border: none;
     transition: all 0.3s;
@@ -548,9 +548,9 @@ const submitReset = async () => {
 }
 
 .submit-btn:hover {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
 }
 
 .forgot-text {
@@ -563,7 +563,7 @@ const submitReset = async () => {
 }
 
 .login-link {
-    color: #dc2626;
+    color: #4f46e5;
     cursor: pointer;
     margin-left: 5px;
     transition: color 0.3s;
@@ -571,7 +571,7 @@ const submitReset = async () => {
 }
 
 .login-link:hover {
-    color: #b91c1c;
+    color: #4338ca;
     text-decoration: underline;
 }
 </style>

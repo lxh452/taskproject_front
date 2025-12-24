@@ -419,13 +419,13 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     padding: 0 20px; 
     border-radius: 10px; 
     font-weight: 500; 
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); 
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); 
     border: none; 
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 .create-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
 }
 
 .main-content {
@@ -452,14 +452,14 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     align-items: center;
     gap: 10px;
     padding: 16px 18px;
-    background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 15px;
     color: var(--text-main);
 }
 .sidebar-icon {
-    color: #dc2626;
+    color: #4f46e5;
     font-size: 18px;
 }
 
@@ -483,15 +483,15 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     background: var(--bg-hover);
 }
 .dept-item.active {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    border: 1px solid #fca5a5;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border: 1px solid #a5b4fc;
 }
 .dept-item.active .dept-item-name {
-    color: #dc2626;
+    color: #4f46e5;
     font-weight: 600;
 }
 .dept-item.active .dept-item-icon {
-    color: #dc2626;
+    color: #4f46e5;
 }
 
 .dept-item-main {
@@ -569,7 +569,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     gap: 8px;
 }
 .section-title .el-icon {
-    color: #dc2626;
+    color: #4f46e5;
 }
 .position-count {
     font-size: 13px;
@@ -610,7 +610,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
 .pos-card:hover { 
     transform: translateY(-3px); 
     box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
-    border-color: #fca5a5; 
+    border-color: #a5b4fc; 
 }
 
 .card-top {
@@ -622,11 +622,11 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #dc2626;
+    color: #4f46e5;
     font-size: 20px;
 }
 .status-dot {
@@ -741,7 +741,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     display: flex;
     align-items: center;
     gap: 14px;
-    background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 20px;
@@ -750,7 +750,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #dc2626;
+    background: #4f46e5;
     color: white;
     display: flex;
     align-items: center;

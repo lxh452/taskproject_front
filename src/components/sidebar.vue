@@ -22,7 +22,7 @@
             :collapse-transition="false"
             background-color="transparent"
             text-color="#64748b"
-            active-text-color="#dc2626"
+            active-text-color="#4f46e5"
             router
         >
           <template v-for="item in menuData" :key="item.index">

@@ -315,7 +315,7 @@ const handleCreate = async () => {
                                 <li><strong>人力资源部、研发部、市场部、销售部、财务部、行政部、运维部</strong></li>
                             </ul>
                             <p style="color: #666;">每个部门下已配置默认职位：<strong>经理、高级、工程师、助理</strong></p>
-                            <p style="margin-top: 12px; color: #666;">您已被自动分配<strong style="color: #dc2626;">「超级管理员」</strong>角色，拥有所有系统权限。</p>
+                            <p style="margin-top: 12px; color: #666;">您已被自动分配<strong style="color: #4f46e5;">「超级管理员」</strong>角色，拥有所有系统权限。</p>
                             <p style="margin-top: 12px; color: #999; font-size: 12px;">提示：您可以在「组织管理」中根据实际需要调整部门和职位。</p>
                         </div>`
                         : `<div style="line-height: 1.8;">
@@ -396,10 +396,10 @@ const handleLogout = () => {
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(220, 38, 38, 0.15);
+    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
     text-shadow: 
-        0 0 80px rgba(220, 38, 38, 0.1),
-        0 0 120px rgba(220, 38, 38, 0.05);
+        0 0 80px rgba(79, 70, 229, 0.1),
+        0 0 120px rgba(79, 70, 229, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;
@@ -488,20 +488,20 @@ const handleLogout = () => {
 }
 
 .action-card:hover {
-    background: #fff5f5;
+    background: #eef2ff;
     transform: translateY(-2px);
-    border-color: rgba(220, 38, 38, 0.2);
+    border-color: rgba(79, 70, 229, 0.2);
 }
 
 .action-card.active {
-    background: #fff5f5;
-    border-color: #dc2626;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    background: #eef2ff;
+    border-color: #4f46e5;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
 }
 
 .card-icon {
     font-size: 32px;
-    color: #dc2626;
+    color: #4f46e5;
     margin-bottom: 12px;
 }
 
@@ -536,8 +536,8 @@ const handleLogout = () => {
 }
 
 .form-section :deep(.el-input__wrapper.is-focus) {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     background-color: #fff;
 }
 
@@ -556,8 +556,8 @@ const handleLogout = () => {
 }
 
 .form-section :deep(.el-textarea__inner:focus) {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 /* 邀请码输入框样式 */
@@ -655,7 +655,7 @@ const handleLogout = () => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     color: #ffffff;
     border: none;
     transition: all 0.3s;
@@ -663,9 +663,9 @@ const handleLogout = () => {
 }
 
 .submit-btn:hover {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
 }
 
 .submit-btn:disabled {
@@ -685,7 +685,7 @@ const handleLogout = () => {
 }
 
 .footer-link :deep(.el-link:hover) {
-    color: #dc2626;
+    color: #4f46e5;
 }
 
 /* 模板选择样式 */

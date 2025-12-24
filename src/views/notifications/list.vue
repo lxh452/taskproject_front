@@ -869,13 +869,13 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 22px;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
 }
 .applicant-info {
   flex: 1;
@@ -907,12 +907,12 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 .form-label .el-icon {
-  color: #dc2626;
+  color: #4f46e5;
   font-size: 16px;
 }
 .form-label.required::after {
   content: '*';
-  color: #dc2626;
+  color: #ef4444;
   margin-left: 2px;
 }
 .label-hint {
@@ -929,10 +929,10 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--border-color) inset;
 }
 .full-width :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #dc2626 inset;
+  box-shadow: 0 0 0 1px #4f46e5 inset;
 }
 .full-width :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #dc2626 inset, 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 1px #4f46e5 inset, 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .option-item {
@@ -952,7 +952,7 @@ onMounted(() => {
   line-height: 1.6;
 }
 .note-input :deep(.el-textarea__inner:focus) {
-  box-shadow: 0 0 0 1px #dc2626, 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 1px #4f46e5, 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 .reject-note :deep(.el-textarea__inner:focus) {
   box-shadow: 0 0 0 1px #ef4444, 0 0 0 3px rgba(239, 68, 68, 0.1);

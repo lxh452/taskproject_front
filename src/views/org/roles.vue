@@ -358,7 +358,7 @@ onMounted(load);
     color: var(--text-secondary); 
     margin: 0; 
 }
-.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: linear-gradient(135deg, var(--color-danger) 0%, #b91c1c 100%); border: none; }
+.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: linear-gradient(135deg, var(--color-primary) 0%, #4338ca 100%); border: none; }
 
 .filter-bar { 
     display: flex; 
@@ -400,8 +400,8 @@ onMounted(load);
     max-width: 48px; 
     max-height: 48px; 
     border-radius: 0.8vw; 
-    background: #fef2f2; 
-    color: var(--color-danger); 
+    background: #eef2ff; 
+    color: var(--color-primary); 
     display: flex; 
     align-items: center; 
     justify-content: center; 
