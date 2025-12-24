@@ -76,8 +76,8 @@
         <div v-if="filteredRows.length > 0" class="handovers-grid">
           <div v-for="row in filteredRows" :key="row.id" class="handover-card" @click="viewHandover(row)">
             <div class="card-header">
-              <div class="type-tag" :class="row.isLeaveRequest ? 'leave' : 'task'">
-                {{ row.isLeaveRequest ? '离职' : '任务' }}
+              <div class="type-tag" :class="row.isNodeCompletion ? 'node' : (row.isLeaveRequest ? 'leave' : 'task')">
+                {{ row.isNodeCompletion ? '节点审批' : (row.isLeaveRequest ? '离职' : '任务') }}
               </div>
               <div class="status-badge" :class="row.statusType">
                 {{ row.statusText }}
@@ -96,7 +96,11 @@
                   <el-icon><Right /></el-icon>
                 </div>
                 <div class="flow-node">
-                  <template v-if="!row.isLeaveRequest">
+                  <template v-if="row.isNodeCompletion">
+                    <div class="audit-badge node">审</div>
+                    <span class="flow-name">{{ row.to || '待审批' }}</span>
+                  </template>
+                  <template v-else-if="!row.isLeaveRequest">
                     <el-avatar :size="36" class="flow-avatar to">{{ row.to?.charAt(0) }}</el-avatar>
                     <span class="flow-name">{{ row.to }}</span>
                   </template>
@@ -115,7 +119,7 @@
               </div>
               <div class="action-btns">
                 <el-button
-                    v-if="!row.isLeaveRequest && row.status === 0 && row.toEmployeeId === currentEmployeeId"
+                    v-if="!row.isLeaveRequest && !row.isNodeCompletion && row.status === 0 && row.toEmployeeId === currentEmployeeId"
                     size="small" type="success" plain
                     @click.stop="quickApprove(row)"
                 >确认</el-button>
@@ -173,8 +177,21 @@ const filteredRows = computed(() => {
 
 const resetFilter = () => { query.value = { keyword: '', status: null, type: null }; };
 const createHandover = () => { router.push('/handovers/create'); };
-function viewHandover(row: any) { router.push(`/handovers/detail/${row.id}`); }
-function quickApprove(row: any) { router.push(`/handovers/detail/${row.id}`); }
+function viewHandover(row: any) {
+  if (row.isNodeCompletion && row.taskNodeId) {
+    // 任务节点完成审批，跳转到任务节点详情
+    router.push(`/tasks/node/${row.taskNodeId}`);
+  } else {
+    router.push(`/handovers/detail/${row.id}`);
+  }
+}
+function quickApprove(row: any) {
+  if (row.isNodeCompletion && row.taskNodeId) {
+    router.push(`/tasks/node/${row.taskNodeId}`);
+  } else {
+    router.push(`/handovers/detail/${row.id}`);
+  }
+}
 
 async function loadData() {
   loading.value = true;
@@ -197,6 +214,7 @@ async function loadData() {
       };
       const statusInfo = statusMap[handoverStatus] || { text: '未知', type: 'default' };
       const isLeaveRequest = !h.taskId || h.taskTitle === '离职审批';
+      const isNodeCompletion = h.approvalType === 'node_completion';
       return {
         id: h.handoverId || h.id,
         task: isLeaveRequest ? '离职审批' : (h.taskTitle || h.taskId || '-'),
@@ -210,6 +228,9 @@ async function loadData() {
         statusType: statusInfo.type,
         time: h.handoverTime || h.createTime || '-',
         isLeaveRequest,
+        isNodeCompletion,
+        approvalType: h.approvalType || 'handover',
+        taskNodeId: h.taskNodeId || '',
       };
     });
   } catch (error: any) { console.error('加载交接列表失败:', error); rows.value = []; }
@@ -357,6 +378,7 @@ onMounted(() => { loadData(); });
 
 .type-tag.task { background: #e0e7ff; color: #4f46e5; }
 .type-tag.leave { background: #fef3c7; color: #d97706; }
+.type-tag.node { background: #d1fae5; color: #059669; }
 
 .status-badge {
   font-size: 11px;
@@ -409,6 +431,10 @@ onMounted(() => { loadData(); });
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
+}
+
+.audit-badge.node {
+  background: #10b981;
 }
 
 .flow-name { font-size: 11px; color: #6b7280; }
