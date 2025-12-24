@@ -315,7 +315,7 @@ tabs.clearTabs();
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 1px rgba(220, 38, 38, 0.25);
+    -webkit-text-stroke: 1px rgba(79, 70, 229, 0.25);
     letter-spacing: 8px;
     text-transform: uppercase;
 }
@@ -324,7 +324,7 @@ tabs.clearTabs();
     font-size: 22px;
     font-weight: 700;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    color: rgba(220, 38, 38, 0.15);
+    color: rgba(79, 70, 229, 0.15);
     letter-spacing: 12px;
 }
 
@@ -346,10 +346,10 @@ tabs.clearTabs();
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(220, 38, 38, 0.15);
+    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
     text-shadow: 
-        0 0 80px rgba(220, 38, 38, 0.1),
-        0 0 120px rgba(220, 38, 38, 0.05);
+        0 0 80px rgba(79, 70, 229, 0.1),
+        0 0 120px rgba(79, 70, 229, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;

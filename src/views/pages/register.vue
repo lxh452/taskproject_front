@@ -274,10 +274,10 @@ const submitForm = (formEl: FormInstance | undefined) => {
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(220, 38, 38, 0.15);
+    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
     text-shadow: 
-        0 0 80px rgba(220, 38, 38, 0.1),
-        0 0 120px rgba(220, 38, 38, 0.05);
+        0 0 80px rgba(79, 70, 229, 0.1),
+        0 0 120px rgba(79, 70, 229, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;
