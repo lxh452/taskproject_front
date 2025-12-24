@@ -279,7 +279,7 @@ export const getTaskComments = (data: { taskId?: string; taskNodeId?: string; pa
     request({ url: '/task/comment/list', method: 'post', data });
 
 // 点赞/取消点赞评论
-export const likeTaskComment = (data: { commentId: string; isLike: boolean }) =>
+export const likeTaskComment = (data: { commentId: string; isLike: number }) =>
     request({ url: '/task/comment/like', method: 'post', data });
 
 // 删除任务评论
