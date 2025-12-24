@@ -8,18 +8,18 @@
         </el-icon>
       </div>
       <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item :to="{ path: '/' }">棣栭〉</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
         <el-breadcrumb-item v-if="currentRoute">{{ currentRoute }}</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
     <div class="header-right">
-      <!-- 鎼滅储 -->
+      <!-- 搜索 -->
       <div class="header-action search-action">
         <el-icon :size="18"><Search /></el-icon>
       </div>
 
-      <!-- 鎴戠殑娓呭崟 -->
+      <!-- 我的清单 -->
       <el-popover
           placement="bottom-end"
           :width="380"
@@ -40,22 +40,22 @@
         <div class="popover-container">
           <div class="popover-header">
             <div class="popover-title">
-              <span class="title-text">鎴戠殑娓呭崟</span>
+              <span class="title-text">我的清单</span>
               <el-tag v-if="uncompletedChecklistCount > 0" type="warning" size="small" effect="dark" round>
                 {{ uncompletedChecklistCount }}
               </el-tag>
             </div>
             <el-radio-group v-model="checklistFilter" size="small" @change="fetchMyChecklist">
-              <el-radio-button :value="-1">鍏ㄩ儴</el-radio-button>
-              <el-radio-button :value="0">寰呭畬鎴?/el-radio-button>
-              <el-radio-button :value="1">宸插畬鎴?/el-radio-button>
+              <el-radio-button :value="-1">全部</el-radio-button>
+              <el-radio-button :value="0">待完成</el-radio-button>
+              <el-radio-button :value="1">已完成</el-radio-button>
             </el-radio-group>
           </div>
           <div class="popover-body" v-loading="checklistLoading">
             <template v-if="myChecklists.length === 0">
               <div class="empty-placeholder">
                 <el-icon :size="48" color="#e2e8f0"><DocumentChecked /></el-icon>
-                <p>鏆傛棤娓呭崟椤?/p>
+                <p>暂无清单项</p>
               </div>
             </template>
             <template v-else>
@@ -75,11 +75,11 @@
                   <div class="item-meta" v-if="item.taskTitle || item.taskNodeName">
                     <div class="task-info" @click.stop="goToTaskNode(item)">
                       <el-icon class="meta-icon"><Document /></el-icon>
-                      <span class="task-title">{{ item.taskTitle || '鏈煡浠诲姟' }}</span>
+                      <span class="task-title">{{ item.taskTitle || '未知任务' }}</span>
                     </div>
                     <div class="node-info" @click.stop="goToTaskNode(item)">
                       <el-icon class="meta-icon"><Connection /></el-icon>
-                      <span class="node-name">{{ item.taskNodeName || '鏈煡鑺傜偣' }}</span>
+                      <span class="node-name">{{ item.taskNodeName || '未知节点' }}</span>
                     </div>
                   </div>
                 </div>
@@ -87,12 +87,12 @@
             </template>
           </div>
           <div class="popover-footer">
-            <el-button link type="primary" @click="goToAllChecklists">鏌ョ湅鍏ㄩ儴</el-button>
+            <el-button link type="primary" @click="goToAllChecklists">查看全部</el-button>
           </div>
         </div>
       </el-popover>
 
-      <!-- 閫氱煡 -->
+      <!-- 通知 -->
       <el-popover
           placement="bottom-end"
           :width="380"
@@ -113,7 +113,7 @@
         <div class="popover-container">
           <div class="popover-header">
             <div class="popover-title">
-              <span class="title-text">閫氱煡涓績</span>
+              <span class="title-text">通知中心</span>
               <el-tag v-if="unreadCount > 0" type="danger" size="small" effect="dark" round>
                 {{ unreadCount }}
               </el-tag>
@@ -123,7 +123,7 @@
             <template v-if="notifications.length === 0">
               <div class="empty-placeholder">
                 <el-icon :size="48" color="#e2e8f0"><Bell /></el-icon>
-                <p>鏆傛棤閫氱煡</p>
+                <p>暂无通知</p>
               </div>
             </template>
             <template v-else>
@@ -147,31 +147,31 @@
             </template>
           </div>
           <div class="popover-footer">
-            <el-button link type="primary" @click="goToNotifications">鏌ョ湅鍏ㄩ儴</el-button>
+            <el-button link type="primary" @click="goToNotifications">查看全部</el-button>
           </div>
         </div>
       </el-popover>
 
-      <!-- 鐢熸垚閭€璇风爜 -->
-      <el-tooltip content="鐢熸垚閭€璇风爜" placement="bottom" v-if="canGenerateInvite">
+      <!-- 生成邀请码 -->
+      <el-tooltip content="生成邀请码" placement="bottom" v-if="canGenerateInvite">
         <div class="header-action invite-action" @click="showInviteDialog = true">
           <el-icon :size="18"><Ticket /></el-icon>
         </div>
       </el-tooltip>
 
-      <!-- 涓婚鍒囨崲 -->
-      <el-tooltip :content="isDarkMode ? '鍒囨崲鍒版祬鑹叉ā寮? : '鍒囨崲鍒版繁鑹叉ā寮?" placement="bottom">
+      <!-- 主题切换 -->
+      <el-tooltip :content="isDarkMode ? '切换到浅色模式' : '切换到深色模式'" placement="bottom">
         <div class="header-action theme-toggle" @click="toggleTheme">
           <el-icon :size="18"><Sunny v-if="isDarkMode" /><Moon v-else /></el-icon>
         </div>
       </el-tooltip>
 
-      <!-- 鍏ㄥ睆 -->
+      <!-- 全屏 -->
       <div class="header-action" @click="setFullScreen">
         <el-icon :size="18"><FullScreen /></el-icon>
       </div>
 
-      <!-- 鐢ㄦ埛澶村儚 -->
+      <!-- 用户头像 -->
       <el-dropdown trigger="click" class="user-dropdown">
         <div class="user-trigger">
           <el-avatar :size="32" class="user-avatar">{{ username?.charAt(0) }}</el-avatar>
@@ -182,50 +182,50 @@
           <el-dropdown-menu>
             <el-dropdown-item @click="goToProfile">
               <el-icon><User /></el-icon>
-              <span>涓汉涓績</span>
+              <span>个人中心</span>
             </el-dropdown-item>
             <el-dropdown-item divided @click="handleSignOut">
               <el-icon><SwitchButton /></el-icon>
-              <span>閫€鍑虹櫥褰?/span>
+              <span>退出登录</span>
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
 
-    <!-- 鐢熸垚閭€璇风爜寮圭獥 -->
-    <el-dialog v-model="showInviteDialog" title="鐢熸垚閭€璇风爜" width="420px">
+    <!-- 生成邀请码弹窗 -->
+    <el-dialog v-model="showInviteDialog" title="生成邀请码" width="420px">
       <el-form :model="inviteForm" label-width="100px">
-        <el-form-item label="鏈夋晥鏈?>
+        <el-form-item label="有效期">
           <el-select v-model="inviteForm.expireDays" style="width: 100%">
-            <el-option label="1 澶? :value="1" />
-            <el-option label="3 澶? :value="3" />
-            <el-option label="7 澶? :value="7" />
-            <el-option label="14 澶? :value="14" />
-            <el-option label="30 澶? :value="30" />
+            <el-option label="1 天" :value="1" />
+            <el-option label="3 天" :value="3" />
+            <el-option label="7 天" :value="7" />
+            <el-option label="14 天" :value="14" />
+            <el-option label="30 天" :value="30" />
           </el-select>
         </el-form-item>
-        <el-form-item label="浣跨敤娆℃暟">
+        <el-form-item label="使用次数">
           <el-input-number v-model="inviteForm.maxUses" :min="0" :max="100" style="width: 100%">
           </el-input-number>
-          <div class="form-tip">0 琛ㄧず涓嶉檺鍒朵娇鐢ㄦ鏁?/div>
+          <div class="form-tip">0 表示不限制使用次数</div>
         </el-form-item>
       </el-form>
 
-      <!-- 鐢熸垚缁撴灉 -->
+      <!-- 生成结果 -->
       <div v-if="generatedCode" class="invite-result">
-        <div class="result-label">閭€璇风爜宸茬敓鎴?/div>
+        <div class="result-label">邀请码已生成</div>
         <div class="result-code">{{ generatedCode }}</div>
         <el-button type="primary" size="small" @click="copyInviteCode">
           <el-icon><DocumentCopy /></el-icon>
-          澶嶅埗閭€璇风爜
+          复制邀请码
         </el-button>
       </div>
 
       <template #footer>
-        <el-button @click="showInviteDialog = false">鍏抽棴</el-button>
+        <el-button @click="showInviteDialog = false">关闭</el-button>
         <el-button type="primary" @click="handleGenerateCode" :loading="generating">
-          {{ generatedCode ? '閲嶆柊鐢熸垚' : '鐢熸垚' }}
+          {{ generatedCode ? '重新生成' : '生成' }}
         </el-button>
       </template>
     </el-dialog>
@@ -249,9 +249,9 @@ const router = useRouter();
 const route = useRoute();
 const sidebar = useSidebarStore();
 const userStore = useUserStore();
-const username = ref(userStore.username || localStorage.getItem('vuems_name') || '鐢ㄦ埛');
+const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
 
-// 涓婚鍒囨崲
+// 主题切换
 const isDarkMode = ref(false);
 
 function initTheme() {
@@ -279,20 +279,20 @@ const currentRoute = computed(() => {
   return route.meta?.title as string || '';
 });
 
-// 閫氱煡鐩稿叧
+// 通知相关
 const unreadCount = ref(0);
 const notifications = ref<any[]>([]);
 const notificationLoading = ref(false);
 const notificationPopoverVisible = ref(false);
 
-// 娓呭崟鐩稿叧
+// 清单相关
 const uncompletedChecklistCount = ref(0);
 const myChecklists = ref<any[]>([]);
 const checklistLoading = ref(false);
 const checklistPopoverVisible = ref(false);
 const checklistFilter = ref(-1);
 
-// 閭€璇风爜鐩稿叧
+// 邀请码相关
 const canGenerateInvite = ref(false);
 const showInviteDialog = ref(false);
 const generating = ref(false);
@@ -331,8 +331,8 @@ const fetchNotifications = async () => {
       const plist = pendingResp.data?.data?.list || [];
       pendingRows = plist.map((p: any) => ({
         id: p.id || p.ID || p.applicationId || p.ApplicationId || `ja_${p.userId || ''}`,
-        title: '鏂板憳宸ュ姞鍏ョ敵璇?,
-        content: `${p.companyName || '鍏徃'} 鐨勫姞鍏ョ敵璇峰緟瀹℃壒`,
+        title: '新员工加入申请',
+        content: `${p.companyName || '公司'} 的加入申请待审批`,
         type: 3,
         priority: 2,
         isRead: 0,
@@ -356,7 +356,7 @@ const fetchNotifications = async () => {
     notifications.value = mergedList;
     unreadCount.value = mergedList.filter((n: any) => (n.isRead ?? 0) === 0).length;
   } catch (error) {
-    console.error('鑾峰彇閫氱煡澶辫触:', error);
+    console.error('获取通知失败:', error);
   } finally {
     notificationLoading.value = false;
   }
@@ -376,7 +376,7 @@ const fetchMyChecklist = async () => {
       uncompletedChecklistCount.value = data.uncompletedCount || 0;
     }
   } catch (error) {
-    console.error('鑾峰彇鎴戠殑娓呭崟澶辫触:', error);
+    console.error('获取我的清单失败:', error);
   } finally {
     checklistLoading.value = false;
   }
@@ -392,13 +392,13 @@ const toggleChecklistItem = async (item: any) => {
     if (resp.data.code === 200) {
       item.isCompleted = newStatus;
       fetchMyChecklist();
-      ElMessage.success(newStatus === 1 ? '宸插畬鎴? : '宸插彇娑堝畬鎴?);
+      ElMessage.success(newStatus === 1 ? '已完成' : '已取消完成');
     } else {
-      ElMessage.error(resp.data.msg || '鎿嶄綔澶辫触');
+      ElMessage.error(resp.data.msg || '操作失败');
     }
   } catch (error) {
-    console.error('鏇存柊娓呭崟鐘舵€佸け璐?', error);
-    ElMessage.error('鎿嶄綔澶辫触');
+    console.error('更新清单状态失败:', error);
+    ElMessage.error('操作失败');
   }
 };
 
@@ -411,7 +411,7 @@ const handleNotificationClick = async (item: any) => {
         unreadCount.value = Math.max(0, unreadCount.value - 1);
       }
     } catch (error: any) {
-      console.error('鏍囪宸茶澶辫触:', error);
+      console.error('标记已读失败:', error);
     }
   }
 
@@ -421,7 +421,6 @@ const handleNotificationClick = async (item: any) => {
   const relatedType = item.relatedType || item.related_type;
   const category = item.category || item.Category || '';
 
-  // 濡傛灉鏄姞鍏ョ敵璇凤紝璺宠浆鍒伴€氱煡涓績杩涜瀹℃壒
   if (relatedType === 'join_application' || category === 'join_application') {
     notificationPopoverVisible.value = false;
     router.push('/notifications');
@@ -481,10 +480,10 @@ const formatTime = (time: string) => {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return '鍒氬垰';
-  if (minutes < 60) return `${minutes}鍒嗛挓鍓峘;
-  if (hours < 24) return `${hours}灏忔椂鍓峘;
-  if (days < 7) return `${days}澶╁墠`;
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  if (hours < 24) return `${hours}小时前`;
+  if (days < 7) return `${days}天前`;
   return time.split('T')[0];
 };
 
@@ -514,7 +513,7 @@ function handleSignOut() {
   localStorage.removeItem('authToken');
   localStorage.removeItem('vuems_name');
   userStore.clearUserInfo();
-  ElMessage.success('閫€鍑烘垚鍔?);
+  ElMessage.success('退出成功');
   router.push('/login');
 }
 
@@ -527,13 +526,13 @@ const handleGenerateCode = async () => {
     });
     if (res.data.code === 200) {
       generatedCode.value = res.data.data?.inviteCode || '';
-      ElMessage.success('閭€璇风爜鐢熸垚鎴愬姛');
+      ElMessage.success('邀请码生成成功');
     } else {
-      ElMessage.error(res.data.msg || '鐢熸垚澶辫触');
+      ElMessage.error(res.data.msg || '生成失败');
     }
   } catch (error: any) {
-    console.error('鐢熸垚閭€璇风爜澶辫触:', error);
-    ElMessage.error(error.response?.data?.msg || '鐢熸垚澶辫触');
+    console.error('生成邀请码失败:', error);
+    ElMessage.error(error.response?.data?.msg || '生成失败');
   } finally {
     generating.value = false;
   }
@@ -541,17 +540,15 @@ const handleGenerateCode = async () => {
 
 const copyInviteCode = async () => {
   if (!generatedCode.value) {
-    ElMessage.warning('娌℃湁鍙鍒剁殑閭€璇风爜');
+    ElMessage.warning('没有可复制的邀请码');
     return;
   }
 
   try {
-    // 浼樺厛浣跨敤 Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(generatedCode.value);
-      ElMessage.success('閭€璇风爜宸插鍒跺埌鍓创鏉?);
+      ElMessage.success('邀请码已复制到剪贴板');
     } else {
-      // 闄嶇骇鏂规锛氫娇鐢?execCommand
       const textArea = document.createElement('textarea');
       textArea.value = generatedCode.value;
       textArea.style.position = 'fixed';
@@ -565,14 +562,13 @@ const copyInviteCode = async () => {
       document.body.removeChild(textArea);
 
       if (successful) {
-        ElMessage.success('閭€璇风爜宸插鍒跺埌鍓创鏉?);
+        ElMessage.success('邀请码已复制到剪贴板');
       } else {
-        ElMessage.error('澶嶅埗澶辫触锛岃鎵嬪姩澶嶅埗');
+        ElMessage.error('复制失败，请手动复制');
       }
     }
   } catch (err) {
-    console.error('澶嶅埗澶辫触:', err);
-    // 鏈€鍚庣殑闄嶇骇鏂规
+    console.error('复制失败:', err);
     const textArea = document.createElement('textarea');
     textArea.value = generatedCode.value;
     textArea.style.position = 'fixed';
@@ -584,9 +580,9 @@ const copyInviteCode = async () => {
 
     try {
       document.execCommand('copy');
-      ElMessage.success('閭€璇风爜宸插鍒跺埌鍓创鏉?);
+      ElMessage.success('邀请码已复制到剪贴板');
     } catch {
-      ElMessage.error('澶嶅埗澶辫触锛岃鎵嬪姩澶嶅埗閭€璇风爜: ' + generatedCode.value);
+      ElMessage.error('复制失败，请手动复制邀请码: ' + generatedCode.value);
     } finally {
       document.body.removeChild(textArea);
     }
@@ -598,19 +594,17 @@ const checkInvitePermission = async () => {
     const resp = await getMyEmployee();
     if (resp.data.code === 200) {
       const emp = resp.data.data || {};
-      // 妫€鏌ユ槸鍚︽湁鐢熸垚閭€璇风爜鏉冮檺锛氬垱濮嬩汉銆佷汉浜嬮儴闂ㄦ垨绠＄悊宀?
-      const isFounder = emp.isFounder === 1 || emp.roleTags?.includes('鍒涘浜?);
-      const isHR = emp.departmentCode === 'HR' || emp.departmentName?.includes('浜轰簨');
-      const isManager = emp.isManagement === 1 || emp.positionName?.includes('缁忕悊');
+      const isFounder = emp.isFounder === 1 || emp.roleTags?.includes('创始人');
+      const isHR = emp.departmentCode === 'HR' || emp.departmentName?.includes('人事');
+      const isManager = emp.isManagement === 1 || emp.positionName?.includes('经理');
       canGenerateInvite.value = isFounder || isHR || isManager;
     }
   } catch (error) {
-    console.error('妫€鏌ラ個璇风爜鏉冮檺澶辫触:', error);
+    console.error('检查邀请码权限失败:', error);
   }
 };
 
 onMounted(async () => {
-  // 鍒濆鍖栦富棰?
   initTheme();
 
   try {
@@ -618,7 +612,7 @@ onMounted(async () => {
     const emp = empRes?.data?.data || {};
     username.value = emp.realName || emp.name || username.value;
   } catch (error: any) {
-    console.error('鑾峰彇鐢ㄦ埛淇℃伅澶辫触:', error);
+    console.error('获取用户信息失败:', error);
   }
 
   checkInvitePermission();
@@ -637,78 +631,74 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: clamp(56px, 8vh, 64px);
-  padding: 0 clamp(16px, 1.3vw, 24px);
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+  height: 64px;
+  padding: 0 24px;
+  background: var(--bg-card, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
   transition: background-color 0.3s, border-color 0.3s;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 1vw, 16px);
+  gap: 16px;
 }
 
 .collapse-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(32px, 2.5vw, 40px);
-  height: clamp(32px, 2.5vw, 40px);
-  border-radius: clamp(6px, 0.6vw, 10px);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #475569);
   transition: all 0.2s ease;
 }
 
 .collapse-trigger:hover {
-  background: var(--bg-hover);
-  color: var(--text-main);
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-main, #0f172a);
 }
 
 .breadcrumb {
-  font-size: clamp(13px, 0.95vw, 15px);
+  font-size: 14px;
 }
 
 .breadcrumb :deep(.el-breadcrumb__inner) {
-  color: var(--text-secondary);
+  color: var(--text-secondary, #475569);
 }
 
 .breadcrumb :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
-  color: var(--text-main);
+  color: var(--text-main, #0f172a);
   font-weight: 500;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: clamp(3px, 0.3vw, 4px);
+  gap: 4px;
 }
 
 .header-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(32px, 2.5vw, 40px);
-  height: clamp(32px, 2.5vw, 40px);
-  border-radius: clamp(6px, 0.6vw, 10px);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #475569);
   transition: all 0.2s ease;
 }
 
 .header-action:hover {
-  background: var(--bg-hover);
-  color: var(--text-main);
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-main, #0f172a);
 }
 
 .header-action.has-badge {
   color: #dc2626;
-}
-
-.header-action.checklist-action {
-  position: relative;
 }
 
 .header-action.checklist-action.has-pending {
@@ -716,41 +706,19 @@ onUnmounted(() => {
   animation: pulse-checklist 2s ease-in-out infinite;
 }
 
-.header-action.checklist-action.has-pending:hover {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.header-action.notification-action {
-  position: relative;
-}
-
 .header-action.notification-action.has-unread {
   color: #dc2626;
   animation: pulse-notification 2s ease-in-out infinite;
 }
 
-.header-action.notification-action.has-unread:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
 @keyframes pulse-checklist {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes pulse-notification {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .header-action.theme-toggle {
@@ -771,61 +739,50 @@ onUnmounted(() => {
   color: #059669;
 }
 
-.header-action :deep(.el-badge__content) {
-  height: clamp(14px, 1.1vw, 16px);
-  line-height: clamp(14px, 1.1vw, 16px);
-  padding: 0 clamp(4px, 0.35vw, 5px);
-  font-size: clamp(9px, 0.7vw, 11px);
-  border: none;
-}
-
 .search-action {
   width: auto;
-  padding: 0 clamp(10px, 0.8vw, 12px);
-  gap: clamp(4px, 0.4vw, 6px);
+  padding: 0 12px;
+  gap: 6px;
 }
 
-/* User Dropdown */
 .user-dropdown {
-  margin-left: clamp(6px, 0.5vw, 8px);
+  margin-left: 8px;
 }
 
 .user-trigger {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 0.5vw, 8px);
-  padding: clamp(3px, 0.3vw, 4px) clamp(6px, 0.5vw, 8px) clamp(3px, 0.3vw, 4px) clamp(3px, 0.3vw, 4px);
-  border-radius: clamp(6px, 0.5vw, 8px);
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .user-trigger:hover {
-  background: var(--bg-hover);
+  background: var(--bg-hover, #f1f5f9);
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  background: linear-gradient(135deg, var(--color-primary, #4f46e5) 0%, var(--color-primary-hover, #4338ca) 100%);
   color: #fff;
   font-weight: 600;
-  font-size: clamp(12px, 0.9vw, 14px);
-  width: clamp(28px, 2.2vw, 36px) !important;
-  height: clamp(28px, 2.2vw, 36px) !important;
+  font-size: 14px;
 }
 
 .user-name {
-  font-size: clamp(13px, 0.95vw, 15px);
+  font-size: 14px;
   font-weight: 500;
-  color: var(--text-main);
-  max-width: clamp(80px, 7vw, 120px);
+  color: var(--text-main, #0f172a);
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .dropdown-icon {
-  color: var(--text-muted);
-  font-size: clamp(11px, 0.8vw, 13px);
+  color: var(--text-muted, #94a3b8);
+  font-size: 12px;
 }
 
 /* Popover Styles */
@@ -838,96 +795,64 @@ onUnmounted(() => {
 }
 
 .popover-header {
-  padding: clamp(12px, 1vw, 16px);
-  border-bottom: 1px solid var(--border-color);
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 0.8vw, 12px);
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
+  gap: 12px;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
 }
 
 .popover-title {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 0.5vw, 8px);
+  gap: 8px;
 }
 
 .title-text {
-  font-size: clamp(14px, 1vw, 16px);
+  font-size: 16px;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--text-main, #0f172a);
 }
 
 .popover-body {
-  max-height: clamp(320px, 28vh, 400px);
+  max-height: 400px;
   overflow-y: auto;
-  overflow-x: hidden;
-  padding: clamp(4px, 0.3vw, 6px) 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.popover-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.popover-body::-webkit-scrollbar-track {
-  background: var(--bg-hover);
-  border-radius: 3px;
-}
-
-.popover-body::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 3px;
-}
-
-.popover-body::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  padding: 6px 0;
 }
 
 .popover-footer {
-  padding: clamp(10px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
-  border-top: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
   text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
 }
 
 .empty-placeholder {
-  padding: clamp(32px, 2.5vw, 40px) clamp(16px, 1.3vw, 20px);
+  padding: 40px 20px;
   text-align: center;
 }
 
 .empty-placeholder p {
-  margin-top: clamp(10px, 0.8vw, 12px);
-  color: var(--text-muted);
-  font-size: clamp(13px, 0.95vw, 15px);
+  margin-top: 12px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 14px;
 }
 
 /* Checklist Item */
 .checklist-item {
   display: flex;
   align-items: flex-start;
-  gap: clamp(10px, 0.8vw, 12px);
-  padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
+  gap: 12px;
+  padding: 14px 16px;
   transition: all 0.2s;
-  cursor: default;
   border-left: 3px solid transparent;
-  border-radius: clamp(4px, 0.3vw, 6px);
-  margin: clamp(2px, 0.2vw, 3px) 0;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
+  border-radius: 6px;
+  margin: 3px 0;
 }
 
 .checklist-item:hover {
-  background: var(--bg-hover);
-  border-left-color: var(--color-primary);
+  background: var(--bg-hover, #f1f5f9);
+  border-left-color: var(--color-primary, #4f46e5);
   transform: translateX(2px);
 }
 
@@ -936,86 +861,48 @@ onUnmounted(() => {
   border-left-color: #10b981;
 }
 
-.checklist-item.completed:hover {
-  border-left-color: #059669;
-}
-
 .item-content {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .item-text {
-  font-size: clamp(13px, 0.95vw, 15px);
-  color: var(--text-main);
+  font-size: 14px;
+  color: var(--text-main, #0f172a);
   line-height: 1.6;
   font-weight: 500;
-  margin-bottom: clamp(2px, 0.2vw, 3px);
-  word-break: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .checklist-item.completed .item-text {
   text-decoration: line-through;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.item-link {
-  font-size: clamp(11px, 0.8vw, 13px);
-  color: var(--text-muted);
-  margin-top: clamp(3px, 0.3vw, 4px);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.item-link:hover {
-  color: var(--color-primary);
+  color: var(--text-muted, #94a3b8);
 }
 
 .item-meta {
-  margin-top: clamp(6px, 0.5vw, 8px);
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: clamp(4px, 0.3vw, 5px);
-  overflow: hidden;
+  gap: 5px;
 }
 
 .task-info,
 .node-info {
   display: flex;
   align-items: center;
-  gap: clamp(4px, 0.3vw, 6px);
-  font-size: clamp(11px, 0.8vw, 12px);
-  color: var(--text-muted);
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
   cursor: pointer;
   transition: all 0.2s;
-  padding: clamp(2px, 0.2vw, 3px) 0;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .task-info:hover,
 .node-info:hover {
-  color: var(--color-primary);
-}
-
-.task-info:hover .meta-icon,
-.node-info:hover .meta-icon {
-  color: var(--color-primary);
-  transform: scale(1.1);
+  color: var(--color-primary, #4f46e5);
 }
 
 .meta-icon {
-  font-size: clamp(12px, 0.9vw, 14px);
-  color: var(--text-muted);
-  transition: all 0.2s;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -1025,38 +912,24 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
-  word-break: break-all;
-}
-
-.task-title {
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.node-name {
-  color: var(--text-muted);
 }
 
 /* Notification Item */
 .notification-item {
   display: flex;
-  gap: clamp(10px, 0.8vw, 12px);
-  padding: clamp(12px, 1vw, 14px) clamp(12px, 1vw, 16px);
+  gap: 12px;
+  padding: 14px 16px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
   border-left: 3px solid transparent;
-  border-radius: clamp(4px, 0.3vw, 6px);
-  margin: clamp(2px, 0.2vw, 3px) 0;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
+  border-radius: 6px;
+  margin: 3px 0;
 }
 
 .notification-item:hover {
-  background: var(--bg-hover);
-  border-left-color: var(--color-primary);
+  background: var(--bg-hover, #f1f5f9);
+  border-left-color: var(--color-primary, #4f46e5);
   transform: translateX(2px);
 }
 
@@ -1066,20 +939,13 @@ onUnmounted(() => {
 }
 
 .notif-icon {
-  width: clamp(36px, 2.8vw, 40px);
-  height: clamp(36px, 2.8vw, 40px);
-  border-radius: clamp(8px, 0.6vw, 10px);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.notification-item:hover .notif-icon {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .notif-icon.type-task {
@@ -1100,26 +966,18 @@ onUnmounted(() => {
 .notif-content {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .notif-title {
-  font-size: clamp(13px, 0.95vw, 15px);
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: clamp(3px, 0.3vw, 4px);
-  color: var(--text-main);
-  word-break: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  margin-bottom: 4px;
+  color: var(--text-main, #0f172a);
 }
 
 .notif-desc {
-  font-size: clamp(11px, 0.8vw, 13px);
-  color: var(--text-secondary);
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1128,48 +986,31 @@ onUnmounted(() => {
 }
 
 .notif-time {
-  font-size: clamp(10px, 0.75vw, 12px);
-  color: var(--text-muted);
-  margin-top: clamp(3px, 0.3vw, 4px);
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 4px;
 }
 
 .unread-indicator {
   position: absolute;
-  right: clamp(12px, 1vw, 16px);
+  right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(6px, 0.5vw, 8px);
-  height: clamp(6px, 0.5vw, 8px);
-  background: var(--color-danger);
+  width: 8px;
+  height: 8px;
+  background: var(--color-danger, #ef4444);
   border-radius: 50%;
 }
 
-/* 鍝嶅簲寮忓竷灞€ */
+/* 响应式布局 */
 @media (max-width: 768px) {
   .header-container {
     padding: 0 16px;
     height: 56px;
   }
 
-  .header-left {
-    gap: 12px;
-  }
-
   .breadcrumb {
     display: none;
-  }
-
-  .header-right {
-    gap: 2px;
-  }
-
-  .header-action {
-    width: 32px;
-    height: 32px;
-  }
-
-  .user-trigger {
-    padding: 2px 4px;
   }
 
   .user-name {
@@ -1179,44 +1020,6 @@ onUnmounted(() => {
   .dropdown-icon {
     display: none;
   }
-
-  .popover-container {
-    margin: -8px;
-  }
-
-  .popover-header {
-    padding: 12px;
-  }
-
-  .popover-body {
-    max-height: 300px;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-container {
-    padding: 0 12px;
-  }
-
-  .collapse-trigger {
-    width: 32px;
-    height: 32px;
-  }
-
-  .header-action {
-    width: 28px;
-    height: 28px;
-  }
-
-  .header-action :deep(.el-icon) {
-    font-size: 16px;
-  }
-
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
 }
 </style>
 
@@ -1224,47 +1027,18 @@ onUnmounted(() => {
 /* Global Popover Style */
 .vben-popover {
   border-radius: 12px !important;
-  box-shadow: var(--shadow-lg) !important;
-  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--border-color, #e2e8f0) !important;
   padding: 0 !important;
-  background: var(--bg-card) !important;
+  background: var(--bg-card, #ffffff) !important;
   max-width: 380px !important;
   width: 380px !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
 }
 
-.vben-popover * {
-  box-sizing: border-box;
-}
-
-.vben-popover .popover-header :deep(.el-radio-group) {
-  width: 100% !important;
-  display: flex !important;
-  box-sizing: border-box !important;
-}
-
-.vben-popover .popover-header :deep(.el-radio-button) {
-  flex: 1 !important;
-  box-sizing: border-box !important;
-  min-width: 0 !important;
-}
-
-.vben-popover .popover-header :deep(.el-radio-button__inner) {
-  width: 100% !important;
-  box-sizing: border-box !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  padding: 0 clamp(8px, 0.6vw, 12px) !important;
-}
-
-/* 绉婚櫎纭紪鐮佺殑 dark-mode 鏍峰紡锛屽畬鍏ㄤ緷璧?CSS 鍙橀噺 */
-
-/* 閭€璇风爜寮圭獥鏍峰紡 */
+/* 邀请码弹窗样式 */
 .form-tip {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #475569);
   margin-top: 4px;
 }
 
