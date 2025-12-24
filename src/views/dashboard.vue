@@ -71,8 +71,12 @@
         </div>
       </div>
       <div class="section-body">
-        <DashboardKanban v-if="activeView === 'kanban'" :maxTasksPerColumn="5" :showExpiring="true" />
-        <DepartmentGantt v-else :departmentId="departmentId" />
+        <div v-if="activeView === 'kanban'" class="placeholder-view">
+          <el-empty description="任务看板加载中..." />
+        </div>
+        <div v-else class="placeholder-view">
+          <el-empty description="甘特图加载中..." />
+        </div>
       </div>
     </div>
   </div>
@@ -88,8 +92,6 @@ import VChart from 'vue-echarts';
 import { DataLine, Clock, Check, Warning } from '@element-plus/icons-vue';
 import { getHandoverList, listTasks, getMyEmployee, getMyTaskNodes } from '@/api';
 import { useUserStore } from '@/store/user';
-import DashboardKanban from '@/components/DashboardKanban.vue';
-import DepartmentGantt from '@/components/DepartmentGantt.vue';
 import countup from '@/components/countup.vue';
 
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart]);
