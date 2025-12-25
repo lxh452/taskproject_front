@@ -184,7 +184,10 @@ async function navigateToTaskNode(taskNodeId: string) {
   try {
     const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
     if (resp.data.code === 200 && resp.data.data) {
-      const taskId = resp.data.data.taskId || resp.data.data.TaskId;
+      const data = resp.data.data;
+      // 从 taskNode 对象中获取 taskId
+      const taskNode = data.taskNode || data;
+      const taskId = taskNode.taskId || taskNode.TaskID || taskNode.taskID;
       if (taskId) {
         router.push(`/tasks/detail/${taskId}`);
         return;
