@@ -61,7 +61,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder="密码"
                         v-model="param.password"
                         @keyup.enter="submitForm(register)"
@@ -69,6 +69,12 @@
                         <template #prepend>
                             <el-icon>
                                 <Lock />
+                            </el-icon>
+                        </template>
+                        <template #suffix>
+                            <el-icon class="password-toggle" @click="showPassword = !showPassword">
+                                <View v-if="showPassword" />
+                                <Hide v-else />
                             </el-icon>
                         </template>
                     </el-input>
@@ -90,7 +96,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Register } from '@/types/user';
 import { apiRegister, sendVerificationCode as sendCode } from '@/api';
-import { User, Message, Lock, UserFilled, Key } from '@element-plus/icons-vue';
+import { User, Message, Lock, UserFilled, Key, View, Hide } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const param = reactive<Register & { verificationCode: string }>({
@@ -103,6 +109,7 @@ const param = reactive<Register & { verificationCode: string }>({
 const loading = ref(false);
 const codeSending = ref(false);
 const codeCountdown = ref(0);
+const showPassword = ref(false);
 let countdownTimer: number | null = null;
 
 // 发送验证码
@@ -365,6 +372,20 @@ const submitForm = (formEl: FormInstance | undefined) => {
 .login-form :deep(.el-input__inner) {
     color: #111827;
     height: 44px;
+}
+
+.login-form :deep(.el-input__suffix) {
+    cursor: pointer;
+}
+
+.password-toggle {
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover {
+    color: #4f46e5;
 }
 
 .login-form :deep(.el-input-group__prepend) {

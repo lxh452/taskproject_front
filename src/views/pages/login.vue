@@ -36,7 +36,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder="密码"
                         v-model="param.password"
                         @keyup.enter="submitForm(login)"
@@ -44,6 +44,12 @@
                         <template #prepend>
                             <el-icon>
                                 <Lock />
+                            </el-icon>
+                        </template>
+                        <template #suffix>
+                            <el-icon class="password-toggle" @click="showPassword = !showPassword">
+                                <View v-if="showPassword" />
+                                <Hide v-else />
                             </el-icon>
                         </template>
                     </el-input>
@@ -83,7 +89,7 @@ import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { apiLogin } from '@/api';
 import { getMyEmployee, employeeRoles } from '@/api';
-import { User, Lock } from '@element-plus/icons-vue';
+import { User, Lock, View, Hide } from '@element-plus/icons-vue';
 
 interface LoginInfo {
     username: string;
@@ -93,6 +99,7 @@ interface LoginInfo {
 const lgStr = localStorage.getItem('login-param');
 const defParam = lgStr ? JSON.parse(lgStr) : null;
 const checked = ref(lgStr ? true : false);
+const showPassword = ref(false);
 
 const router = useRouter();
 const param = reactive<LoginInfo>({
@@ -443,6 +450,20 @@ tabs.clearTabs();
     color: #111827;
     height: 44px;
     font-size: 14px;
+}
+
+.login-form :deep(.el-input__suffix) {
+    cursor: pointer;
+}
+
+.password-toggle {
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover {
+    color: #4f46e5;
 }
 
 .login-form :deep(.el-input-group__prepend) {

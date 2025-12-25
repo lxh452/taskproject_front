@@ -180,14 +180,14 @@ const createHandover = () => { router.push('/handovers/create'); };
 function viewHandover(row: any) {
   if (row.isNodeCompletion && row.taskNodeId) {
     // 任务节点完成审批，跳转到任务节点详情
-    router.push(`/tasks/node/${row.taskNodeId}`);
+    router.push(`/task-nodes/detail/${row.taskNodeId}`);
   } else {
     router.push(`/handovers/detail/${row.id}`);
   }
 }
 function quickApprove(row: any) {
   if (row.isNodeCompletion && row.taskNodeId) {
-    router.push(`/tasks/node/${row.taskNodeId}`);
+    router.push(`/task-nodes/detail/${row.taskNodeId}`);
   } else {
     router.push(`/handovers/detail/${row.id}`);
   }
