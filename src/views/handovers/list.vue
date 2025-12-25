@@ -124,7 +124,17 @@
                     @click.stop="quickApprove(row)"
                 >确认</el-button>
                 <el-button
-                    v-if="row.status === 1 && row.approverId === currentEmployeeId"
+                    v-if="row.isNodeCompletion && row.status === 1"
+                    size="small" type="success" plain
+                    @click.stop="handleNodeApprove(row, true)"
+                >通过</el-button>
+                <el-button
+                    v-if="row.isNodeCompletion && row.status === 1"
+                    size="small" type="danger" plain
+                    @click.stop="handleNodeApprove(row, false)"
+                >拒绝</el-button>
+                <el-button
+                    v-if="!row.isNodeCompletion && row.status === 1 && row.approverId === currentEmployeeId"
                     size="small" type="warning" plain
                     @click.stop="quickApprove(row)"
                 >审批</el-button>
@@ -144,9 +154,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Search, Refresh, Plus, Right, Clock, CircleCheck, CircleClose, User, Calendar } from '@element-plus/icons-vue';
-import { listHandovers, getMyEmployee } from '@/api';
+import { listHandovers, getMyEmployee, approveTaskNodeCompletion } from '@/api';
 import request from '@/utils/request';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 const router = useRouter();
 const rows = ref<any[]>([]);
@@ -208,11 +218,72 @@ function viewHandover(row: any) {
     router.push(`/handovers/detail/${row.id}`);
   }
 }
+
 function quickApprove(row: any) {
-  if (row.isNodeCompletion && row.taskNodeId) {
-    navigateToTaskNode(row.taskNodeId);
-  } else {
-    router.push(`/handovers/detail/${row.id}`);
+  router.push(`/handovers/detail/${row.id}`);
+}
+
+// 处理任务节点完成审批
+async function handleNodeApprove(row: any, approved: boolean) {
+  try {
+    const { value: comment } = await ElMessageBox.prompt(
+        approved ? '确定要通过此任务节点的完成审批吗？' : '确定要拒绝此任务节点的完成审批吗？',
+        approved ? '审批通过' : '审批拒绝',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputType: 'textarea',
+          inputPlaceholder: '请输入审批意见（可选）',
+          inputValidator: () => true,
+        }
+    ).catch(() => ({ value: '' }));
+
+    // 获取审批ID - 从row中获取，或者通过taskNodeId查询
+    let approvalId = row.approvalId || row.id;
+    
+    // 如果没有approvalId，尝试通过taskNodeId获取
+    if (!approvalId && row.taskNodeId) {
+      try {
+        const nodeResp = await request({
+          url: '/tasknode/get',
+          method: 'post',
+          data: { taskNodeId: row.taskNodeId }
+        });
+        if (nodeResp.data.code === 200) {
+          const data = nodeResp.data.data || {};
+          const approvals = data.approvals || [];
+          const pendingApproval = approvals.find((a: any) => a.approvalType === 0);
+          if (pendingApproval) {
+            approvalId = pendingApproval.approvalId;
+          }
+        }
+      } catch (error) {
+        console.error('获取审批记录失败:', error);
+      }
+    }
+
+    if (!approvalId) {
+      ElMessage.error('无法找到审批记录，请刷新页面重试');
+      return;
+    }
+
+    const resp = await approveTaskNodeCompletion({
+      approvalId: approvalId,
+      approved: approved ? 1 : 2,
+      comment: comment || ''
+    });
+    
+    if (resp.data.code === 200) {
+      ElMessage.success(approved ? '审批通过' : '审批已拒绝');
+      await loadData();
+    } else {
+      ElMessage.error(resp.data.msg || '审批失败');
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('审批失败:', error);
+      ElMessage.error('审批失败');
+    }
   }
 }
 
