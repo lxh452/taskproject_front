@@ -708,6 +708,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import TaskChecklist from '@/components/TaskChecklist.vue';
 import { useUserStore } from '@/store/user';
 import { getFileUrl, processFileUrls } from '@/utils/fileUrl';
+import request from '@/utils/request';
 import * as echarts from 'echarts';
 
 const route = useRoute();
@@ -1118,11 +1119,36 @@ async function updateNodeProgress(node: any, progress: number) {
 }
 
 async function loadTaskDetail() {
-    const taskId = route.params.id as string;
+    let taskId = route.params.id as string;
     if (!taskId) {
         ElMessage.error('任务ID不能为空');
         router.go(-1);
         return;
+    }
+
+    // 检测是否传入的是节点ID（以node_开头），如果是则先获取真正的taskId
+    if (taskId.startsWith('node_')) {
+        try {
+            const nodeResp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId: taskId } });
+            if (nodeResp.data.code === 200 && nodeResp.data.data) {
+                const data = nodeResp.data.data;
+                const taskNode = data.taskNode || data;
+                const realTaskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
+                if (realTaskId) {
+                    // 重定向到正确的任务详情页面
+                    router.replace(`/tasks/detail/${realTaskId}`);
+                    return;
+                }
+            }
+            ElMessage.error('无法获取任务节点信息');
+            router.go(-1);
+            return;
+        } catch (error) {
+            console.error('获取任务节点失败:', error);
+            ElMessage.error('获取任务节点信息失败');
+            router.go(-1);
+            return;
+        }
     }
 
     loading.value = true;
