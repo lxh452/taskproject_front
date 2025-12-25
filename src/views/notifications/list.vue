@@ -37,7 +37,11 @@
                 <div class="notif-body" v-if="notification.content">{{ notification.content }}</div>
                 <div class="notif-time">{{ formatTime(notification.createTime) }}</div>
               </div>
-              <div class="notif-actions" v-if="(isJoinApplication(notification) || isTaskNodeCompletionApproval(notification)) && canApprove">
+              <div class="notif-actions" v-if="isJoinApplication(notification) && canApprove">
+                <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
+                <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
+              </div>
+              <div class="notif-actions" v-else-if="isTaskNodeCompletionApproval(notification)">
                 <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
                 <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
               </div>
@@ -52,7 +56,7 @@
                 v-for="notification in unreadNotifications"
                 :key="notification.id"
                 class="notification-item unread"
-                :class="{ 'has-actions': isJoinApplication(notification) }"
+                :class="{ 'has-actions': isJoinApplication(notification) || isTaskNodeCompletionApproval(notification) }"
             >
               <div class="notif-icon" :class="getIconClass(notification.type)">
                 <el-icon><component :is="getIcon(notification.type)" /></el-icon>
@@ -67,7 +71,11 @@
                 <div class="notif-body" v-if="notification.content">{{ notification.content }}</div>
                 <div class="notif-time">{{ formatTime(notification.createTime) }}</div>
               </div>
-              <div class="notif-actions" v-if="(isJoinApplication(notification) || isTaskNodeCompletionApproval(notification)) && canApprove">
+              <div class="notif-actions" v-if="isJoinApplication(notification) && canApprove">
+                <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
+                <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
+              </div>
+              <div class="notif-actions" v-else-if="isTaskNodeCompletionApproval(notification)">
                 <el-button type="success" size="small" @click.stop="handleApprove(notification, true)">通过</el-button>
                 <el-button type="danger" size="small" @click.stop="handleApprove(notification, false)">拒绝</el-button>
               </div>
