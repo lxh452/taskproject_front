@@ -319,8 +319,29 @@ async function handleNotificationClick(notification: any) {
   const relatedType = notification.relatedType || notification.related_type;
   if (relatedId) {
     if (relatedType === 'task' || relatedType === 'Task') router.push(`/tasks/detail/${relatedId}`);
-    else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') router.push(`/task-nodes/detail/${relatedId}`);
+    else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') {
+      // 任务节点跳转到所属任务详情
+      navigateToTaskNode(relatedId);
+    }
     else if (relatedType === 'handover' || relatedType === 'Handover') router.push(`/handovers`);
+  }
+}
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+  try {
+    const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+    if (resp.data.code === 200 && resp.data.data) {
+      const taskId = resp.data.data.taskId || resp.data.data.TaskId;
+      if (taskId) {
+        router.push(`/tasks/detail/${taskId}`);
+        return;
+      }
+    }
+    ElMessage.warning('无法获取任务节点信息');
+  } catch (error) {
+    console.error('获取任务节点失败:', error);
+    ElMessage.error('获取任务节点信息失败');
   }
 }
 
@@ -330,7 +351,10 @@ function viewNotification(notification: any) {
   const relatedType = notification.relatedType || notification.related_type;
   if (relatedId) {
     if (relatedType === 'task' || relatedType === 'Task') router.push(`/tasks/detail/${relatedId}`);
-    else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') router.push(`/task-nodes/detail/${relatedId}`);
+    else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') {
+      // 任务节点跳转到所属任务详情
+      navigateToTaskNode(relatedId);
+    }
     else if (relatedType === 'handover' || relatedType === 'Handover') router.push(`/handovers`);
   }
 }

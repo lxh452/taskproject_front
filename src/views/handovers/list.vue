@@ -145,6 +145,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Search, Refresh, Plus, Right, Clock, CircleCheck, CircleClose, User, Calendar } from '@element-plus/icons-vue';
 import { listHandovers, getMyEmployee } from '@/api';
+import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
 
 const router = useRouter();
@@ -177,17 +178,36 @@ const filteredRows = computed(() => {
 
 const resetFilter = () => { query.value = { keyword: '', status: null, type: null }; };
 const createHandover = () => { router.push('/handovers/create'); };
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+  try {
+    const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+    if (resp.data.code === 200 && resp.data.data) {
+      const taskId = resp.data.data.taskId || resp.data.data.TaskId;
+      if (taskId) {
+        router.push(`/tasks/detail/${taskId}`);
+        return;
+      }
+    }
+    ElMessage.warning('无法获取任务节点信息');
+  } catch (error) {
+    console.error('获取任务节点失败:', error);
+    ElMessage.error('获取任务节点信息失败');
+  }
+}
+
 function viewHandover(row: any) {
   if (row.isNodeCompletion && row.taskNodeId) {
-    // 任务节点完成审批，跳转到任务节点详情
-    router.push(`/task-nodes/detail/${row.taskNodeId}`);
+    // 任务节点完成审批，跳转到任务节点所属的任务详情
+    navigateToTaskNode(row.taskNodeId);
   } else {
     router.push(`/handovers/detail/${row.id}`);
   }
 }
 function quickApprove(row: any) {
   if (row.isNodeCompletion && row.taskNodeId) {
-    router.push(`/task-nodes/detail/${row.taskNodeId}`);
+    navigateToTaskNode(row.taskNodeId);
   } else {
     router.push(`/handovers/detail/${row.id}`);
   }

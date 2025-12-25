@@ -243,6 +243,7 @@ import {
   Sunny, Moon, Ticket, DocumentCopy, Document, Connection
 } from '@element-plus/icons-vue';
 import { getMyEmployee, listNotifications, getMyChecklist, updateChecklist, markNotificationRead, generateInviteCode, getPendingJoinApplications } from '@/api';
+import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
 
 const router = useRouter();
@@ -431,7 +432,8 @@ const handleNotificationClick = async (item: any) => {
     if (relatedType === 'task' || relatedType === 'Task') {
       router.push(`/tasks/detail/${relatedId}`);
     } else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') {
-      router.push(`/task-nodes/detail/${relatedId}`);
+      // 任务节点跳转到所属任务详情
+      navigateToTaskNode(relatedId);
     } else if (relatedType === 'handover' || relatedType === 'Handover') {
       router.push(`/handovers`);
     } else {
@@ -442,6 +444,24 @@ const handleNotificationClick = async (item: any) => {
   }
 };
 
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+  try {
+    const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+    if (resp.data.code === 200 && resp.data.data) {
+      const taskId = resp.data.data.taskId || resp.data.data.TaskId;
+      if (taskId) {
+        router.push(`/tasks/detail/${taskId}`);
+        return;
+      }
+    }
+    ElMessage.warning('无法获取任务节点信息');
+  } catch (error) {
+    console.error('获取任务节点失败:', error);
+    ElMessage.error('获取任务节点信息失败');
+  }
+}
+
 const goToNotifications = () => {
   notificationPopoverVisible.value = false;
   router.push('/notifications');
@@ -450,7 +470,8 @@ const goToNotifications = () => {
 const goToTaskNode = (item: any) => {
   checklistPopoverVisible.value = false;
   if (item.taskNodeId) {
-    router.push(`/task-nodes/detail/${item.taskNodeId}?taskId=${item.taskId || ''}`);
+    // 跳转到任务节点所属的任务详情
+    navigateToTaskNode(item.taskNodeId);
   } else if (item.taskId) {
     router.push(`/tasks/detail/${item.taskId}`);
   }

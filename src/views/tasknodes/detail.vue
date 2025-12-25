@@ -334,39 +334,25 @@ async function loadNodeDetail() {
         if (resp.data.code === 200) {
             const data = resp.data.data || {};
             const taskNode = data.taskNode || data;
-            const approvals = data.approvals || [];
+            const taskId = taskNode.taskId || taskNode.TaskId || '';
             
-            // 统一字段映射，确保字段名称一致
-            nodeInfo.value = {
-                ...taskNode,
-                nodeName: taskNode.nodeName || taskNode.NodeName || taskNode.name || '',
-                status: taskNode.status !== undefined ? taskNode.status : (taskNode.Status !== undefined ? taskNode.Status : (taskNode.nodeStatus !== undefined ? taskNode.nodeStatus : 0)),
-                progress: taskNode.progress !== undefined ? taskNode.progress : (taskNode.Progress !== undefined ? taskNode.Progress : 0),
-                executorId: taskNode.executorId || taskNode.executorID || taskNode.ExecutorID || '',
-                executorIds: Array.isArray(taskNode.executorIds) ? taskNode.executorIds : (taskNode.executorId ? taskNode.executorId.split(',').filter((id: string) => id.trim()) : []),
-                leaderId: taskNode.leaderId || taskNode.leaderID || taskNode.LeaderID || '',
-                nodeStartTime: taskNode.nodeStartTime || taskNode.NodeStartTime || taskNode.startTime || '',
-                nodeDeadline: taskNode.nodeDeadline || taskNode.NodeDeadline || taskNode.deadline || '',
-                nodeDetail: taskNode.nodeDetail || taskNode.NodeDetail || taskNode.detail || '',
-                departmentName: taskNode.departmentName || taskNode.DepartmentName || '',
-                estimatedDays: taskNode.estimatedDays || taskNode.EstimatedDays || 0,
-                taskId: taskNode.taskId || taskNode.TaskId || '',
-                approvals: approvals // 保存审批列表
-            };
-            
-            // 如果有taskId，加载关联任务信息
-            if (nodeInfo.value.taskId) {
-                const taskResp = await getTask({ taskId: nodeInfo.value.taskId });
-                if (taskResp.data.code === 200) {
-                    taskInfo.value = taskResp.data.data;
-                }
+            // 如果有taskId，直接跳转到任务详情页面
+            if (taskId) {
+                router.replace(`/tasks/detail/${taskId}`);
+                return;
             }
+            
+            // 如果没有taskId，显示错误信息
+            ElMessage.warning('无法获取任务节点所属的任务信息');
+            router.go(-1);
         } else {
             ElMessage.error(resp.data.msg || '加载节点详情失败');
+            router.go(-1);
         }
     } catch (error: any) {
         console.error('加载节点详情失败:', error);
         ElMessage.error('加载节点详情失败');
+        router.go(-1);
     } finally {
         loading.value = false;
     }

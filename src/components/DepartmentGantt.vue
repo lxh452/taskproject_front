@@ -72,6 +72,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import { getMyTaskNodes } from '@/api';
+import request from '@/utils/request';
+import { ElMessage } from 'element-plus';
 
 const props = defineProps({
     departmentId: { type: String, default: '' }
@@ -196,7 +198,26 @@ function getTaskClass(task: any) {
 function viewTask(task: any) {
     const nodeId = task.id || task.taskNodeId || task.nodeId;
     if (nodeId) {
-        router.push(`/task-nodes/detail/${nodeId}`);
+        // 跳转到任务节点所属的任务详情
+        navigateToTaskNode(nodeId);
+    }
+}
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+    try {
+        const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+        if (resp.data.code === 200 && resp.data.data) {
+            const taskId = resp.data.data.taskId || resp.data.data.TaskId;
+            if (taskId) {
+                router.push(`/tasks/detail/${taskId}`);
+                return;
+            }
+        }
+        ElMessage.warning('无法获取任务节点信息');
+    } catch (error) {
+        console.error('获取任务节点失败:', error);
+        ElMessage.error('获取任务节点信息失败');
     }
 }
 

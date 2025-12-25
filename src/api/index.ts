@@ -319,3 +319,8 @@ export const resolveAttachmentComment = (data: { commentId: string }) =>
 // 删除附件评论
 export const deleteAttachmentComment = (data: { commentId: string }) =>
     request({ url: '/upload/comment/delete', method: 'post', data });
+
+
+// 获取任务节点详情
+export const getTaskNode = (data: { taskNodeId: string }) =>
+    request({ url: '/tasknode/get', method: 'post', data });
