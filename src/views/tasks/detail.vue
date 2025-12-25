@@ -1120,6 +1120,8 @@ async function updateNodeProgress(node: any, progress: number) {
 
 async function loadTaskDetail() {
     let taskId = route.params.id as string;
+    console.log('[loadTaskDetail] 传入的ID:', taskId);
+    
     if (!taskId) {
         ElMessage.error('任务ID不能为空');
         router.go(-1);
@@ -1128,23 +1130,39 @@ async function loadTaskDetail() {
 
     // 检测是否传入的是节点ID（以node_开头），如果是则先获取真正的taskId
     if (taskId.startsWith('node_')) {
+        console.log('[loadTaskDetail] 检测到节点ID，开始获取真正的taskId');
         try {
             const nodeResp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId: taskId } });
+            console.log('[loadTaskDetail] /tasknode/get 响应:', JSON.stringify(nodeResp.data));
+            
             if (nodeResp.data.code === 200 && nodeResp.data.data) {
                 const data = nodeResp.data.data;
+                console.log('[loadTaskDetail] 响应data:', JSON.stringify(data));
+                
+                // 后端返回的结构是 { taskNode: {...}, approvals: [...] }
                 const taskNode = data.taskNode || data;
-                const realTaskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
+                console.log('[loadTaskDetail] taskNode:', JSON.stringify(taskNode));
+                
+                // 后端 TaskNodeInfo 的 JSON 标签是 taskId (小写驼峰)
+                const realTaskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID || taskNode.TaskID;
+                console.log('[loadTaskDetail] 提取的realTaskId:', realTaskId);
+                
                 if (realTaskId) {
-                    // 重定向到正确的任务详情页面
-                    router.replace(`/tasks/detail/${realTaskId}`);
+                    console.log('[loadTaskDetail] 重定向到:', `/tasks/detail/${realTaskId}`);
+                    // 使用 push 而不是 replace，确保页面正确导航
+                    await router.push(`/tasks/detail/${realTaskId}`);
                     return;
+                } else {
+                    console.error('[loadTaskDetail] taskNode中没有找到taskId字段，taskNode内容:', taskNode);
                 }
+            } else {
+                console.error('[loadTaskDetail] API返回错误:', nodeResp.data);
             }
             ElMessage.error('无法获取任务节点信息');
             router.go(-1);
             return;
         } catch (error) {
-            console.error('获取任务节点失败:', error);
+            console.error('[loadTaskDetail] 获取任务节点失败:', error);
             ElMessage.error('获取任务节点信息失败');
             router.go(-1);
             return;
