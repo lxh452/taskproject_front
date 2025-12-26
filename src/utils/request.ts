@@ -11,7 +11,7 @@ function buildApiBaseUrl(): string {
         return 'http://127.0.0.1:8888/api/v1';
     }
     // 生产环境使用域名
-    return 'https://lxh452.xyz/api/v1';
+    return 'http://lxh452.xyz/api/v1';
 }
 
 const service: AxiosInstance = axios.create({
