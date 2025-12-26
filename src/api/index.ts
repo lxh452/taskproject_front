@@ -328,3 +328,7 @@ export const getTaskNode = (data: { taskNodeId: string }) =>
 // AI助手API
 export const getAiSuggestion = () =>
     request({ url: '/ai/suggestion', method: 'get' });
+
+// 仪表盘统计API
+export const getDashboardStats = (data?: { scope?: string }) =>
+    request({ url: '/dashboard/stats', method: 'get', params: data });

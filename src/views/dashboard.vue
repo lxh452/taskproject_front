@@ -201,7 +201,7 @@ import {
   TrendCharts, PieChart, Histogram, MoreFilled, DocumentRemove,
   Grid, Menu, DataBoard
 } from '@element-plus/icons-vue';
-import { getHandoverList, listTasks, getMyEmployee, getMyTaskNodes } from '@/api';
+import { getHandoverList, listTasks, getMyEmployee, getMyTaskNodes, getDashboardStats } from '@/api';
 import { useUserStore } from '@/store/user';
 import countup from '@/components/countup.vue';
 import DashboardKanban from '@/components/DashboardKanban.vue';
@@ -263,32 +263,28 @@ async function loadData() {
     const rawDept = emp.departmentId ?? emp.DepartmentId ?? emp.department_id;
     departmentId.value = typeof rawDept === 'object' ? (rawDept?.String || '') : (rawDept != null ? String(rawDept) : '');
 
+    // 使用新的仪表盘统计API获取四个数据容器的数据
+    try {
+      const statsRes = await getDashboardStats({ scope: 'personal' });
+      const stats = statsRes?.data?.data || {};
+      metrics.value.totalTasks = stats.totalTasks || 0;
+      metrics.value.pendingApprovals = stats.pendingApprovals || 0;
+      metrics.value.completed = stats.completedTasks || 0;
+      metrics.value.critical = stats.criticalTasks || 0;
+    } catch (e) {
+      console.error('加载仪表盘统计失败:', e);
+    }
+
+    // 获取任务列表用于图表展示
     if (departmentId.value) {
       const res = await listTasks({ page: 1, pageSize: 100, departmentId: departmentId.value });
       const list = res.data?.data?.list || [];
-      
-      metrics.value.totalTasks = list.length;
-      metrics.value.completed = list.filter((it: any) => (it.progress ?? 0) >= 100 || (it.status ?? 0) === 2).length;
-      metrics.value.critical = list.filter((it: any) => (it.priority ?? 3) === 1).length;
-
       buildCharts(list);
     } else {
       const res = await getMyTaskNodes({ page: 1, pageSize: 100 });
       const data = res.data?.data || {};
       const allTasks = [...(data.executor_task || []), ...(data.leader_task || [])];
-      
-      metrics.value.totalTasks = allTasks.length;
-      metrics.value.completed = allTasks.filter((it: any) => (it.progress ?? 0) >= 100 || (it.status ?? 0) === 2).length;
-      metrics.value.critical = allTasks.filter((it: any) => (it.nodeType ?? it.priority ?? 3) === 1).length;
-
       buildCharts(allTasks);
-    }
-
-    try {
-      const handoverRes = await getHandoverList({ page: 1, pageSize: 1, status: 0 });
-      metrics.value.pendingApprovals = handoverRes.data?.data?.total || 0;
-    } catch (e) {
-      console.error('加载待审批失败:', e);
     }
   } catch (e) {
     console.error('加载数据失败:', e);
