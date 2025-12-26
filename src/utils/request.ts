@@ -5,13 +5,17 @@ function buildApiBaseUrl(): string {
     const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
     if (envUrl) return envUrl;
     
-    const hostname = window.location.hostname;
-    // 本地开发环境
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // 自动使用当前访问的域名/IP，避免跨域问题
+    const proto = window.location.protocol;
+    const host = window.location.hostname;
+    
+    // 本地开发环境需要指定端口
+    if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://127.0.0.1:8888/api/v1';
     }
-    // 生产环境使用域名
-    return 'http://lxh452.xyz/api/v1';
+    
+    // 生产环境通过 nginx 代理，不需要端口
+    return `${proto}//${host}/api/v1`;
 }
 
 const service: AxiosInstance = axios.create({
