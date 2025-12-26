@@ -174,7 +174,7 @@
       <!-- 用户头像 -->
       <el-dropdown trigger="click" class="user-dropdown">
         <div class="user-trigger">
-          <el-avatar :size="32" class="user-avatar">{{ username?.charAt(0) }}</el-avatar>
+          <el-avatar :size="32" class="user-avatar" :src="userAvatar">{{ !userAvatar ? username?.charAt(0) : '' }}</el-avatar>
           <span class="user-name">{{ username }}</span>
           <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
         </div>
@@ -251,6 +251,7 @@ const route = useRoute();
 const sidebar = useSidebarStore();
 const userStore = useUserStore();
 const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
+const userAvatar = ref('');
 
 // 主题切换
 const isDarkMode = ref(false);
@@ -634,6 +635,7 @@ onMounted(async () => {
     const empRes = await getMyEmployee();
     const emp = empRes?.data?.data || {};
     username.value = emp.realName || emp.name || username.value;
+    userAvatar.value = emp.avatar || '';
   } catch (error: any) {
     console.error('获取用户信息失败:', error);
   }
