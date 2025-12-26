@@ -328,7 +328,7 @@
                                     :loading="dispatching"
                                     style="margin-left: auto;"
                                 >
-                                    自动派发
+                                    AI智能派发
                                 </el-button>
                             </div>
                     </template>
@@ -369,6 +369,17 @@
                                                 <el-icon><Calendar /></el-icon>
                                                 <span>截止: {{ formatTime(node.nodeDeadline) || '-' }}</span>
                                             </div>
+                                            <el-button 
+                                                v-if="!node.executorId"
+                                                type="primary" 
+                                                size="small" 
+                                                :icon="Connection"
+                                                @click.stop="handleAutoDispatchNode(node)"
+                                                :loading="dispatchingNodeId === (node.id || node.taskNodeId)"
+                                                style="margin-left: auto;"
+                                            >
+                                                智能派发
+                                            </el-button>
                                         </div>
                                         <!-- 任务清单组件 -->
                                         <div class="node-checklist">
@@ -687,6 +698,63 @@
                 </el-button>
             </template>
         </el-dialog>
+
+        <!-- AI推荐派发对话框 -->
+        <el-dialog 
+            v-model="showRecommendDialog" 
+            title="AI智能推荐" 
+            width="800px"
+            :close-on-click-modal="false"
+        >
+            <div v-if="recommendations.length > 0" class="recommendations-container">
+                <div v-for="rec in recommendations" :key="rec.taskNodeId" class="recommendation-card">
+                    <div class="rec-header">
+                        <el-icon><List /></el-icon>
+                        <span class="rec-node-name">{{ rec.taskNodeName }}</span>
+                    </div>
+                    <div class="rec-analysis" v-if="rec.aiAnalysis">
+                        <el-icon><ChatDotRound /></el-icon>
+                        <span>{{ rec.aiAnalysis }}</span>
+                    </div>
+                    <div class="rec-candidates">
+                        <div 
+                            v-for="candidate in rec.candidates" 
+                            :key="candidate.employeeId"
+                            class="candidate-item"
+                            :class="{ selected: selectedCandidates[rec.taskNodeId] === candidate.employeeId }"
+                            @click="selectCandidate(rec.taskNodeId, candidate.employeeId)"
+                        >
+                            <div class="candidate-rank">#{{ candidate.rank }}</div>
+                            <div class="candidate-info">
+                                <div class="candidate-name">{{ candidate.name }}</div>
+                                <div class="candidate-reason">{{ candidate.reason }}</div>
+                            </div>
+                            <div class="candidate-score">
+                                <el-progress 
+                                    type="circle" 
+                                    :percentage="Math.round(candidate.score)" 
+                                    :width="50"
+                                    :stroke-width="4"
+                                    :color="getScoreColor(candidate.score)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <el-empty v-else description="没有需要派发的节点" />
+            <template #footer>
+                <el-button @click="showRecommendDialog = false">取消</el-button>
+                <el-button 
+                    type="primary" 
+                    @click="confirmDispatch" 
+                    :loading="confirmingDispatch"
+                    :disabled="Object.keys(selectedCandidates).length === 0"
+                >
+                    确认派发 ({{ Object.keys(selectedCandidates).length }})
+                </el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
@@ -724,7 +792,14 @@ let flowChartInstance: echarts.ECharts | null = null;
 const employeesMap = ref<Record<string, any>>({});
 const userStore = useUserStore();
 const dispatching = ref(false);
+const dispatchingNodeId = ref<string | null>(null);
 const expandedNodes = ref<(string | number)[]>([]);
+
+// AI推荐派发相关
+const showRecommendDialog = ref(false);
+const recommendations = ref<any[]>([]);
+const selectedCandidates = ref<Record<string, string>>({});
+const confirmingDispatch = ref(false);
 
 // 附件相关
 const attachments = ref<any[]>([]);
@@ -999,7 +1074,7 @@ async function submitEdit() {
     });
 }
 
-// 自动派发任务节点
+// 自动派发任务节点 - 使用AI推荐
 async function handleAutoDispatch() {
     if (!taskInfo.value?.id) {
         ElMessage.warning('任务ID不存在');
@@ -1007,45 +1082,130 @@ async function handleAutoDispatch() {
     }
 
     try {
-        await ElMessageBox.confirm(
-            '确认要对所有未派发的任务节点执行自动派发吗？系统将根据规则自动分配执行人。',
-            '确认自动派发',
-            {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
-                type: 'info',
-            }
-        );
-
         dispatching.value = true;
         const resp = await autoDispatchTask({ taskId: taskInfo.value.id });
 
         if (resp.data.code === 200) {
             const result = resp.data.data;
-            const successCount = result.successCount || 0;
-            const failCount = result.failCount || 0;
-            const totalNodes = result.totalNodes || 0;
-
-            if (successCount > 0) {
-                ElMessage.success(`自动派发完成：成功 ${successCount} 个，失败 ${failCount} 个，共 ${totalNodes} 个节点`);
-            } else if (failCount > 0) {
-                ElMessage.warning(`自动派发完成：失败 ${failCount} 个节点`);
+            
+            // 新的AI推荐响应格式
+            if (result.recommendations && result.recommendations.length > 0) {
+                recommendations.value = result.recommendations;
+                selectedCandidates.value = {};
+                showRecommendDialog.value = true;
+                ElMessage.success(result.message || 'AI分析完成，请选择执行人');
             } else {
                 ElMessage.info('没有需要派发的节点');
             }
-
-            // 重新加载任务详情
-            await loadTaskDetail();
         } else {
-            ElMessage.error(resp.data.msg || '自动派发失败');
+            ElMessage.error(resp.data.msg || '获取推荐失败');
         }
     } catch (error: any) {
-        if (error !== 'cancel') {
-            console.error('自动派发失败:', error);
-            ElMessage.error('自动派发失败: ' + (error.message || '未知错误'));
-        }
+        console.error('获取AI推荐失败:', error);
+        ElMessage.error('获取AI推荐失败: ' + (error.message || '未知错误'));
     } finally {
         dispatching.value = false;
+    }
+}
+
+// 自动派发单个任务节点 - 使用AI推荐
+async function handleAutoDispatchNode(node: any) {
+    if (!taskInfo.value?.id) {
+        ElMessage.warning('任务ID不存在');
+        return;
+    }
+
+    const nodeId = node.id || node.taskNodeId;
+    if (!nodeId) {
+        ElMessage.warning('节点ID不存在');
+        return;
+    }
+
+    try {
+        dispatchingNodeId.value = nodeId;
+        const resp = await autoDispatchTask({ taskId: taskInfo.value.id, nodeId: nodeId });
+
+        if (resp.data.code === 200) {
+            const result = resp.data.data;
+            
+            // 新的AI推荐响应格式
+            if (result.recommendations && result.recommendations.length > 0) {
+                recommendations.value = result.recommendations;
+                selectedCandidates.value = {};
+                showRecommendDialog.value = true;
+                ElMessage.success(result.message || 'AI分析完成，请选择执行人');
+            } else {
+                ElMessage.info('没有候选员工');
+            }
+        } else {
+            ElMessage.error(resp.data.msg || '获取推荐失败');
+        }
+    } catch (error: any) {
+        console.error('获取AI推荐失败:', error);
+        ElMessage.error('获取AI推荐失败: ' + (error.message || '未知错误'));
+    } finally {
+        dispatchingNodeId.value = null;
+    }
+}
+
+// 选择候选人
+function selectCandidate(nodeId: string, employeeId: string) {
+    if (selectedCandidates.value[nodeId] === employeeId) {
+        delete selectedCandidates.value[nodeId];
+    } else {
+        selectedCandidates.value[nodeId] = employeeId;
+    }
+}
+
+// 获取分数颜色
+function getScoreColor(score: number): string {
+    if (score >= 80) return '#67c23a';
+    if (score >= 60) return '#e6a23c';
+    return '#f56c6c';
+}
+
+// 确认派发
+async function confirmDispatch() {
+    const selections = Object.entries(selectedCandidates.value);
+    if (selections.length === 0) {
+        ElMessage.warning('请至少选择一个执行人');
+        return;
+    }
+
+    confirmingDispatch.value = true;
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+        for (const [nodeId, employeeId] of selections) {
+            try {
+                const resp = await request({
+                    url: '/tasknode/update',
+                    method: 'put',
+                    data: {
+                        taskNodeId: nodeId,
+                        executorId: [employeeId]
+                    }
+                });
+                if (resp.data.code === 200) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            } catch (e) {
+                failCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            ElMessage.success(`派发完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+            showRecommendDialog.value = false;
+            await loadTaskDetail();
+        } else {
+            ElMessage.error('派发失败');
+        }
+    } finally {
+        confirmingDispatch.value = false;
     }
 }
 
@@ -3352,5 +3512,117 @@ watch(() => taskInfo.value?.nodes, () => {
     .comment-filter .el-select {
         width: 100% !important;
     }
+}
+
+/* AI推荐派发对话框样式 */
+.recommendations-container {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.recommendation-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.rec-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.rec-header .el-icon {
+    color: var(--color-primary);
+}
+
+.rec-analysis {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-hover);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.rec-analysis .el-icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.rec-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.candidate-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-page);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.candidate-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--color-primary-light);
+}
+
+.candidate-item.selected {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border-color: var(--color-primary);
+}
+
+.candidate-rank {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.candidate-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.candidate-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.candidate-reason {
+    font-size: 12px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.candidate-score {
+    flex-shrink: 0;
 }
 </style>

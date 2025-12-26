@@ -7,7 +7,7 @@
           <img src="@/assets/img/logo.jpg" alt="Logo" class="logo-img" />
         </div>
         <transition name="fade">
-          <span class="logo-text" v-if="!sidebar.collapse">Task Pro</span>
+          <span class="logo-text" v-if="!sidebar.collapse">Task Helper</span>
         </transition>
       </div>
     </div>

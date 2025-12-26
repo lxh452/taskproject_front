@@ -197,7 +197,7 @@ export const confirmLeaveApproval = (data: { approvalId: string; approved: boole
     request({ url: '/employee/leave/approve', method: 'post', data });
 
 // Task Auto Dispatch
-export const autoDispatchTask = (data: { taskId: string }) =>
+export const autoDispatchTask = (data: { taskId: string; nodeId?: string }) =>
     request({ url: '/task/dispatch', method: 'post', data });
 
 // ===== Checklist API (任务清单) =====
@@ -324,3 +324,7 @@ export const deleteAttachmentComment = (data: { commentId: string }) =>
 // 获取任务节点详情
 export const getTaskNode = (data: { taskNodeId: string }) =>
     request({ url: '/tasknode/get', method: 'post', data });
+
+// AI助手API
+export const getAiSuggestion = () =>
+    request({ url: '/ai/suggestion', method: 'get' });

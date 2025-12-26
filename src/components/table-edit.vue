@@ -1,4 +1,4 @@
-<template>
+ <template>
 	<el-form ref="formRef" :model="form" :rules="rules" :label-width="options.labelWidth">
 		<el-row>
 			<el-col :span="options.span" v-for="item in options.list">

@@ -8,6 +8,8 @@
           <p class="welcome-subtitle">这是你的工作概览，今天也要加油哦！</p>
         </div>
         <div class="welcome-meta">
+          <!-- AI助手小圆球 -->
+          <AiAssistant />
           <div class="date-badge">
             <el-icon><Calendar /></el-icon>
             <span>{{ currentDate }}</span>
@@ -204,6 +206,7 @@ import { useUserStore } from '@/store/user';
 import countup from '@/components/countup.vue';
 import DashboardKanban from '@/components/DashboardKanban.vue';
 import DepartmentGantt from '@/components/DepartmentGantt.vue';
+import AiAssistant from '@/components/AiAssistant.vue';
 
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart]);
 

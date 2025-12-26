@@ -8,7 +8,7 @@ function buildApiBaseUrl(): string {
         const proto = window.location.protocol || 'http:';
         const hn = window.location.hostname || 'localhost';
         const host = hn.includes(':') ? `[${hn}]` : hn; // IPv6 支持
-        return `${proto}//${host}/api/v1`;
+        return `${proto}//${host}:8888/api/v1`;
     } catch {
         return 'http://127.0.0.1:8888/api/v1';
     }
