@@ -4,14 +4,14 @@ import { ElMessage, ElNotification } from 'element-plus';
 function buildApiBaseUrl(): string {
     const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
     if (envUrl) return envUrl;
-    try {
-        const proto = window.location.protocol || 'http:';
-        const hn = window.location.hostname || 'localhost';
-        const host = hn.includes(':') ? `[${hn}]` : hn; // IPv6 支持
-        return `${proto}//${host}/api/v1`;
-    } catch {
+    
+    const hostname = window.location.hostname;
+    // 本地开发环境
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return 'http://127.0.0.1:8888/api/v1';
     }
+    // 生产环境使用域名
+    return 'https://lxh452.xyz/api/v1';
 }
 
 const service: AxiosInstance = axios.create({
