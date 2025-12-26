@@ -266,11 +266,14 @@ async function loadData() {
     // 使用新的仪表盘统计API获取四个数据容器的数据
     try {
       const statsRes = await getDashboardStats({ scope: 'personal' });
+      console.log('仪表盘统计API响应:', statsRes);
       const stats = statsRes?.data?.data || {};
+      console.log('解析后的统计数据:', stats);
       metrics.value.totalTasks = stats.totalTasks || 0;
       metrics.value.pendingApprovals = stats.pendingApprovals || 0;
       metrics.value.completed = stats.completedTasks || 0;
       metrics.value.critical = stats.criticalTasks || 0;
+      console.log('更新后的metrics:', metrics.value);
     } catch (e) {
       console.error('加载仪表盘统计失败:', e);
     }
