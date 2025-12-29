@@ -346,8 +346,8 @@ const filteredRows = computed(() => {
 
 // 权限判断
 const canCreateCompany = computed(() => {
-    // 未加入公司的用户可以创建公司
-    return !userStore.hasJoinedCompany;
+    // 未加入公司的用户可以创建公司（没有companyId表示未加入）
+    return !userStore.companyId;
 });
 
 function canEditCompany(company: any) {

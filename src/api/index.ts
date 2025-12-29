@@ -94,6 +94,9 @@ export const listCompanies = (data: any) =>
 export const createCompany = (data: any) =>
     request({ url: '/company/create', method: 'post', data });
 
+export const updateCompany = (data: any) =>
+    request({ url: '/company/update', method: 'put', data });
+
 export const joinCompany = (data: { companyId: string }) =>
     request({ url: '/employee/join', method: 'post', data });
 
