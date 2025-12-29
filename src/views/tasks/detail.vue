@@ -854,11 +854,22 @@ const editRules: FormRules = {
     ]
 };
 
-// 判断是否可以编辑任务（任务负责人）
+// 判断是否可以编辑任务（使用后端返回的 isFullAccess 字段）
 const canEditTask = computed(() => {
     if (!taskInfo.value || !currentEmployeeId.value) return false;
+    // 优先使用后端返回的 isFullAccess 字段
+    if (taskInfo.value.isFullAccess !== undefined) {
+        return taskInfo.value.isFullAccess;
+    }
+    // 兼容旧逻辑：任务负责人或创建者
     const leaderId = taskInfo.value.leaderId || taskInfo.value.LeaderId || '';
-    return leaderId === currentEmployeeId.value;
+    const creatorId = taskInfo.value.creatorId || taskInfo.value.CreatorId || '';
+    return leaderId === currentEmployeeId.value || creatorId === currentEmployeeId.value;
+});
+
+// 是否有完全访问权限（可以看到所有节点）
+const isFullAccess = computed(() => {
+    return taskInfo.value?.isFullAccess ?? true;
 });
 
 // 工具提示
@@ -1784,9 +1795,16 @@ const filteredAttachments = computed(() => {
     return attachments.value.filter((f: any) => f.taskNodeId === attachmentNodeFilter.value);
 });
 
-// 用户可以上传附件的节点（执行人或负责人的节点）
+// 用户可以上传附件的节点（执行人或负责人的节点，或有完全访问权限时返回所有节点）
 const userAccessibleNodes = computed(() => {
     if (!taskInfo.value?.nodes || !currentEmployeeId.value) return [];
+    
+    // 如果有完全访问权限，返回所有节点
+    if (taskInfo.value.isFullAccess) {
+        return taskInfo.value.nodes;
+    }
+    
+    // 否则只返回用户参与的节点
     return taskInfo.value.nodes.filter((node: any) => {
         const leaderId = node.leaderId || node.leaderID || '';
         const executorId = node.executorId || node.executorID || '';
