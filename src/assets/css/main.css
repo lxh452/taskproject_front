@@ -1221,3 +1221,431 @@ html.dark-mode .echarts-tooltip {
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
+
+
+/* ==================== Enhanced Mobile Responsive Styles ==================== */
+
+/* Mobile-first approach for common page layouts */
+@media (max-width: 768px) {
+  /* Page header responsive */
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--spacing-md) !important;
+    padding: var(--spacing-lg) !important;
+  }
+  
+  .page-header .header-left,
+  .page-header .header-right {
+    width: 100%;
+  }
+  
+  .page-header .header-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Filter bar responsive */
+  .filter-bar,
+  .toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: var(--spacing-md) !important;
+    padding: var(--spacing-md) !important;
+  }
+  
+  .filter-bar .filter-left,
+  .filter-bar .filter-right,
+  .toolbar-left,
+  .toolbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+  
+  .filter-bar .search-input,
+  .filter-bar .filter-select,
+  .toolbar .search-input,
+  .toolbar .filter-select {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+  
+  .toolbar-right {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+  }
+  
+  /* Card grid responsive */
+  .tasks-grid,
+  .employees-grid,
+  .cards-grid,
+  .stat-cards {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-md) !important;
+  }
+  
+  /* Dashboard stat cards */
+  .key-info-grid,
+  .stats-grid,
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--spacing-sm) !important;
+  }
+  
+  /* Table responsive - horizontal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .el-table {
+    min-width: 600px;
+  }
+  
+  /* Hide less important columns on mobile */
+  .el-table .hide-mobile-col {
+    display: none !important;
+  }
+  
+  /* Dialog responsive */
+  .el-dialog {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 10px auto !important;
+  }
+  
+  .el-dialog__body {
+    padding: var(--spacing-lg) !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+  /* Form responsive */
+  .el-form--inline .el-form-item {
+    display: block !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+    margin-bottom: var(--spacing-md) !important;
+  }
+  
+  .el-form-item__content {
+    width: 100% !important;
+  }
+  
+  /* Button group responsive */
+  .el-button-group,
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  /* Tabs responsive */
+  .el-tabs__header {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .el-tabs__nav {
+    flex-wrap: nowrap;
+  }
+  
+  .el-tabs__item {
+    padding: 0 var(--spacing-md) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+  
+  /* Pagination responsive */
+  .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-xs);
+  }
+  
+  .el-pagination .el-pagination__sizes,
+  .el-pagination .el-pagination__jump {
+    display: none !important;
+  }
+  
+  /* Card actions always visible on mobile */
+  .card-actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  /* Collapse/Accordion responsive */
+  .el-collapse-item__header {
+    padding: var(--spacing-md) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+  
+  .el-collapse-item__content {
+    padding: var(--spacing-md) !important;
+  }
+  
+  /* Avatar sizes on mobile */
+  .el-avatar--large {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  /* Progress bar text */
+  .el-progress__text {
+    font-size: var(--font-size-xs) !important;
+  }
+  
+  /* Tag sizes */
+  .el-tag {
+    font-size: var(--font-size-xs) !important;
+    padding: 2px 6px !important;
+  }
+  
+  /* Breadcrumb hide on mobile */
+  .el-breadcrumb {
+    display: none !important;
+  }
+  
+  /* Detail page two-column to single column */
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .detail-left,
+  .detail-right {
+    width: 100% !important;
+  }
+  
+  /* Hero section responsive */
+  .hero-section {
+    padding: var(--spacing-xl) var(--spacing-lg) !important;
+  }
+  
+  .hero-title h1 {
+    font-size: var(--font-size-xl) !important;
+  }
+  
+  .hero-meta {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm) !important;
+  }
+  
+  /* Info cards grid */
+  .info-card {
+    padding: var(--spacing-md) !important;
+  }
+  
+  .info-card .info-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .info-card .info-value {
+    font-size: var(--font-size-sm) !important;
+  }
+  
+  /* Node list responsive */
+  .node-item-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  .node-progress-mini {
+    width: 100%;
+    margin-top: var(--spacing-xs);
+  }
+  
+  /* Comment section responsive */
+  .comment-input-wrapper {
+    width: 100%;
+  }
+  
+  .comment-actions {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  /* Flow chart container */
+  .flow-chart-container {
+    min-height: 200px !important;
+    overflow-x: auto;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  /* Even smaller stat cards */
+  .key-info-grid,
+  .stats-grid,
+  .info-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Smaller buttons */
+  .el-button {
+    padding: var(--spacing-xs) var(--spacing-md) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+  
+  .el-button .el-icon + span,
+  .el-button span + .el-icon {
+    margin-left: var(--spacing-xs) !important;
+  }
+  
+  /* Hide button text, show only icon */
+  .btn-icon-only-mobile span {
+    display: none !important;
+  }
+  
+  .btn-icon-only-mobile .el-icon {
+    margin: 0 !important;
+  }
+  
+  /* Smaller card padding */
+  .el-card__body {
+    padding: var(--spacing-md) !important;
+  }
+  
+  /* Table font size */
+  .el-table {
+    font-size: var(--font-size-xs) !important;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: var(--spacing-xs) !important;
+  }
+}
+
+/* Tablet landscape */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tasks-grid,
+  .employees-grid,
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .key-info-grid,
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ==================== Mobile Navigation Improvements ==================== */
+@media (max-width: 768px) {
+  /* Bottom action bar for important actions */
+  .mobile-action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-around;
+    gap: var(--spacing-sm);
+    z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-action-bar .el-button {
+    flex: 1;
+  }
+  
+  /* Add padding to page content when action bar is present */
+  .has-mobile-action-bar {
+    padding-bottom: 80px !important;
+  }
+  
+  /* Floating action button */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.4);
+    z-index: 100;
+    cursor: pointer;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+  }
+  
+  .fab:hover,
+  .fab:active {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.5);
+  }
+  
+  .fab .el-icon {
+    font-size: 24px;
+  }
+}
+
+/* ==================== Touch-friendly Improvements ==================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .el-button,
+  .el-input__wrapper,
+  .el-select__wrapper {
+    min-height: 44px;
+  }
+  
+  /* Remove hover effects that don't work on touch */
+  .el-button:hover {
+    transform: none;
+  }
+  
+  /* Active state for touch feedback */
+  .el-button:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  
+  .el-card:active {
+    transform: scale(0.99);
+  }
+  
+  /* Disable text selection on interactive elements */
+  .el-button,
+  .el-menu-item,
+  .el-tabs__item {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+  .sidebar,
+  .header,
+  .toolbar,
+  .filter-bar,
+  .el-button,
+  .mobile-action-bar,
+  .fab {
+    display: none !important;
+  }
+  
+  .content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .el-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+}

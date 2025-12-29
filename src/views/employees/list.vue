@@ -63,6 +63,16 @@
                 <el-tag size="small" type="info" effect="plain">{{ getDeptName(row.department) }}</el-tag>
               </div>
               <div class="info-row">
+                <span class="info-label">直属上级</span>
+                <span class="info-value supervisor" :class="{ 'clickable': canEditSupervisor }" @click="canEditSupervisor && openSupervisorDialog(row)">
+                  {{ getSupervisorName(row.supervisorId) || '自动推断' }}
+                  <el-tooltip v-if="!row.supervisorId" content="系统将根据部门经理/职位级别自动推断" placement="top">
+                    <el-icon class="info-icon"><InfoFilled /></el-icon>
+                  </el-tooltip>
+                  <el-icon v-if="canEditSupervisor" class="edit-icon"><Edit /></el-icon>
+                </span>
+              </div>
+              <div class="info-row">
                 <span class="info-label">邮箱</span>
                 <span class="info-value email" :title="row.workEmail">{{ row.workEmail || '未绑定' }}</span>
               </div>
@@ -147,13 +157,47 @@
         <el-button type="danger" @click="handleLeave" :loading="leaveSubmitting">确认办理</el-button>
       </template>
     </el-dialog>
+
+    <!-- 设置直属上级对话框 -->
+    <el-dialog v-model="supervisorDialogVisible" title="设置直属上级" width="420px" class="vben-dialog" :close-on-click-modal="false" destroy-on-close>
+      <div class="dialog-user-info">
+        <span class="label">员工：</span>
+        <span class="value">{{ supervisorForm.employeeName }}</span>
+      </div>
+      <el-form :model="supervisorForm" label-position="top">
+        <el-form-item label="直属上级">
+          <el-select
+            v-model="supervisorForm.supervisorId"
+            placeholder="选择直属上级（留空则自动推断）"
+            filterable
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="emp in availableSupervisors"
+              :key="emp.id"
+              :label="`${emp.realName} (${getDeptName(emp.department)})`"
+              :value="emp.id"
+            />
+          </el-select>
+          <div class="form-tip">
+            <p>• 如果不指定，系统将自动推断上级</p>
+            <p>• 推断规则：部门经理 → 上级部门经理 → 公司创始人</p>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="supervisorDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSetSupervisor" :loading="supervisorSubmitting">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { Search, Refresh, Loading, Key, CircleClose } from '@element-plus/icons-vue';
-import { listEmployees, employeeRoles, listDepartments, listPositions, employeeLeave, getMyEmployee } from '@/api';
+import { Search, Refresh, Loading, Key, CircleClose, Edit, InfoFilled } from '@element-plus/icons-vue';
+import { listEmployees, employeeRoles, listDepartments, listPositions, employeeLeave, getMyEmployee, updateEmployeeSupervisor } from '@/api';
 import { useUserStore } from '@/store/user';
 import { PERM_NAMES } from '@/perm/defs';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -232,6 +276,72 @@ const leaveForm = ref({ employeeId: '', employeeName: '', leaveType: 'hr', leave
 const currentUser = ref<any>(null);
 const currentUserPosition = ref<any>(null);
 const leaveTypeError = ref('');
+
+// 直属上级相关
+const supervisorDialogVisible = ref(false);
+const supervisorSubmitting = ref(false);
+const supervisorForm = ref({ employeeId: '', employeeName: '', supervisorId: '' });
+const employeeMap = ref<Record<string, any>>({});
+
+// 检查当前用户是否有权限编辑上级（创始人或管理岗）
+const canEditSupervisor = computed(() => {
+  if (!currentUser.value) return false;
+  const currentEmp = rows.value.find(r => r.id === currentUser.value.employeeId);
+  if (!currentEmp) return false;
+  // 创始人或管理岗可以编辑
+  return currentEmp.isFounder === true || currentEmp.positionCode === 'FOUNDER' || currentEmp.isManagement === 1;
+});
+
+// 获取可选的上级列表（排除自己和已离职的）
+const availableSupervisors = computed(() => {
+  return rows.value.filter(emp =>
+    emp.id !== supervisorForm.value.employeeId &&
+    emp.status === 1
+  );
+});
+
+// 获取上级名称
+function getSupervisorName(supervisorId: string) {
+  if (!supervisorId) return '';
+  const supervisor = employeeMap.value[supervisorId];
+  return supervisor ? supervisor.realName : supervisorId;
+}
+
+// 打开设置上级对话框
+function openSupervisorDialog(row: any) {
+  supervisorForm.value = {
+    employeeId: row.id,
+    employeeName: row.realName,
+    supervisorId: row.supervisorId || ''
+  };
+  supervisorDialogVisible.value = true;
+}
+
+// 设置直属上级
+async function handleSetSupervisor() {
+  supervisorSubmitting.value = true;
+  try {
+    const resp = await updateEmployeeSupervisor({
+      employeeId: supervisorForm.value.employeeId,
+      supervisorId: supervisorForm.value.supervisorId || ''
+    });
+    if (resp.data.code === 200) {
+      ElMessage.success('设置成功');
+      supervisorDialogVisible.value = false;
+      // 更新本地数据
+      const emp = rows.value.find(r => r.id === supervisorForm.value.employeeId);
+      if (emp) {
+        emp.supervisorId = supervisorForm.value.supervisorId;
+      }
+    } else {
+      ElMessage.error(resp.data.msg || '设置失败');
+    }
+  } catch (error: any) {
+    ElMessage.error('设置失败');
+  } finally {
+    supervisorSubmitting.value = false;
+  }
+}
 
 async function openRoles(row: any) {
   rolesVisible.value = true;
@@ -319,11 +429,19 @@ async function loadData() {
       realName: e.realName || e.name || '未知',
       department: e.departmentId || e.departmentName || '',
       position: e.positionId || e.positionName || '',
+      supervisorId: e.supervisorId || '',
       workEmail: e.workEmail || e.email || '',
       status: e.status ?? 1,
       avatar: e.avatar || '',
       createTime: e.createTime || e.hireDate,
+      isFounder: e.isFounder || false,
+      positionCode: e.positionCode || '',
+      isManagement: e.isManagement || 0,
     }));
+    // 构建员工映射
+    rows.value.forEach((emp: any) => {
+      employeeMap.value[emp.id] = emp;
+    });
   } catch (error: any) { rows.value = []; }
   finally { loading.value = false; }
 }
@@ -475,6 +593,42 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.info-value.supervisor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+}
+
+.info-value.supervisor.clickable {
+  cursor: pointer;
+  color: #4f46e5;
+}
+
+.info-value.supervisor.clickable:hover {
+  text-decoration: underline;
+}
+
+.info-value.supervisor .edit-icon {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.info-value.supervisor .info-icon {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+.form-tip p {
+  margin: 2px 0;
 }
 
 .card-footer {
