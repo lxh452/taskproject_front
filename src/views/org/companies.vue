@@ -288,7 +288,7 @@ import { ref, onMounted, computed } from 'vue';
 import { Search, Refresh, Plus, View, Edit, Share, User, OfficeBuilding, Location, Calendar, CopyDocument } from '@element-plus/icons-vue';
 import { listCompanies, updateCompany, generateInviteCode as apiGenerateInviteCode } from '@/api';
 import { ElMessage } from 'element-plus';
-import { useUserStore } from '@/stores/user';
+import { useUserStore } from '@/store/user';
 import type { FormInstance, FormRules } from 'element-plus';
 
 const userStore = useUserStore();
