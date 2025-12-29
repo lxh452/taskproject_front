@@ -1,0 +1,55 @@
+/* Gemini 3 Pro 风格的页面头部样式 */
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+}
+
+.card-header-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.card-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    letter-spacing: -0.02em;
+}
+
+.title-icon {
+    font-size: 24px;
+    color: #2563eb;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+    padding: 8px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 卡片头部样式优化 */
+:deep(.el-card__header) {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-bottom: 2px solid #e5e7eb;
+    padding: 20px 24px;
+}
+
+
+
+
+
+
+
