@@ -80,6 +80,9 @@
         :draggable="true"
         @dragstart="onDragStart(node)"
         @dragend="onDragEnd"
+        @touchstart="onTouchStart($event, node)"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
             @click="selectNodeFromLibrary(node)"
           >
             <div class="node-card-header">
@@ -1299,6 +1302,164 @@ function onDragEnd() {
   }, 100)
 }
 
+// ========== 移动端触摸拖拽支持 ==========
+const touchDragElement = ref<HTMLElement | null>(null)
+const touchStartPos = ref<{ x: number; y: number } | null>(null)
+const isTouchDragging = ref(false)
+
+function onTouchStart(event: TouchEvent, node: any) {
+  const touch = event.touches[0]
+  touchStartPos.value = { x: touch.clientX, y: touch.clientY }
+  draggedNode.value = node
+  isTouchDragging.value = false
+  
+  // 创建拖拽预览元素
+  const target = event.currentTarget as HTMLElement
+  touchDragElement.value = target.cloneNode(true) as HTMLElement
+  touchDragElement.value.classList.add('touch-drag-preview')
+  touchDragElement.value.style.cssText = `
+    position: fixed;
+    left: ${touch.clientX - 60}px;
+    top: ${touch.clientY - 30}px;
+    width: 120px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.9;
+    transform: scale(0.9);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  `
+  document.body.appendChild(touchDragElement.value)
+}
+
+function onTouchMove(event: TouchEvent) {
+  if (!draggedNode.value || !touchDragElement.value) return
+  
+  const touch = event.touches[0]
+  
+  // 检测是否开始拖拽（移动超过10px）
+  if (touchStartPos.value) {
+    const dx = Math.abs(touch.clientX - touchStartPos.value.x)
+    const dy = Math.abs(touch.clientY - touchStartPos.value.y)
+    if (dx > 10 || dy > 10) {
+      isTouchDragging.value = true
+      event.preventDefault() // 阻止滚动
+    }
+  }
+  
+  if (isTouchDragging.value) {
+    // 更新预览元素位置
+    touchDragElement.value.style.left = `${touch.clientX - 60}px`
+    touchDragElement.value.style.top = `${touch.clientY - 30}px`
+  }
+}
+
+function onTouchEnd(event: TouchEvent) {
+  if (!draggedNode.value) return
+  
+  // 清理预览元素
+  if (touchDragElement.value && touchDragElement.value.parentNode) {
+    touchDragElement.value.parentNode.removeChild(touchDragElement.value)
+    touchDragElement.value = null
+  }
+  
+  // 如果是拖拽操作，执行放置逻辑
+  if (isTouchDragging.value) {
+    const touch = event.changedTouches[0]
+    handleTouchDrop(touch.clientX, touch.clientY)
+  }
+  
+  // 重置状态
+  touchStartPos.value = null
+  isTouchDragging.value = false
+  draggedNode.value = null
+}
+
+function handleTouchDrop(clientX: number, clientY: number) {
+  if (!draggedNode.value) return
+  
+  const node = draggedNode.value
+  const nodeId = String(node.taskNodeId)
+  
+  // 检查节点是否已经在画布上
+  const existingNode = nodes.value.find(n => n.id === nodeId)
+  if (existingNode) {
+    ElMessage.warning('该节点已在画布上')
+    return
+  }
+  
+  // 检查放置位置是否在画布区域内
+  const canvasEl = canvasTopEl.value
+  if (!canvasEl) return
+  
+  const rect = canvasEl.getBoundingClientRect()
+  if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+    // 不在画布区域内，不执行放置
+    return
+  }
+  
+  // 获取画布坐标
+  const position = screenToFlowCoordinate({
+    x: clientX,
+    y: clientY,
+  })
+  
+  // 获取部门颜色
+  const deptId = String(node.departmentId || '')
+  const deptColor = deptColorMap.value[deptId] || buildPalette(0)
+  
+  // 获取员工信息
+  const leader = employees.value.find(e => String(e.id) === String(node.leaderId))
+  const executors = (node.executorIds || []).map((eid: any) => 
+    employees.value.find(e => String(e.id) === String(eid))
+  ).filter(Boolean)
+  
+  const status = node.status || 0
+  const progress = node.progress || 0
+  
+  // 创建新节点
+  const newNode: Node = {
+    id: nodeId,
+    type: 'task',
+    position,
+    data: {
+      label: node.nodeName || '未命名',
+      taskNodeId: node.taskNodeId,
+      nodeName: node.nodeName,
+      nodeType: node.nodeType,
+      status,
+      progress,
+      deadline: node.nodeDeadline,
+      estimatedHours: node.estimatedHours,
+      nodeDetail: node.nodeDetail,
+      leaderId: node.leaderId,
+      executorIds: node.executorIds,
+      assignee: node.leaderId,
+      leaderName: leader?.realName || leader?.name || node.leaderId || '-',
+      leaderAvatar: leader?.avatar || '',
+      executorNames: executors.map((e: any) => e.realName || e.name).join(', ') || '-',
+      executors: executors.map((e: any) => ({
+        id: e.id,
+        name: e.realName || e.name,
+        avatar: e.avatar || ''
+      })),
+      departmentId: node.departmentId,
+      departmentName: getDepartmentName(node.departmentId),
+      deptColor: deptColor.color,
+      deptBgFrom: deptColor.bgFrom,
+      deptBgTo: deptColor.bgTo,
+      prerequisiteNodes: node.prerequisiteNodes || [],
+      canDrag: String(node.leaderId) === String(currentEmployeeId.value),
+    },
+    draggable: String(node.leaderId) === String(currentEmployeeId.value),
+  }
+  
+  nodes.value.push(newNode)
+  ElMessage.success('节点已添加到画布')
+  
+  // 选中新添加的节点
+  store.setSelection(nodeId)
+}
+
 function selectNodeFromLibrary(node: any) {
   const nodeId = String(node.taskNodeId)
   const foundNode = nodes.value.find(n => n.id === nodeId)
@@ -2302,6 +2463,35 @@ const nodeTypes = {
 .node-card.draggable:active {
   cursor: grabbing;
   transform: scale(0.98);
+}
+
+/* 触摸拖拽预览样式 */
+.touch-drag-preview {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #6366f1 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3) !important;
+}
+
+.touch-drag-preview .node-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.touch-drag-preview .node-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.touch-drag-preview .node-card-footer,
+.touch-drag-preview .node-meta {
+  display: none;
 }
 
 .node-card.readonly {

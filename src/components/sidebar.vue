@@ -24,6 +24,7 @@
             text-color="#64748b"
             active-text-color="#4f46e5"
             router
+            @select="handleMenuSelect"
         >
           <template v-for="item in menuData" :key="item.index">
             <template v-if="item.children">
@@ -97,6 +98,16 @@ const onRoutes = computed(() => {
 });
 
 const sidebar = useSidebarStore();
+
+// 检测是否为移动端
+const isMobile = () => window.innerWidth <= 768;
+
+// 移动端点击菜单项后自动收起侧边栏
+const handleMenuSelect = () => {
+  if (isMobile() && !sidebar.collapse) {
+    sidebar.setCollapse(true);
+  }
+};
 
 onMounted(async () => {
   try {
