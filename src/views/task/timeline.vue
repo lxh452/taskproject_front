@@ -10,7 +10,7 @@
                 <div v-for="(group, date) in groupedItems" :key="date" class="timeline-group">
                     <div class="date-label">{{ formatDateLabel(String(date)) }}</div>
                     <div class="timeline-items">
-                        <div v-for="item in group" :key="item.id" class="timeline-item">
+                        <div v-for="item in group" :key="item.id" class="timeline-item" @click="viewTask(item)">
                             <div class="time-column">{{ formatTime(item.time) }}</div>
                             <div class="content-card" :class="item.type">
                                 <div class="card-dot"></div>
@@ -40,8 +40,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { getMyTaskNodes } from '@/api';
+import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
+
+const router = useRouter();
 
 interface TLItem { 
     id: string; 
@@ -108,6 +112,32 @@ function getStatusClass(status?: number) {
         case 2: return 'completed';
         case 3: return 'cancelled';
         default: return 'pending';
+    }
+}
+
+function viewTask(task: TLItem) {
+    if (task.id) {
+        navigateToTaskNode(task.id);
+    }
+}
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+    try {
+        const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+        if (resp.data.code === 200 && resp.data.data) {
+            const data = resp.data.data;
+            const taskNode = data.taskNode || data;
+            const taskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
+            if (taskId) {
+                router.push(`/tasks/detail/${taskId}`);
+                return;
+            }
+        }
+        ElMessage.warning('无法获取任务节点信息');
+    } catch (error) {
+        console.error('获取任务节点失败:', error);
+        ElMessage.error('获取任务节点信息失败');
     }
 }
 
@@ -208,6 +238,7 @@ onMounted(() => {
     gap: 24px;
     margin-bottom: 20px;
     position: relative;
+    cursor: pointer;
 }
 
 .timeline-item::before {

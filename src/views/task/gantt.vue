@@ -25,7 +25,7 @@
                             :hollow="true"
                             size="large"
                         >
-                            <div class="timeline-card">
+                            <div class="timeline-card" @click="viewTask(item)">
                                 <div class="card-header">
                                     <span class="card-title">{{ item.name }}</span>
                                     <el-tag :type="item.urgencyType" size="small" effect="plain">{{ item.urgencyText }}</el-tag>
@@ -52,13 +52,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import VChart from 'vue-echarts';
 import { getMyTaskNodes } from '@/api';
+import request from '@/utils/request';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CustomChart } from 'echarts/charts';
 import { Refresh } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+
+const router = useRouter();
 
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, CustomChart]);
 
@@ -220,6 +225,33 @@ async function loadData() {
     }
 }
 
+// 点击任务卡片跳转
+function viewTask(item: any) {
+    if (item.id) {
+        navigateToTaskNode(item.id);
+    }
+}
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+    try {
+        const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+        if (resp.data.code === 200 && resp.data.data) {
+            const data = resp.data.data;
+            const taskNode = data.taskNode || data;
+            const taskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
+            if (taskId) {
+                router.push(`/tasks/detail/${taskId}`);
+                return;
+            }
+        }
+        ElMessage.warning('无法获取任务节点信息');
+    } catch (error) {
+        console.error('获取任务节点失败:', error);
+        ElMessage.error('获取任务节点信息失败');
+    }
+}
+
 onMounted(() => {
     loadData();
 });
@@ -301,6 +333,14 @@ onMounted(() => {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timeline-card:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .card-header {

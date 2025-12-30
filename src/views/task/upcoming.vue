@@ -9,7 +9,7 @@
             </template>
             <div v-if="list.length === 0" class="empty-wrap"><el-empty description="暂无即将到期任务" /></div>
             <div v-else>
-                <div class="up-item" v-for="u in list" :key="u.id">
+                <div class="up-item" v-for="u in list" :key="u.id" @click="viewTask(u)">
                     <div class="up-title">
                         <span class="ellipsis">{{ u.name }}</span>
                         <el-tag :type="u.urgencyType" size="small">{{ u.urgencyText }}</el-tag>
@@ -24,8 +24,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { getMyTaskNodes } from '@/api';
+import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
+
+const router = useRouter();
 
 interface UItem { 
     id: string; 
@@ -47,6 +51,32 @@ function priorityToTag(nodeType?: number) {
         case 2: return { text: '高', type: 'warning' };
         case 3: return { text: '中', type: 'info' };
         default: return { text: '低', type: '' };
+    }
+}
+
+function viewTask(task: UItem) {
+    if (task.id) {
+        navigateToTaskNode(task.id);
+    }
+}
+
+// 跳转到任务节点所属的任务详情
+async function navigateToTaskNode(taskNodeId: string) {
+    try {
+        const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
+        if (resp.data.code === 200 && resp.data.data) {
+            const data = resp.data.data;
+            const taskNode = data.taskNode || data;
+            const taskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
+            if (taskId) {
+                router.push(`/tasks/detail/${taskId}`);
+                return;
+            }
+        }
+        ElMessage.warning('无法获取任务节点信息');
+    } catch (error) {
+        console.error('获取任务节点失败:', error);
+        ElMessage.error('获取任务节点信息失败');
     }
 }
 
@@ -110,7 +140,8 @@ onMounted(async () => {
 .upcoming-page { padding: 8px; }
 .card-header-title { font-weight: 600; }
 .card-header-desc { color: #909399; font-size: 12px; }
-.up-item { margin-bottom: 16px; }
+.up-item { margin-bottom: 16px; cursor: pointer; padding: 12px; border-radius: 8px; transition: background 0.2s; }
+.up-item:hover { background: #f5f7fa; }
 .up-title { display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
 .up-sub { color: #909399; font-size: 12px; margin: 4px 0 8px; }
 .ellipsis { max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
