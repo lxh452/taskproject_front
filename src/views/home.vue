@@ -134,6 +134,8 @@ onUnmounted(() => {
     background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     animation: fadeIn 0.3s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes fadeIn {

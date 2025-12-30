@@ -2809,11 +2809,23 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__controls-button) {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   background-color: transparent;
   border-radius: 8px;
   margin: 2px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.vue-flow__controls-button svg) {
+  width: 16px;
+  height: 16px;
 }
 
 :deep(.vue-flow__controls-button:hover) {
@@ -2951,8 +2963,14 @@ const nodeTypes = {
   }
 
   .sidebar-left {
-    max-height: 250px;
+    min-height: 320px;
+    max-height: 380px;
     order: 1;
+  }
+
+  .nodes-list {
+    min-height: 180px;
+    max-height: 220px;
   }
 
   .canvas-area {
@@ -3069,7 +3087,7 @@ const nodeTypes = {
     display: none;
   }
 
-  /* 调整控制按钮位置 */
+  /* 调整控制按钮位置和大小 */
   :deep(.vue-flow__controls) {
     bottom: 10px !important;
     right: 10px !important;
@@ -3077,8 +3095,15 @@ const nodeTypes = {
   }
 
   :deep(.vue-flow__controls-button) {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  :deep(.vue-flow__controls-button svg) {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -3107,7 +3132,13 @@ const nodeTypes = {
   }
 
   .sidebar-left {
-    max-height: 200px;
+    min-height: 280px;
+    max-height: 320px;
+  }
+
+  .nodes-list {
+    min-height: 150px;
+    max-height: 180px;
   }
 
   .canvas-area {
@@ -3163,6 +3194,19 @@ const nodeTypes = {
 
   .executor-name {
     font-size: 12px;
+  }
+
+  /* 控制按钮统一大小 */
+  :deep(.vue-flow__controls-button) {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  :deep(.vue-flow__controls-button svg) {
+    width: 14px;
+    height: 14px;
   }
 }
 

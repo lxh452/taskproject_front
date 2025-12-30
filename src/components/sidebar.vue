@@ -398,7 +398,7 @@ function handleSignOut() {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 280px;
+    width: 280px !important;
     max-width: 85vw;
     z-index: 1001;
     transform: translateX(-100%);
@@ -406,14 +406,16 @@ function handleSignOut() {
     box-shadow: none;
   }
 
+  /* 移动端：collapse=false 时显示侧边栏 */
   .sidebar-container:not(.is-collapse) {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
   }
 
+  /* 移动端：collapse=true 时隐藏侧边栏 */
   .sidebar-container.is-collapse {
     transform: translateX(-100%);
-    width: 280px;
+    width: 280px !important;
   }
 
   .sidebar-logo {

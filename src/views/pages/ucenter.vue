@@ -1027,26 +1027,126 @@ onMounted(() => {
 
 /* 响应式 */
 @media (max-width: 768px) {
+    .ucenter-page {
+        padding: 0;
+    }
+
     .hero-section {
-        padding: 24px 16px 100px;
+        padding: 20px 16px 100px;
+    }
+
+    .hero-content {
+        padding: 0;
     }
 
     .profile-card {
         flex-direction: column;
         text-align: center;
-        gap: 20px;
+        gap: 16px;
+        padding: 0 8px;
+    }
+
+    .user-name {
+        font-size: 24px;
     }
 
     .user-meta {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .meta-item {
+        font-size: 13px;
+    }
+
+    .user-email {
+        font-size: 13px;
         justify-content: center;
     }
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 0 8px;
+    }
+
+    .stat-card {
+        padding: 14px;
+        gap: 12px;
+        border-radius: 12px;
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+        border-radius: 10px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+
+    .stat-label {
+        font-size: 12px;
     }
 
     .main-content {
-        padding: 0 16px;
+        padding: 0 12px;
+        margin: -70px auto 24px;
+    }
+
+    .content-card {
+        border-radius: 16px;
+    }
+
+    .settings-tabs :deep(.el-tabs__nav-wrap) {
+        padding: 0 12px;
+    }
+
+    .settings-tabs :deep(.el-tabs__item) {
+        padding: 14px 12px;
+        font-size: 14px;
+    }
+
+    .tab-label {
+        gap: 6px;
+    }
+
+    .tab-label .el-icon {
+        font-size: 16px;
+    }
+
+    .tab-content {
+        padding: 20px 16px;
+    }
+
+    .section-header {
+        margin-bottom: 20px;
+    }
+
+    .section-header h3 {
+        font-size: 18px;
+    }
+
+    .section-desc {
+        font-size: 13px;
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 12px 0;
+    }
+
+    .info-label {
+        width: auto;
+        font-size: 13px;
+    }
+
+    .info-value {
+        font-size: 14px;
     }
 
     .crop-container {
@@ -1054,18 +1154,79 @@ onMounted(() => {
         height: 250px;
     }
 
-    .tab-content {
-        padding: 24px 16px;
+    .avatar-wrapper {
+        width: 80px !important;
+        height: 80px !important;
     }
 
-    .info-row {
+    .user-avatar {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 28px !important;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 16px 12px 90px;
+    }
+
+    .profile-card {
+        gap: 12px;
+    }
+
+    .user-name {
+        font-size: 20px;
+    }
+
+    .user-meta {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+        gap: 8px;
     }
 
-    .info-label {
-        width: auto;
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 12px;
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .main-content {
+        padding: 0 8px;
+        margin: -60px auto 20px;
+    }
+
+    .tab-content {
+        padding: 16px 12px;
+    }
+
+    .settings-tabs :deep(.el-tabs__item) {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .tab-label span {
+        display: none;
+    }
+
+    .tab-label .el-icon {
+        font-size: 18px;
     }
 }
 </style>
