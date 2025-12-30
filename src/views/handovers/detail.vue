@@ -536,8 +536,8 @@ async function loadAvailableEmployees() {
     employeesLoading.value = true;
     try {
         const companyId = userStore.companyId || '';
-        // 获取离职员工的职务ID
-        const fromEmployeePositionId = handover.value.fromEmployeePositionId || handover.value.fromEmployee?.positionId || '';
+        // 获取离职员工的职务ID - 离职审批不按职务筛选，显示所有在职员工
+        const fromEmployeePositionId = isLeaveRequest.value ? '' : (handover.value.fromEmployeePositionId || handover.value.fromEmployee?.positionId || '');
         
         let finalCompanyId = companyId;
         if (!finalCompanyId) {
@@ -546,8 +546,10 @@ async function loadAvailableEmployees() {
             finalCompanyId = emp.companyId || emp.CompanyId || '';
         }
         
+        console.log('[loadAvailableEmployees] companyId:', finalCompanyId, 'positionId:', fromEmployeePositionId);
+        
         if (finalCompanyId) {
-            // 如果有职务ID，按职务筛选；否则显示所有员工
+            // 离职审批时不按职务筛选，显示公司所有在职员工
             const requestData: any = { 
                 page: 1, 
                 pageSize: 200, 
@@ -557,11 +559,16 @@ async function loadAvailableEmployees() {
                 requestData.positionId = fromEmployeePositionId;
             }
             
+            console.log('[loadAvailableEmployees] requestData:', requestData);
             const resp = await listEmployees(requestData);
+            console.log('[loadAvailableEmployees] response:', resp.data);
+            
             if (resp.data?.code === 200) {
                 // 后端返回的数据在 data.employees.list 中
                 const employees = resp.data.data?.employees || resp.data.data || {};
                 const list = employees.list || [];
+                console.log('[loadAvailableEmployees] employees list:', list);
+                
                 availableEmployees.value = list
                     .filter((e: any) => e.status === 1 && e.id !== handover.value.fromEmployeeId) // 只显示在职且不是发起人
                     .map((e: any) => ({
@@ -570,7 +577,10 @@ async function loadAvailableEmployees() {
                         department: e.departmentName || '',
                         taskCount: e.taskCount || 0 // 显示任务数量
                     }));
+                console.log('[loadAvailableEmployees] availableEmployees:', availableEmployees.value);
             }
+        } else {
+            console.warn('[loadAvailableEmployees] No companyId found');
         }
     } catch (error) {
         console.error('加载员工列表失败:', error);
