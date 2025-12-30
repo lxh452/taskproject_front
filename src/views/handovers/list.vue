@@ -181,7 +181,10 @@ const filteredRows = computed(() => {
     const bySt = (status === '' || status === null || status === undefined) || r.status === status;
     let byType = true;
     if (type === 'from') byType = r.fromEmployeeId === currentEmployeeId.value;
-    else if (type === 'to') byType = r.toEmployeeId === currentEmployeeId.value;
+    else if (type === 'to') {
+      // 待我审批：包括作为接收人或审批人的记录
+      byType = r.toEmployeeId === currentEmployeeId.value || r.approverId === currentEmployeeId.value;
+    }
     return byKw && bySt && byType;
   });
 });
@@ -309,14 +312,24 @@ async function loadData() {
       const statusInfo = statusMap[handoverStatus] || { text: '未知', type: 'default' };
       const isLeaveRequest = !h.taskId || h.taskTitle === '离职审批';
       const isNodeCompletion = h.approvalType === 'node_completion';
+      
+      // 离职审批时，显示审批人而不是接收人
+      let toName = h.toEmployeeName || h.toEmployeeId || '-';
+      let toId = h.toEmployeeId || '';
+      if (isLeaveRequest && h.approverId) {
+        toName = h.approverName || h.approverId || '待审批';
+        toId = h.approverId;
+      }
+      
       return {
         id: h.handoverId || h.id,
         task: isLeaveRequest ? '离职审批' : (h.taskTitle || h.taskId || '-'),
         from: h.fromEmployeeName || h.fromEmployeeId || '-',
         fromEmployeeId: h.fromEmployeeId,
-        to: isLeaveRequest ? '待审批' : (h.toEmployeeName || h.toEmployeeId || '-'),
-        toEmployeeId: h.toEmployeeId || '',
+        to: isLeaveRequest ? toName : (h.toEmployeeName || h.toEmployeeId || '-'),
+        toEmployeeId: isLeaveRequest ? toId : (h.toEmployeeId || ''),
         approverId: h.approverId || '',
+        approverName: h.approverName || '',
         status: handoverStatus,
         statusText: statusInfo.text,
         statusType: statusInfo.type,
