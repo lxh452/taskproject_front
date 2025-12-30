@@ -701,12 +701,138 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
 
 .error-tip { color: #ef4444; font-size: 12px; margin-top: 4px; }
 
+/* 平板适配 */
+@media (max-width: 1024px) {
+  .employees-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 移动端适配 */
 @media (max-width: 768px) {
-    .employees-page { padding: 16px; }
-    .filter-bar { flex-direction: column; gap: 10px; }
-    .filter-left { flex-direction: column; width: 100%; }
-    .search-input, .filter-select, .filter-select-sm { width: 100%; }
-    .filter-right { width: 100%; justify-content: space-between; }
-    .employees-grid { grid-template-columns: 1fr; }
+  .employees-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-desc {
+    font-size: 13px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .filter-left {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-input,
+  .filter-select,
+  .filter-select-sm {
+    width: 100%;
+  }
+
+  .filter-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .employees-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .employee-card {
+    padding: 14px;
+  }
+
+  .card-header {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+
+  .employee-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 16px;
+  }
+
+  .employee-name {
+    font-size: 14px;
+  }
+
+  .info-row {
+    font-size: 12px;
+  }
+
+  .info-value.email {
+    max-width: 120px;
+  }
+
+  .card-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 480px) {
+  .employees-page {
+    padding: 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .filter-bar {
+    padding: 10px;
+  }
+
+  .employee-card {
+    padding: 12px;
+  }
+
+  .employee-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 14px;
+  }
+
+  .info-value.email {
+    max-width: 100px;
+  }
+}
+
+/* 抽屉和对话框移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-drawer) {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 90vw !important;
+    margin: 5vh auto !important;
+  }
 }
 </style>

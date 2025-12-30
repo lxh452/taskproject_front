@@ -572,18 +572,171 @@ onMounted(() => { loadData(); });
   border: 1px solid #e5e7eb;
 }
 
+/* 平板适配 */
 @media (max-width: 1024px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .handovers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .handovers-page { padding: 16px; }
-  .page-header { flex-direction: column; gap: 12px; }
-  .create-btn { width: 100%; }
-  .stats-row { grid-template-columns: 1fr; }
-  .filter-bar { flex-direction: column; gap: 10px; }
-  .filter-left { flex-direction: column; width: 100%; }
-  .search-input, .filter-select { width: 100%; }
-  .handovers-grid { grid-template-columns: 1fr; }
+  .handovers-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-desc {
+    font-size: 13px;
+  }
+
+  .create-btn {
+    width: 100%;
+    height: 44px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .stat-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .filter-left {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+
+  .handovers-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .handover-card {
+    padding: 14px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .flow-visual {
+    padding: 12px;
+  }
+
+  .flow-avatar,
+  .audit-badge {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 11px;
+  }
+
+  .flow-name {
+    font-size: 10px;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .action-btns {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .action-btns .el-button {
+    flex: 1;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 480px) {
+  .handovers-page {
+    padding: 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .filter-bar {
+    padding: 10px;
+  }
+
+  .handover-card {
+    padding: 12px;
+  }
+
+  .flow-visual {
+    padding: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flow-arrow {
+    display: none;
+  }
+
+  .flow-node {
+    flex: 1;
+    min-width: 80px;
+  }
 }
 </style>

@@ -35,7 +35,17 @@ const tabs = useTabsStore();
 const isMobile = ref(false);
 
 const checkMobile = () => {
+    const wasMobile = isMobile.value;
     isMobile.value = window.innerWidth <= 768;
+    
+    // 从桌面切换到移动端时，自动收起侧边栏
+    if (!wasMobile && isMobile.value && !sidebar.collapse) {
+        sidebar.setCollapse(true);
+    }
+    // 从移动端切换到桌面时，自动展开侧边栏
+    if (wasMobile && !isMobile.value && sidebar.collapse) {
+        sidebar.setCollapse(false);
+    }
 };
 
 // 移动端侧边栏打开时禁止body滚动

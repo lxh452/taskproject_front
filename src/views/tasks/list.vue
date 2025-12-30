@@ -481,13 +481,134 @@ onMounted(() => {
   padding: 20px;
 }
 
+/* 平板适配 */
+@media (max-width: 1024px) {
+  .tasks-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .tasks-page { padding: 16px; }
-  .page-header { flex-direction: column; gap: 12px; }
-  .create-btn { width: 100%; }
-  .filter-bar { flex-direction: column; gap: 10px; }
-  .filter-left { flex-direction: column; width: 100%; }
-  .search-input, .filter-select { width: 100%; }
-  .tasks-grid { grid-template-columns: 1fr; }
+  .tasks-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-desc {
+    font-size: 13px;
+  }
+
+  .create-btn {
+    width: 100%;
+    height: 44px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .filter-left {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+
+  .filter-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .tasks-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .task-card {
+    padding: 14px;
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+  }
+
+  .task-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .task-title {
+    font-size: 14px;
+    min-height: auto;
+    -webkit-line-clamp: 3;
+  }
+
+  .task-meta {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+  }
+
+  .card-actions .action-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 480px) {
+  .tasks-page {
+    padding: 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .filter-bar {
+    padding: 10px;
+  }
+
+  .task-card {
+    padding: 12px;
+  }
+
+  .card-actions .action-btn {
+    flex: 1 1 100%;
+    height: 38px;
+  }
+}
+
+/* 抽屉移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-drawer) {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
 }
 </style>

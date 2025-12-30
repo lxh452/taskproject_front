@@ -1015,4 +1015,85 @@ onMounted(() => {
 .submit-btn .el-icon {
   font-size: 16px;
 }
+
+/* 移动端审批弹窗适配 */
+@media (max-width: 768px) {
+  .approve-dialog :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 90vw !important;
+    margin: 5vh auto !important;
+    border-radius: 12px;
+  }
+
+  .dialog-header {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    border-radius: 10px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .header-desc {
+    font-size: 13px;
+  }
+
+  .dialog-body {
+    padding: 16px;
+  }
+
+  .applicant-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .applicant-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .applicant-name {
+    font-size: 14px;
+  }
+
+  .applicant-time {
+    font-size: 12px;
+  }
+
+  .form-label {
+    font-size: 13px;
+  }
+
+  .dialog-footer {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .notification-item.has-actions {
+    flex-wrap: wrap;
+  }
+
+  .notif-actions {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    justify-content: flex-end;
+  }
+}
 </style>

@@ -1272,4 +1272,404 @@ onMounted(() => {
     opacity: 0;
     transform: scale(0.95) translateY(-8px);
 }
+
+/* ========== 移动端适配 ========== */
+
+/* 平板适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+    .org-tree-page {
+        padding: 20px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .header-left {
+        text-align: center;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-input {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .tree-panel {
+        padding: 16px;
+    }
+
+    .tree-columns {
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .tree-column {
+        min-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding-right: 0;
+        padding-bottom: 16px;
+    }
+
+    .tree-column:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .column-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .org-card {
+        min-width: 200px;
+        flex: 0 0 auto;
+    }
+
+    .detail-panel {
+        width: 100%;
+        max-height: 500px;
+        padding: 20px;
+    }
+}
+
+/* 手机适配 (< 768px) */
+@media (max-width: 768px) {
+    .org-tree-page {
+        padding: 12px;
+        min-height: auto;
+    }
+
+    .page-header {
+        margin-bottom: 16px;
+    }
+
+    .header-content {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-subtitle {
+        font-size: 12px;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .main-content {
+        gap: 16px;
+    }
+
+    .tree-panel {
+        padding: 12px;
+        border-radius: 16px;
+    }
+
+    .tree-columns {
+        gap: 12px;
+    }
+
+    .column-header {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .column-title {
+        font-size: 10px;
+    }
+
+    .column-content {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-right: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .org-card {
+        min-width: 160px;
+        padding: 12px;
+        margin-bottom: 0;
+        border-radius: 12px;
+    }
+
+    .card-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .card-title {
+        font-size: 13px;
+    }
+
+    .card-subtitle {
+        font-size: 11px;
+    }
+
+    .card-arrow {
+        font-size: 14px;
+    }
+
+    .detail-panel {
+        padding: 16px;
+        border-radius: 16px;
+        max-height: none;
+    }
+
+    .detail-header {
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+    }
+
+    .detail-avatar {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+        border-radius: 14px;
+    }
+
+    .detail-title {
+        font-size: 18px;
+    }
+
+    .detail-subtitle {
+        font-size: 12px;
+    }
+
+    .detail-stats {
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .stat-box {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .tasks-header {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+
+    .tasks-title {
+        font-size: 11px;
+    }
+
+    .tasks-list {
+        gap: 10px;
+    }
+
+    .task-item {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .task-name {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .task-meta {
+        gap: 8px;
+    }
+
+    .task-date {
+        font-size: 11px;
+    }
+
+    .task-progress {
+        font-size: 11px;
+    }
+
+    /* 隐藏悬停卡片在手机上 */
+    .employee-hover-card {
+        display: none;
+    }
+}
+
+/* 超小屏幕适配 (< 480px) */
+@media (max-width: 480px) {
+    .org-tree-page {
+        padding: 8px;
+    }
+
+    .header-content {
+        padding: 12px;
+    }
+
+    .page-title {
+        font-size: 18px;
+    }
+
+    .page-subtitle {
+        font-size: 11px;
+    }
+
+    .tree-panel {
+        padding: 10px;
+    }
+
+    .column-header {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+    }
+
+    .org-card {
+        min-width: 140px;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .card-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    .card-title {
+        font-size: 12px;
+    }
+
+    .card-subtitle {
+        font-size: 10px;
+    }
+
+    .detail-panel {
+        padding: 12px;
+    }
+
+    .detail-header {
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    .detail-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+        border-radius: 12px;
+    }
+
+    .detail-title {
+        font-size: 16px;
+    }
+
+    .detail-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .stat-box {
+        padding: 10px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .stat-label {
+        font-size: 9px;
+    }
+
+    .task-item {
+        padding: 10px;
+    }
+
+    .task-name {
+        font-size: 12px;
+    }
+
+    .empty-icon,
+    .placeholder-icon {
+        font-size: 36px;
+    }
+
+    .empty-text,
+    .placeholder-text {
+        font-size: 13px;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-content {
+        flex-direction: row;
+        height: calc(100vh - 140px);
+    }
+
+    .tree-panel {
+        flex: 1;
+        max-width: 60%;
+    }
+
+    .tree-columns {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .tree-column {
+        min-width: 180px;
+        border-right: 1px solid rgba(0, 0, 0, 0.06);
+        border-bottom: none;
+        padding-right: 12px;
+        padding-bottom: 0;
+    }
+
+    .column-content {
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .org-card {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .detail-panel {
+        width: 40%;
+        max-height: none;
+    }
+}
 </style>

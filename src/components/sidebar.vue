@@ -398,20 +398,86 @@ function handleSignOut() {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 70vw;
-    max-width: 280px;
+    width: 280px;
+    max-width: 85vw;
     z-index: 1001;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    box-shadow: none;
   }
 
   .sidebar-container:not(.is-collapse) {
     transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
   }
 
   .sidebar-container.is-collapse {
     transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .sidebar-logo {
+    height: 56px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .menu-item,
+  .menu-submenu :deep(.el-sub-menu__title) {
+    height: 48px !important;
+    line-height: 48px !important;
+  }
+
+  .menu-icon {
+    font-size: 18px !important;
+    width: 18px;
+  }
+
+  .menu-title {
+    font-size: 14px;
+  }
+
+  .user-panel {
+    padding: 12px;
+  }
+
+  .user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .user-name {
+    font-size: 14px;
+  }
+
+  .user-action {
+    font-size: 12px;
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar-container {
+    width: 200px;
+  }
+
+  .sidebar-container.is-collapse {
+    width: 60px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .menu-title {
+    font-size: 13px;
   }
 }
 </style>

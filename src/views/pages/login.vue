@@ -551,7 +551,28 @@ tabs.clearTabs();
     text-decoration: underline;
 }
 
-/* 响应式 */
+/* 响应式 - 平板 */
+@media (max-width: 768px) {
+    .login-container {
+        width: 95%;
+        max-width: 400px;
+        padding: 36px 28px;
+    }
+    
+    .task-letter {
+        font-size: 35vw;
+    }
+    
+    .marquee-text {
+        font-size: 20px;
+    }
+    
+    .marquee-text-cn {
+        font-size: 18px;
+    }
+}
+
+/* 响应式 - 小屏幕 */
 @media (max-width: 480px) {
     .login-container {
         width: 90%;

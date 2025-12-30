@@ -2833,6 +2833,365 @@ const nodeTypes = {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
+
+/* ========== 移动端适配 ========== */
+
+/* 平板适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+  .flow-designer-page {
+    height: auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .toolbar-left {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toolbar-title {
+    justify-content: center;
+  }
+
+  .task-selector {
+    width: 100%;
+  }
+
+  .toolbar-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .flow-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar-left,
+  .sidebar-right {
+    width: 100%;
+    max-height: 300px;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .sidebar-right {
+    border-bottom: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    max-height: 400px;
+  }
+
+  .canvas-area {
+    min-height: 400px;
+    height: 50vh;
+  }
+
+  .canvas-wrapper {
+    position: relative;
+    min-height: 400px;
+  }
+
+  .nodes-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .node-card {
+    min-width: 200px;
+    flex: 0 0 auto;
+  }
+}
+
+/* 手机适配 (< 768px) */
+@media (max-width: 768px) {
+  .flow-designer-page {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .toolbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .toolbar-title {
+    font-size: 16px;
+  }
+
+  .title-icon {
+    font-size: 18px;
+  }
+
+  .task-selector {
+    width: 100%;
+  }
+
+  .toolbar-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .toolbar-right :deep(.el-button) {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .flow-container {
+    flex-direction: column;
+  }
+
+  .sidebar-left {
+    max-height: 250px;
+    order: 1;
+  }
+
+  .canvas-area {
+    min-height: 350px;
+    height: 45vh;
+    order: 2;
+  }
+
+  .sidebar-right {
+    max-height: none;
+    order: 3;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px;
+  }
+
+  .header-title {
+    font-size: 14px;
+  }
+
+  .filter-section {
+    padding: 12px 16px;
+  }
+
+  .nodes-list {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .node-card {
+    min-width: 160px;
+    padding: 12px;
+  }
+
+  .node-type-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .node-name {
+    font-size: 13px;
+  }
+
+  .node-meta {
+    font-size: 11px;
+  }
+
+  .detail-content {
+    padding: 14px;
+  }
+
+  .detail-section {
+    margin-bottom: 18px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .detail-item {
+    padding: 10px;
+  }
+
+  .detail-label {
+    font-size: 10px;
+  }
+
+  .detail-value {
+    font-size: 13px;
+  }
+
+  .role-form :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  .role-form :deep(.el-form-item__label) {
+    font-size: 12px;
+  }
+
+  .empty-nodes {
+    padding: 30px 16px;
+  }
+
+  .empty-icon {
+    font-size: 36px;
+  }
+
+  .empty-text {
+    font-size: 14px;
+  }
+
+  .empty-hint {
+    font-size: 12px;
+  }
+
+  .detail-empty {
+    padding: 30px 16px;
+  }
+
+  .detail-empty .empty-icon {
+    font-size: 36px;
+  }
+
+  .detail-empty .empty-text {
+    font-size: 14px;
+  }
+
+  /* 隐藏小地图在手机上 */
+  :deep(.vue-flow__minimap) {
+    display: none;
+  }
+
+  /* 调整控制按钮位置 */
+  :deep(.vue-flow__controls) {
+    bottom: 10px !important;
+    right: 10px !important;
+    padding: 4px;
+  }
+
+  :deep(.vue-flow__controls-button) {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* 超小屏幕适配 (< 480px) */
+@media (max-width: 480px) {
+  .toolbar {
+    padding: 8px 10px;
+  }
+
+  .toolbar-title {
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  .title-icon {
+    font-size: 16px;
+  }
+
+  .toolbar-right :deep(.el-button span) {
+    display: none;
+  }
+
+  .toolbar-right :deep(.el-button) {
+    min-width: 40px;
+    padding: 8px;
+  }
+
+  .sidebar-left {
+    max-height: 200px;
+  }
+
+  .canvas-area {
+    min-height: 300px;
+    height: 40vh;
+  }
+
+  .node-card {
+    min-width: 140px;
+    padding: 10px;
+  }
+
+  .node-card-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .node-type-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .node-name {
+    font-size: 12px;
+  }
+
+  .node-card-footer {
+    padding-top: 8px;
+  }
+
+  .prereq-tag :deep(.el-tag) {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .sidebar-footer {
+    padding: 10px;
+  }
+
+  .tip-text {
+    font-size: 11px;
+  }
+
+  .detail-item {
+    padding: 8px;
+  }
+
+  .executor-item {
+    padding: 8px 10px;
+  }
+
+  .executor-name {
+    font-size: 12px;
+  }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .flow-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sidebar-left {
+    width: 35%;
+    max-height: none;
+    height: calc(100vh - 120px);
+    order: 1;
+  }
+
+  .canvas-area {
+    width: 65%;
+    height: calc(100vh - 120px);
+    order: 2;
+  }
+
+  .sidebar-right {
+    width: 100%;
+    max-height: 300px;
+    order: 3;
+  }
+}
 </style>
 
 

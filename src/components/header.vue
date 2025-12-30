@@ -1027,15 +1027,76 @@ onUnmounted(() => {
   border-radius: 50%;
 }
 
-/* 响应式布局 */
+/* 响应式布局 - 平板 */
+@media (max-width: 1024px) {
+  .header-container {
+    padding: 0 20px;
+  }
+
+  .header-right {
+    gap: 2px;
+  }
+
+  .header-action {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-name {
+    max-width: 80px;
+  }
+}
+
+/* 响应式布局 - 移动端 */
 @media (max-width: 768px) {
   .header-container {
-    padding: 0 16px;
+    padding: 0 12px;
     height: 56px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .collapse-trigger {
+    width: 36px;
+    height: 36px;
   }
 
   .breadcrumb {
     display: none;
+  }
+
+  .header-right {
+    gap: 0;
+  }
+
+  .header-action {
+    width: 36px;
+    height: 36px;
+  }
+
+  .header-action .el-icon {
+    font-size: 16px !important;
+  }
+
+  /* 移动端隐藏搜索和全屏按钮 */
+  .search-action,
+  .header-action:has(.el-icon > svg[class*="FullScreen"]) {
+    display: none;
+  }
+
+  .user-dropdown {
+    margin-left: 4px;
+  }
+
+  .user-trigger {
+    padding: 4px;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .user-name {
@@ -1043,6 +1104,30 @@ onUnmounted(() => {
   }
 
   .dropdown-icon {
+    display: none;
+  }
+}
+
+/* 响应式布局 - 小屏幕 */
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 8px;
+    height: 52px;
+  }
+
+  .collapse-trigger {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-action {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* 小屏幕只保留核心功能 */
+  .theme-toggle,
+  .invite-action {
     display: none;
   }
 }
