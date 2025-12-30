@@ -10,6 +10,16 @@
           <span class="logo-text" v-if="!sidebar.collapse">Task Helper</span>
         </transition>
       </div>
+      <!-- 移动端关闭按钮 -->
+      <div class="mobile-close-btn" @click="closeSidebar">
+        <el-icon><Close /></el-icon>
+      </div>
+    </div>
+
+    <!-- 移动端提示 -->
+    <div class="mobile-tip">
+      <p>点击菜单项导航</p>
+      <p>点击右上角 × 关闭菜单</p>
     </div>
 
     <!-- 导航菜单 -->
@@ -83,7 +93,7 @@ import { computed, ref, onMounted } from 'vue';
 import { useSidebarStore } from '../store/sidebar';
 import { useRoute, useRouter } from 'vue-router';
 import { menuData } from '@/components/menu';
-import { SwitchButton } from '@element-plus/icons-vue';
+import { SwitchButton, Close } from '@element-plus/icons-vue';
 import { useUserStore } from '@/store/user';
 import { ElMessage } from 'element-plus';
 import { getMyEmployee } from '@/api';
@@ -107,6 +117,11 @@ const handleMenuSelect = () => {
   if (isMobile() && !sidebar.collapse) {
     sidebar.setCollapse(true);
   }
+};
+
+// 移动端关闭侧边栏
+const closeSidebar = () => {
+  sidebar.setCollapse(true);
 };
 
 onMounted(async () => {
@@ -150,6 +165,7 @@ function handleSignOut() {
   height: clamp(56px, 8vh, 64px);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 clamp(12px, 1vw, 16px);
   border-bottom: 1px solid var(--border-color);
 }
@@ -159,6 +175,40 @@ function handleSignOut() {
   align-items: center;
   gap: clamp(8px, 0.7vw, 10px);
   overflow: hidden;
+}
+
+/* 移动端关闭按钮 - 默认隐藏 */
+.mobile-close-btn {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.mobile-close-btn:hover {
+  background: var(--color-danger-light, #fef2f2);
+  color: var(--color-danger, #ef4444);
+}
+
+/* 移动端提示 - 默认隐藏 */
+.mobile-tip {
+  display: none;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-tip p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .logo-icon {
@@ -427,6 +477,16 @@ function handleSignOut() {
   .sidebar-container.is-collapse {
     transform: translateX(-100%);
     width: 280px !important;
+  }
+
+  /* 移动端显示关闭按钮 */
+  .mobile-close-btn {
+    display: flex;
+  }
+
+  /* 移动端显示提示 */
+  .mobile-tip {
+    display: block;
   }
 
   .sidebar-logo {
