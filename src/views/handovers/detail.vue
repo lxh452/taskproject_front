@@ -559,7 +559,9 @@ async function loadAvailableEmployees() {
             
             const resp = await listEmployees(requestData);
             if (resp.data?.code === 200) {
-                const list = resp.data.data?.list || [];
+                // 后端返回的数据在 data.employees.list 中
+                const employees = resp.data.data?.employees || resp.data.data || {};
+                const list = employees.list || [];
                 availableEmployees.value = list
                     .filter((e: any) => e.status === 1 && e.id !== handover.value.fromEmployeeId) // 只显示在职且不是发起人
                     .map((e: any) => ({
@@ -573,7 +575,7 @@ async function loadAvailableEmployees() {
     } catch (error) {
         console.error('加载员工列表失败:', error);
     } finally {
-        employeesLoading.value = false;
+        employeesLoading.value = false;   
     }
 }
 
