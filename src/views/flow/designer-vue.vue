@@ -950,7 +950,8 @@ async function loadTaskNodes() {
 function buildFlowGraph() {
   console.log('开始构建流程图，可用节点数:', availableNodes.value.length)
   const nodeMap = new Map<string, any>()
-  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID）  const newNodes: Node[] = []
+  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID）
+  const newNodes: Node[] = []
   const newEdges: Edge[] = []
   
   // 筛选出已安排的节点（有前置节点关系的节点）
