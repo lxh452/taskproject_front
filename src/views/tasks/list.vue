@@ -274,9 +274,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 使用全局主题色变量 */
 .tasks-page {
+  --page-primary: var(--color-primary, #4A90D9);
+  --page-primary-rgb: var(--color-primary-rgb, 74, 144, 217);
+  --page-primary-light: var(--color-primary-light, #E8F4FD);
+  
   padding: 20px;
-  background: #f9fafb;
+  background: var(--bg-page, #f9fafb);
   min-height: calc(100vh - 64px);
 }
 
@@ -342,7 +347,7 @@ onMounted(() => {
 
 .dot.danger { background: #ef4444; }
 .dot.warning { background: #f59e0b; }
-.dot.info { background: #3B82F6; }
+.dot.info { background: var(--page-primary); }
 .dot.success { background: #10b981; }
 
 /* 任务网格 */
@@ -385,7 +390,7 @@ onMounted(() => {
 
 .task-icon.danger { background: #fee2e2; color: #ef4444; }
 .task-icon.warning { background: #fef3c7; color: #f59e0b; }
-.task-icon.info { background: #e0e7ff; color: #3B82F6; }
+.task-icon.info { background: var(--page-primary-light); color: var(--page-primary); }
 .task-icon.success { background: #d1fae5; color: #10b981; }
 
 .status-badge {
@@ -431,7 +436,7 @@ onMounted(() => {
 .meta-item.priority .dot { width: 5px; height: 5px; }
 .meta-item.priority.danger { color: #ef4444; }
 .meta-item.priority.warning { color: #f59e0b; }
-.meta-item.priority.info { color: #3B82F6; }
+.meta-item.priority.info { color: var(--page-primary); }
 .meta-item.priority.success { color: #10b981; }
 
 .card-footer {

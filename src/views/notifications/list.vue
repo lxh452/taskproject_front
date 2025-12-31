@@ -648,7 +648,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 使用全局主题色变量 */
 .notifications-page {
+  --page-primary: var(--color-primary, #4A90D9);
+  --page-primary-rgb: var(--color-primary-rgb, 74, 144, 217);
+  --page-primary-light: var(--color-primary-light, #E8F4FD);
+  
   padding: clamp(16px, 1.5vw, 24px);
   background: var(--bg-page);
   min-height: calc(100vh - clamp(56px, 8vh, 64px));
@@ -941,7 +946,7 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 .form-label .el-icon {
-  color: #3B82F6;
+  color: var(--page-primary);
   font-size: 16px;
 }
 .form-label.required::after {

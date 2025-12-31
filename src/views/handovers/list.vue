@@ -348,9 +348,14 @@ onMounted(() => { loadData(); });
 </script>
 
 <style scoped>
+/* 使用全局主题色变量 */
 .handovers-page {
+  --page-primary: var(--color-primary, #4A90D9);
+  --page-primary-rgb: var(--color-primary-rgb, 74, 144, 217);
+  --page-primary-light: var(--color-primary-light, #E8F4FD);
+  
   padding: 20px;
-  background: #f9fafb;
+  background: var(--bg-page, #f9fafb);
   min-height: calc(100vh - 64px);
 }
 
@@ -410,7 +415,7 @@ onMounted(() => { loadData(); });
 }
 
 .stat-icon.warning { background: #fef3c7; color: #f59e0b; }
-.stat-icon.primary { background: #e0e7ff; color: #3B82F6; }
+.stat-icon.primary { background: var(--page-primary-light); color: var(--page-primary); }
 .stat-icon.success { background: #d1fae5; color: #10b981; }
 .stat-icon.default { background: #f3f4f6; color: #6b7280; }
 
@@ -483,7 +488,7 @@ onMounted(() => { loadData(); });
   border-radius: 4px;
 }
 
-.type-tag.task { background: #e0e7ff; color: #3B82F6; }
+.type-tag.task { background: var(--page-primary-light); color: var(--page-primary); }
 .type-tag.leave { background: #fef3c7; color: #d97706; }
 .type-tag.node { background: #d1fae5; color: #059669; }
 
@@ -525,7 +530,7 @@ onMounted(() => { loadData(); });
 }
 
 .flow-avatar.from { background: #64748b; color: #fff; font-weight: 600; }
-.flow-avatar.to { background: #3B82F6; color: #fff; font-weight: 600; }
+.flow-avatar.to { background: var(--page-primary); color: #fff; font-weight: 600; }
 
 .audit-badge {
   width: 36px;
