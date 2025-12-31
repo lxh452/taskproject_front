@@ -104,6 +104,68 @@
                     </div>
                 </div>
 
+                <!-- 涉及的任务（离职交接时显示） -->
+                <div class="info-section" v-if="isLeaveRequest && handover.involvedTasks && handover.involvedTasks.length > 0">
+                    <div class="section-title">
+                        <el-icon><Document /></el-icon>
+                        <span>涉及的任务 ({{ handover.involvedTasks.length }})</span>
+                    </div>
+                    <div class="involved-list">
+                        <div 
+                            v-for="task in handover.involvedTasks" 
+                            :key="task.taskId" 
+                            class="involved-item"
+                            @click="goToTask(task.taskId)"
+                        >
+                            <div class="involved-main">
+                                <span class="involved-name">{{ task.taskTitle }}</span>
+                                <el-tag size="small" :type="getTaskStatusType(task.status)">
+                                    {{ getTaskStatusText(task.status) }}
+                                </el-tag>
+                            </div>
+                            <div class="involved-meta">
+                                <span class="involved-role">{{ task.role }}</span>
+                                <span class="involved-deadline">截止: {{ task.deadline }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 涉及的任务节点（离职交接时显示） -->
+                <div class="info-section" v-if="isLeaveRequest && handover.involvedNodes && handover.involvedNodes.length > 0">
+                    <div class="section-title">
+                        <el-icon><List /></el-icon>
+                        <span>涉及的任务节点 ({{ handover.involvedNodes.length }})</span>
+                    </div>
+                    <div class="involved-list">
+                        <div 
+                            v-for="node in handover.involvedNodes" 
+                            :key="node.nodeId" 
+                            class="involved-item"
+                            @click="goToTask(node.taskId)"
+                        >
+                            <div class="involved-main">
+                                <span class="involved-name">{{ node.nodeName }}</span>
+                                <el-tag size="small" :type="getNodeStatusType(node.status)">
+                                    {{ getNodeStatusText(node.status) }}
+                                </el-tag>
+                            </div>
+                            <div class="involved-meta">
+                                <span class="involved-task">任务: {{ node.taskTitle }}</span>
+                                <span class="involved-role">{{ node.role }}</span>
+                            </div>
+                            <div class="involved-progress">
+                                <el-progress 
+                                    :percentage="node.progress || 0" 
+                                    :stroke-width="6"
+                                    :show-text="true"
+                                    style="width: 120px;"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 交接信息 -->
                 <div class="info-section">
                     <div class="section-title">
@@ -311,7 +373,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { 
     ArrowLeft, Right, Document, InfoFilled, 
     CircleCheck, CircleCheckFilled, CircleCloseFilled,
-    Check, Close, Edit, User, UserFilled, Clock
+    Check, Close, Edit, User, UserFilled, Clock, List
 } from '@element-plus/icons-vue';
 import { getHandover, approveHandover, confirmHandover, rejectHandover, getMyEmployee, listEmployees } from '@/api';
 import { useUserStore } from '@/store/user';
@@ -465,6 +527,57 @@ const waitingDesc = computed(() => {
 
 const goBack = () => {
     router.push('/handovers');
+};
+
+// 跳转到任务详情
+const goToTask = (taskId: string) => {
+    if (taskId) {
+        router.push(`/tasks/detail/${taskId}`);
+    }
+};
+
+// 获取任务状态类型
+const getTaskStatusType = (status: number) => {
+    const map: Record<number, string> = {
+        0: 'info',
+        1: 'warning',
+        2: 'success',
+        3: 'danger'
+    };
+    return map[status] || 'info';
+};
+
+// 获取任务状态文本
+const getTaskStatusText = (status: number) => {
+    const map: Record<number, string> = {
+        0: '未开始',
+        1: '进行中',
+        2: '已完成',
+        3: '已逾期'
+    };
+    return map[status] || '未知';
+};
+
+// 获取节点状态类型
+const getNodeStatusType = (status: number) => {
+    const map: Record<number, string> = {
+        0: 'info',
+        1: 'warning',
+        2: 'success',
+        3: 'danger'
+    };
+    return map[status] || 'info';
+};
+
+// 获取节点状态文本
+const getNodeStatusText = (status: number) => {
+    const map: Record<number, string> = {
+        0: '未开始',
+        1: '进行中',
+        2: '已完成',
+        3: '已逾期'
+    };
+    return map[status] || '未知';
 };
 
 // 接收人同意接收
@@ -714,7 +827,9 @@ const loadData = async () => {
                 status: data.handoverStatus ?? data.HandoverStatus ?? data.status ?? 0,
                 createTime: data.createTime || data.CreateTime || data.handoverTime || '-',
                 approveTime: data.approveTime || data.ApproveTime || '',
-                rejectReason: data.rejectReason || data.RejectReason || ''
+                rejectReason: data.rejectReason || data.RejectReason || '',
+                involvedTasks: data.involvedTasks || [],
+                involvedNodes: data.involvedNodes || []
             };
             
             // 如果是离职申请或ToEmployeeId为空，且需要审批，加载员工列表
@@ -1141,5 +1256,78 @@ onMounted(() => {
 
 :deep(.el-steps) {
     --el-color-primary: #3B82F6;
+}
+
+/* 涉及的任务和节点列表样式 */
+.involved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.involved-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.involved-item:hover {
+    background: #f1f5f9;
+    border-color: #3B82F6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.involved-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.involved-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.involved-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.involved-task {
+    color: #3B82F6;
+}
+
+.involved-role {
+    padding: 2px 8px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.involved-deadline {
+    color: #9ca3af;
+}
+
+.involved-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 </style>
