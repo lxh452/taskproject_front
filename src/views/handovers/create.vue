@@ -331,7 +331,7 @@ onMounted(() => {
 }
 
 .emp-avatar {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #3B82F6, #8b5cf6);
     color: #fff;
     font-size: 12px;
 }
@@ -409,16 +409,16 @@ onMounted(() => {
 }
 
 :deep(.el-select) {
-    --el-select-border-color-hover: #6366f1;
+    --el-select-border-color-hover: #3B82F6;
 }
 
 :deep(.el-button--primary) {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #3B82F6, #8b5cf6);
     border: none;
 }
 
 :deep(.el-button--primary:hover) {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: linear-gradient(135deg, #3B82F6, #7c3aed);
 }
 </style>
 

@@ -443,7 +443,7 @@ onMounted(async () => {
     color: #1f2937;
     margin: 0 0 16px 0;
     padding-left: 8px;
-    border-left: 3px solid #4f46e5;
+    border-left: 3px solid #3B82F6;
     line-height: 1.2;
 }
 

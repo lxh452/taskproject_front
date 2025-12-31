@@ -491,7 +491,7 @@ watch(() => form.departmentIds, () => {
 
 .section-icon {
     font-size: 20px;
-    color: #667eea;
+    color: #3B82F6;
 }
 
 .section-title {
@@ -588,14 +588,14 @@ watch(() => form.departmentIds, () => {
 .create-form :deep(.el-input__inner:hover),
 .create-form :deep(.el-select .el-input__inner:hover),
 .create-form :deep(.el-textarea__inner:hover) {
-    border-color: #667eea;
+    border-color: #3B82F6;
 }
 
 .create-form :deep(.el-input__inner:focus),
 .create-form :deep(.el-select .el-input__inner:focus),
 .create-form :deep(.el-textarea__inner:focus) {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-actions {
@@ -615,14 +615,14 @@ watch(() => form.departmentIds, () => {
 }
 
 .form-actions .el-button--primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
     border: none;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .form-actions .el-button--primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.45);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
 }
 
 .chooser-dialog :deep(.el-dialog__header) {

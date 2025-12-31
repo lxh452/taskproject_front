@@ -40,7 +40,7 @@
                 <!-- 统计卡片 -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);">
                             <el-icon><Document /></el-icon>
                         </div>
                         <div class="stat-content">
@@ -585,7 +585,7 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #10B981 50%, #f093fb 100%);
     z-index: 0;
 }
 
@@ -806,11 +806,11 @@ onMounted(() => {
 }
 
 .settings-tabs :deep(.el-tabs__item.is-active) {
-    color: #667eea;
+    color: #3B82F6;
 }
 
 .settings-tabs :deep(.el-tabs__active-bar) {
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #3B82F6, #10B981);
     height: 3px;
     border-radius: 3px 3px 0 0;
 }
@@ -867,7 +867,7 @@ onMounted(() => {
 
 .setting-item:hover {
     border-color: #c7d2fe;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
 }
 
 .setting-title {
@@ -882,7 +882,7 @@ onMounted(() => {
     color: #6b7280;
 }
 
-/* 头像编辑器 */
+/* 头像编辑�?*/
 .avatar-editor {
     display: flex;
     flex-direction: column;
@@ -1025,7 +1025,7 @@ onMounted(() => {
     color: #1f2937;
 }
 
-/* 响应式 */
+/* 响应�?*/
 @media (max-width: 768px) {
     .ucenter-page {
         padding: 0;

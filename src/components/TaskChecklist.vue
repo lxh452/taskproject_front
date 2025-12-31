@@ -459,7 +459,7 @@ defineExpose({
 
 .header-icon {
     font-size: 16px;
-    color: #6366f1;
+    color: #3B82F6;
 }
 
 .header-title {
@@ -470,7 +470,7 @@ defineExpose({
 
 .stats-tag {
     background: #eef2ff;
-    color: #6366f1;
+    color: #3B82F6;
     border: none;
 }
 
@@ -562,7 +562,7 @@ defineExpose({
 }
 
 .checklist-item.own-item {
-    border-left: 3px solid #6366f1;
+    border-left: 3px solid #3B82F6;
 }
 
 .item-left {
@@ -612,7 +612,7 @@ defineExpose({
 }
 
 .creator-avatar {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
     color: white;
     font-size: 10px;
     flex-shrink: 0;
@@ -688,7 +688,7 @@ defineExpose({
 }
 
 .content-input :deep(.el-textarea__inner:focus) {
-    border-color: #6366f1;
+    border-color: #3B82F6;
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
 }
 

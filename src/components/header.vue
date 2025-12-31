@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="header-container">
     <div class="header-left">
       <div class="collapse-trigger" @click="collapseChage">
@@ -789,7 +789,7 @@ onUnmounted(() => {
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, var(--color-primary, #4f46e5) 0%, var(--color-primary-hover, #4338ca) 100%);
+  background: linear-gradient(135deg, var(--color-primary, #3B82F6) 0%, var(--color-primary-hover, #2563EB) 100%);
   color: #fff;
   font-weight: 600;
   font-size: 14px;
@@ -877,7 +877,7 @@ onUnmounted(() => {
 
 .checklist-item:hover {
   background: var(--bg-hover, #f1f5f9);
-  border-left-color: var(--color-primary, #4f46e5);
+  border-left-color: var(--color-primary, #3B82F6);
   transform: translateX(2px);
 }
 
@@ -923,7 +923,7 @@ onUnmounted(() => {
 
 .task-info:hover,
 .node-info:hover {
-  color: var(--color-primary, #4f46e5);
+  color: var(--color-primary, #3B82F6);
 }
 
 .meta-icon {
@@ -954,7 +954,7 @@ onUnmounted(() => {
 
 .notification-item:hover {
   background: var(--bg-hover, #f1f5f9);
-  border-left-color: var(--color-primary, #4f46e5);
+  border-left-color: var(--color-primary, #3B82F6);
   transform: translateX(2px);
 }
 

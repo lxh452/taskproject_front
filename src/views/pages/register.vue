@@ -281,10 +281,10 @@ const submitForm = (formEl: FormInstance | undefined) => {
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
+    -webkit-text-stroke: 2px rgba(59, 130, 246, 0.15);
     text-shadow: 
-        0 0 80px rgba(79, 70, 229, 0.1),
-        0 0 120px rgba(79, 70, 229, 0.05);
+        0 0 80px rgba(59, 130, 246, 0.1),
+        0 0 120px rgba(59, 130, 246, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;
@@ -364,8 +364,8 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     background-color: #fff;
 }
 
@@ -385,7 +385,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .password-toggle:hover {
-    color: #4f46e5;
+    color: #3B82F6;
 }
 
 .login-form :deep(.el-input-group__prepend) {
@@ -402,7 +402,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
     color: #ffffff;
     border: none;
     transition: all 0.3s;
@@ -412,9 +412,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .login-btn:hover {
-    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #059669 100%);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
 }
 
 .login-text {
@@ -427,7 +427,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .register-link {
-    color: #4f46e5;
+    color: #3B82F6;
     cursor: pointer;
     margin-left: 5px;
     transition: color 0.3s;
@@ -435,7 +435,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .register-link:hover {
-    color: #4338ca;
+    color: #2563EB;
     text-decoration: underline;
 }
 
@@ -455,7 +455,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
     border: none;
     color: #fff;
 }
@@ -466,6 +466,6 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .send-code-btn:not(:disabled):hover {
-    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #059669 100%);
 }
 </style>

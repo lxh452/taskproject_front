@@ -241,18 +241,18 @@ onMounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .ai-bubble:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
 }
 
 .ai-bubble.loading {
@@ -289,7 +289,7 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   border-radius: 50%;
-  background: rgba(79, 70, 229, 0.4);
+  background: rgba(59, 130, 246, 0.4);
   animation: pulse-ring 2s ease-out infinite;
 }
 
@@ -367,7 +367,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -406,7 +406,7 @@ onMounted(() => {
   align-items: flex-start;
   gap: 10px;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.06) 0%, rgba(124, 58, 237, 0.06) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(124, 58, 237, 0.06) 100%);
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 13px;
@@ -646,10 +646,10 @@ html.dark-mode .ai-panel {
 }
 
 html.dark-mode .panel-header {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
 }
 
 html.dark-mode .ai-analysis {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(124, 58, 237, 0.12) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(124, 58, 237, 0.12) 100%);
 }
 </style>

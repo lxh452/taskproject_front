@@ -257,7 +257,7 @@ onMounted(() => {
 
 .column-header.pending {
     background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    border-color: #6366f1;
+    border-color: #3B82F6;
 }
 
 .column-header.in-progress {

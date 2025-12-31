@@ -26,11 +26,11 @@ body {
 /* ==================== Design Token System ==================== */
 :root {
   /* === 品牌色 (Primary Colors) === */
-  --color-primary: #4f46e5;           /* Indigo 600 - Main brand color */
-  --color-primary-light: #eef2ff;     /* Indigo 50 - Light variant */
-  --color-primary-hover: #4338ca;     /* Indigo 700 - Hover state */
-  --color-primary-active: #3730a3;    /* Indigo 800 - Active state */
-  --color-primary-rgb: 79, 70, 229;   /* RGB for opacity usage */
+  --color-primary: #4A90D9;           /* Blue - Main brand color */
+  --color-primary-light: #E8F4FD;     /* Light blue - Light variant */
+  --color-primary-hover: #3B82C4;     /* Deep blue - Hover state */
+  --color-primary-active: #2D6BA8;    /* Darker blue - Active state */
+  --color-primary-rgb: 74, 144, 217;  /* RGB for opacity usage */
   
   /* === 语义色 (Semantic Colors) === */
   --color-success: #10b981;           /* Emerald 500 */
@@ -50,7 +50,7 @@ body {
   --color-info-dark: #2563eb;         /* Blue 600 */
   
   /* === 中性色 (Neutral Colors) === */
-  --bg-page: #f8fafc;                 /* Slate 50 - Page background */
+  --bg-page: #F8FBFD;                 /* Light blue tint - Page background */
   --bg-card: #ffffff;                 /* White - Card background */
   --bg-hover: #f1f5f9;                /* Slate 100 - Hover state */
   --bg-active: #e2e8f0;               /* Slate 200 - Active state */
@@ -163,11 +163,11 @@ body {
 /* ==================== 深色模式变量 (Dark Mode Variables) ==================== */
 html.dark-mode {
   /* === 品牌色调整 === */
-  --color-primary: #818cf8;           /* Indigo 400 */
-  --color-primary-light: rgba(99, 102, 241, 0.15);
-  --color-primary-hover: #a5b4fc;     /* Indigo 300 */
-  --color-primary-active: #c7d2fe;    /* Indigo 200 */
-  --color-primary-rgb: 129, 140, 248;
+  --color-primary: #6BB3E9;           /* Light blue for dark mode */
+  --color-primary-light: rgba(74, 144, 217, 0.15);
+  --color-primary-hover: #8BC5F0;     /* Lighter blue - Hover state */
+  --color-primary-active: #A8D4F5;    /* Even lighter - Active state */
+  --color-primary-rgb: 107, 179, 233;
   
   /* === 语义色调整 === */
   --color-success: #34d399;           /* Emerald 400 */
@@ -564,9 +564,9 @@ html.dark-mode .el-message__content {
 
 /* 深色模式标签 */
 html.dark-mode .el-tag {
-  background-color: rgba(99, 102, 241, 0.15) !important;
-  border-color: rgba(99, 102, 241, 0.3) !important;
-  color: #a5b4fc !important;
+  background-color: rgba(74, 144, 217, 0.15) !important;
+  border-color: rgba(74, 144, 217, 0.3) !important;
+  color: #8BC5F0 !important;
 }
 
 /* 深色模式进度条 */

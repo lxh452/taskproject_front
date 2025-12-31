@@ -627,10 +627,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 使用全局主题色变量 */
 .org-tree-page {
+    --page-primary: var(--color-primary, #4A90D9);
+    --page-primary-rgb: var(--color-primary-rgb, 74, 144, 217);
+    --page-primary-light: var(--color-primary-light, #E8F4FD);
+    
     padding: 28px;
     min-height: calc(100vh - 100px);
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    background: linear-gradient(135deg, var(--bg-page, #f5f7fa) 0%, #e4e8f0 100%);
 }
 
 /* 页面头部 */
@@ -693,8 +698,8 @@ onMounted(() => {
 }
 
 .search-input :deep(.el-input__wrapper.is-focus) {
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
-    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 16px rgba(var(--page-primary-rgb), 0.15);
+    border-color: rgba(var(--page-primary-rgb), 0.3);
 }
 
 /* 主内容区域 */
@@ -743,13 +748,13 @@ onMounted(() => {
 .column-header {
     margin-bottom: 20px;
     padding-bottom: 14px;
-    border-bottom: 2px solid rgba(99, 102, 241, 0.1);
+    border-bottom: 2px solid rgba(var(--page-primary-rgb), 0.1);
 }
 
 .column-title {
     font-size: 11px;
     font-weight: 700;
-    color: #6366f1;
+    color: var(--page-primary);
     letter-spacing: 1.5px;
     text-transform: uppercase;
 }
@@ -770,12 +775,12 @@ onMounted(() => {
 }
 
 .column-content::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(var(--page-primary-rgb), 0.2);
     border-radius: 10px;
 }
 
 .column-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.4);
+    background: rgba(var(--page-primary-rgb), 0.4);
 }
 
 /* 组织卡片 */
@@ -802,15 +807,15 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(var(--page-primary-rgb), 0.05) 0%, rgba(var(--page-primary-rgb), 0.08) 100%);
     opacity: 0;
     transition: opacity 0.35s ease;
 }
 
 .org-card:hover {
     transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
-    border-color: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 8px 24px rgba(var(--page-primary-rgb), 0.12);
+    border-color: rgba(var(--page-primary-rgb), 0.2);
 }
 
 .org-card:hover::before {
@@ -818,10 +823,10 @@ onMounted(() => {
 }
 
 .org-card.active {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
     border-color: transparent;
     color: white;
-    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.35);
+    box-shadow: 0 8px 28px rgba(var(--page-primary-rgb), 0.35);
     transform: translateY(-2px);
 }
 
@@ -846,8 +851,8 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    color: #6366f1;
+    background: linear-gradient(135deg, var(--page-primary-light) 0%, rgba(var(--page-primary-rgb), 0.15) 100%);
+    color: var(--page-primary);
     border-radius: 12px;
     flex-shrink: 0;
     transition: all 0.35s ease;
@@ -917,7 +922,7 @@ onMounted(() => {
 
 .org-card:hover .card-arrow {
     transform: translateX(4px);
-    color: #6366f1;
+    color: var(--page-primary);
 }
 
 .org-card.active .card-arrow {
@@ -989,7 +994,7 @@ onMounted(() => {
 .detail-avatar {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -998,7 +1003,7 @@ onMounted(() => {
     font-weight: 700;
     color: white;
     flex-shrink: 0;
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 24px rgba(var(--page-primary-rgb), 0.3);
 }
 
 .detail-title-section {
@@ -1121,7 +1126,7 @@ onMounted(() => {
 .task-item:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateX(6px);
-    border-color: rgba(99, 102, 241, 0.3);
+    border-color: rgba(var(--page-primary-rgb), 0.3);
 }
 
 .task-name {
@@ -1210,7 +1215,7 @@ onMounted(() => {
     gap: 14px;
     align-items: center;
     padding: 18px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
     color: white;
 }
 

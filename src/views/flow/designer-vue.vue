@@ -641,7 +641,7 @@ function filterNodesByDepartment() {
 
 function buildPalette(index: number): { color: string; bgFrom: string; bgTo: string } {
   const palette = [
-    { color: '#667eea', bgFrom: '#f0f4ff', bgTo: '#e0e9ff' },
+    { color: '#3B82F6', bgFrom: '#EFF6FF', bgTo: '#DBEAFE' },
     { color: '#4ade80', bgFrom: '#f0fdf4', bgTo: '#dcfce7' },
     { color: '#f59e0b', bgFrom: '#fffbeb', bgTo: '#fef3c7' },
     { color: '#f5576c', bgFrom: '#fff1f2', bgTo: '#ffe4e6' },
@@ -690,7 +690,7 @@ async function loadDepartments(companyId: string) {
 const edgeOptions = {
   type: 'smoothstep',
   markerEnd: MarkerType.ArrowClosed,
-  style: { strokeWidth: 3, stroke: '#667eea' },
+  style: { strokeWidth: 3, stroke: '#3B82F6' },
   selectable: true,
   animated: true,
   deletable: false, // 我们通过右侧面板删除，不使用默认删除功能
@@ -948,10 +948,9 @@ async function loadTaskNodes() {
 }
 
 function buildFlowGraph() {
-  console.log('开始构建流程图，可用节点数量:', availableNodes.value.length)
+  console.log('开始构建流程图，可用节点数�?', availableNodes.value.length)
   const nodeMap = new Map<string, any>()
-  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID）
-  const newNodes: Node[] = []
+  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID�?  const newNodes: Node[] = []
   const newEdges: Edge[] = []
   
   // 筛选出已安排的节点（有前置节点关系的节点）
@@ -1054,7 +1053,7 @@ function buildFlowGraph() {
     position: { x: 100, y: 200 },
     data: { label: '开始' },
     style: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #3B82F6 0%, #10B981 100%)',
       color: '#fff',
       border: 'none',
       borderRadius: '12px',
@@ -2273,7 +2272,7 @@ const nodeTypes = {
 
 .title-icon {
   font-size: 22px;
-  color: #6366f1;
+  color: #3B82F6;
 }
 
 .task-selector {
@@ -2357,7 +2356,7 @@ const nodeTypes = {
 
 .header-icon {
   font-size: 20px;
-  color: #6366f1;
+  color: #3B82F6;
 }
 
 .header-title {
@@ -2468,7 +2467,7 @@ const nodeTypes = {
 /* 触摸拖拽预览样式 */
 .touch-drag-preview {
   background: rgba(255, 255, 255, 0.95) !important;
-  border: 2px solid #6366f1 !important;
+  border: 2px solid #3B82F6 !important;
   border-radius: 12px !important;
   padding: 12px !important;
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3) !important;
@@ -2526,7 +2525,7 @@ const nodeTypes = {
 
 .node-type-badge.type-task {
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  color: #6366f1;
+  color: #3B82F6;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
@@ -2657,7 +2656,7 @@ const nodeTypes = {
 .section-title {
   font-size: 12px;
   font-weight: 700;
-  color: #6366f1;
+  color: #3B82F6;
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(99, 102, 241, 0.1);
@@ -2894,12 +2893,12 @@ const nodeTypes = {
   color: #94a3b8;
 }
 
-/* Vue Flow 连接点样式 - 精美设计 */
+/* Vue Flow 连接点样�?- 精美设计 */
 :deep(.vue-flow__handle) {
   width: 16px !important;
   height: 16px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%) !important;
   border: 3px solid #fff !important;
   opacity: 0 !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -2922,7 +2921,7 @@ const nodeTypes = {
 :deep(.vue-flow__handle:hover) {
   width: 20px !important;
   height: 20px !important;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  background: linear-gradient(135deg, #3B82F6 0%, #7c3aed 100%) !important;
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
   cursor: grabbing !important;
 }
@@ -3020,7 +3019,7 @@ const nodeTypes = {
 
 :deep(.vue-flow__controls-button:hover) {
   background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  color: #3B82F6;
 }
 
 :deep(.vue-flow__controls-button:last-child) {
@@ -3272,12 +3271,12 @@ const nodeTypes = {
     font-size: 14px;
   }
 
-  /* 隐藏小地图在手机上 */
+  /* 隐藏小地图在手机�?*/
   :deep(.vue-flow__minimap) {
     display: none;
   }
 
-  /* 调整控制按钮位置和大小 */
+  /* 调整控制按钮位置和大�?*/
   :deep(.vue-flow__controls) {
     bottom: 10px !important;
     right: 10px !important;

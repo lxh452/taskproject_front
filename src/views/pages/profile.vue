@@ -110,7 +110,7 @@
                     <el-input 
                         v-model="passwordForm.oldPassword" 
                         type="password" 
-                        placeholder="请输入当前密码"
+                        placeholder="请输入当前密�?
                         show-password
                     />
                 </el-form-item>
@@ -344,12 +344,12 @@ onMounted(() => {
 }
 
 .user-avatar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
     color: white;
     font-size: 48px;
     font-weight: 600;
     border: 4px solid #e5e7eb;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 
 .avatar-uploader {

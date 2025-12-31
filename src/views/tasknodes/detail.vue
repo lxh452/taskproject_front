@@ -390,7 +390,7 @@ onMounted(async () => {
 }
 
 .back-btn:hover {
-    color: #6366f1;
+    color: #3B82F6;
     transform: translateX(-2px);
 }
 
@@ -500,7 +500,7 @@ onMounted(async () => {
 .progress-value {
     font-size: 18px;
     font-weight: 700;
-    color: #6366f1;
+    color: #3B82F6;
 }
 
 .progress-hint {
@@ -537,7 +537,7 @@ onMounted(async () => {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -595,7 +595,7 @@ onMounted(async () => {
     background: #f9fafb;
     padding: 16px;
     border-radius: 8px;
-    border-left: 4px solid #6366f1;
+    border-left: 4px solid #3B82F6;
 }
 
 /* 清单卡片 */

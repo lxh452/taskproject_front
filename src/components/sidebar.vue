@@ -32,7 +32,7 @@
             :collapse-transition="false"
             background-color="transparent"
             text-color="#64748b"
-            active-text-color="#4f46e5"
+            active-text-color="#3B82F6"
             router
             @select="handleMenuSelect"
         >

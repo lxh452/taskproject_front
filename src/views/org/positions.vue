@@ -419,13 +419,13 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     padding: 0 20px; 
     border-radius: 10px; 
     font-weight: 500; 
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); 
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
     border: none; 
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 .create-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .main-content {
@@ -459,7 +459,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     color: var(--text-main);
 }
 .sidebar-icon {
-    color: #4f46e5;
+    color: #3B82F6;
     font-size: 18px;
 }
 
@@ -487,11 +487,11 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     border: 1px solid #a5b4fc;
 }
 .dept-item.active .dept-item-name {
-    color: #4f46e5;
+    color: #3B82F6;
     font-weight: 600;
 }
 .dept-item.active .dept-item-icon {
-    color: #4f46e5;
+    color: #3B82F6;
 }
 
 .dept-item-main {
@@ -569,7 +569,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     gap: 8px;
 }
 .section-title .el-icon {
-    color: #4f46e5;
+    color: #3B82F6;
 }
 .position-count {
     font-size: 13px;
@@ -626,7 +626,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4f46e5;
+    color: #3B82F6;
     font-size: 20px;
 }
 .status-dot {
@@ -750,7 +750,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #4f46e5;
+    background: #3B82F6;
     color: white;
     display: flex;
     align-items: center;

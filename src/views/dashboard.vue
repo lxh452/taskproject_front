@@ -348,8 +348,8 @@ function buildCharts(list: any[]) {
           itemStyle: { shadowBlur: 20, shadowColor: 'rgba(0,0,0,0.15)' }
         },
         data: [
-          { value: statusData.done, name: '已完成', itemStyle: { color: '#10b981' } },
-          { value: statusData.inProgress, name: '进行中', itemStyle: { color: '#4f46e5' } },
+          { value: statusData.done, name: '已完成', itemStyle: { color: '#2DD4A8' } },
+          { value: statusData.inProgress, name: '进行中', itemStyle: { color: '#4A90D9' } },
           { value: statusData.review, name: '审核中', itemStyle: { color: '#f59e0b' } },
           { value: statusData.todo, name: '待办', itemStyle: { color: '#9ca3af' } }
         ]
@@ -386,7 +386,7 @@ function buildCharts(list: any[]) {
         type: 'bar',
         data: [
           { value: priorityData.low, itemStyle: { color: '#9ca3af', borderRadius: [6, 6, 0, 0] } },
-          { value: priorityData.medium, itemStyle: { color: '#4f46e5', borderRadius: [6, 6, 0, 0] } },
+          { value: priorityData.medium, itemStyle: { color: '#4A90D9', borderRadius: [6, 6, 0, 0] } },
           { value: priorityData.high, itemStyle: { color: '#f59e0b', borderRadius: [6, 6, 0, 0] } },
           { value: priorityData.critical, itemStyle: { color: '#ef4444', borderRadius: [6, 6, 0, 0] } }
         ],
@@ -414,12 +414,12 @@ onMounted(loadData);
 /* ==================== Welcome Section ==================== */
 .welcome-section {
   position: relative;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #4A90D9 0%, #3B82C4 50%, #2DD4A8 100%);
   border-radius: var(--radius-xl, 16px);
   padding: 32px 40px;
   margin-bottom: 28px;
   overflow: hidden;
-  box-shadow: 0 10px 40px -10px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 10px 40px -10px rgba(74, 144, 217, 0.4);
 }
 
 .welcome-content {
@@ -574,9 +574,9 @@ onMounted(loadData);
 }
 
 /* Card Variants */
-.stat-total::before { background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+.stat-total::before { background: linear-gradient(90deg, #4A90D9, #3B82C4); }
 .stat-pending::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.stat-completed::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.stat-completed::before { background: linear-gradient(90deg, #2DD4A8, #34d399); }
 .stat-critical::before { background: linear-gradient(90deg, #ef4444, #f87171); }
 
 /* Icon Wrapper */
@@ -601,9 +601,9 @@ onMounted(loadData);
   color: #fff;
 }
 
-.stat-total .stat-icon { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.stat-total .stat-icon { background: linear-gradient(135deg, #4A90D9, #3B82C4); }
 .stat-pending .stat-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.stat-completed .stat-icon { background: linear-gradient(135deg, #10b981, #34d399); }
+.stat-completed .stat-icon { background: linear-gradient(135deg, #2DD4A8, #34d399); }
 .stat-critical .stat-icon { background: linear-gradient(135deg, #ef4444, #f87171); }
 
 /* Icon Ring Animation */
@@ -619,9 +619,9 @@ onMounted(loadData);
   transition: all 0.3s ease;
 }
 
-.stat-total .stat-ring { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+.stat-total .stat-ring { box-shadow: 0 0 0 0 rgba(74, 144, 217, 0.4); }
 .stat-pending .stat-ring { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-.stat-completed .stat-ring { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+.stat-completed .stat-ring { box-shadow: 0 0 0 0 rgba(45, 212, 168, 0.4); }
 .stat-critical .stat-ring { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
 
 .stat-card:hover .stat-ring {
@@ -721,7 +721,7 @@ onMounted(loadData);
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, #2DD4A8, #34d399);
   border-radius: 0 0 0 12px;
   transition: width 1s ease-out;
 }
@@ -1034,8 +1034,8 @@ onMounted(loadData);
 
 /* ==================== Dark Mode Adjustments ==================== */
 html.dark-mode .welcome-section {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
-  box-shadow: 0 10px 40px -10px rgba(79, 70, 229, 0.3);
+  background: linear-gradient(135deg, #3B82C4 0%, #2D6BA8 50%, #2DD4A8 100%);
+  box-shadow: 0 10px 40px -10px rgba(74, 144, 217, 0.3);
 }
 
 html.dark-mode .stat-card {

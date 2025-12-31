@@ -910,7 +910,7 @@ onMounted(() => {
 }
 
 .section-title .el-icon {
-    color: #6366f1;
+    color: #3B82F6;
 }
 
 .info-grid {
@@ -946,7 +946,7 @@ onMounted(() => {
 }
 
 .info-value.task-title {
-    color: #6366f1;
+    color: #3B82F6;
     font-weight: 600;
 }
 
@@ -1036,7 +1036,7 @@ onMounted(() => {
 }
 
 .approver-actions {
-    border: 2px solid #6366f1;
+    border: 2px solid #3B82F6;
 }
 
 .actions-title {
@@ -1054,7 +1054,7 @@ onMounted(() => {
 }
 
 .approver-actions .actions-title .el-icon {
-    color: #6366f1;
+    color: #3B82F6;
 }
 
 .actions-hint {
@@ -1131,15 +1131,15 @@ onMounted(() => {
 }
 
 :deep(.el-button--primary) {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #3B82F6, #8b5cf6);
     border: none;
 }
 
 :deep(.el-button--primary:hover) {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: linear-gradient(135deg, #3B82F6, #7c3aed);
 }
 
 :deep(.el-steps) {
-    --el-color-primary: #6366f1;
+    --el-color-primary: #3B82F6;
 }
 </style>

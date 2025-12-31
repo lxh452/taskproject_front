@@ -763,7 +763,7 @@ onBeforeUnmount(() => {
     --text-secondary: #6b7280;
     --text-muted: #9ca3af;
     --border-color: #e5e7eb;
-    --accent-color: #4f46e5;
+    --accent-color: #3B82F6;
     --accent-light: #eef2ff;
     --shadow: 0 1px 3px rgba(0,0,0,0.05);
     --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
@@ -790,7 +790,7 @@ onBeforeUnmount(() => {
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
     --border-color: #334155;
-    --accent-color: #6366f1;
+    --accent-color: #3B82F6;
     --accent-light: rgba(99, 102, 241, 0.15);
     --shadow: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
@@ -856,7 +856,7 @@ onBeforeUnmount(() => {
 
 .sheet-select { width: 160px; }
 
-/* ========== 主内容 ========== */
+/* ========== 主内�?========== */
 .preview-main { flex: 1; display: flex; overflow: hidden; }
 
 .content-section { flex: 1; overflow: auto; background: var(--bg-page); }

@@ -626,12 +626,12 @@ function openDesigner() {
 .form-actions .el-button--primary {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     border: none;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .form-actions .el-button--primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.45);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
 }
 
 .form-actions .el-button--success {

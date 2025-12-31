@@ -56,6 +56,24 @@
                         <div class="info-value">{{ formatId(taskInfo.id) }}</div>
                     </div>
                 </div>
+                <div class="info-card" @mouseenter="showTooltip($event, '负责人', getLeaderName())" @mouseleave="hideTooltip">
+                    <div class="info-icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                        <el-icon><User /></el-icon>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">负责人</div>
+                        <div class="info-value">{{ getLeaderName() }}</div>
+                    </div>
+                </div>
+                <div class="info-card" @mouseenter="showTooltip($event, '执行人', getResponsibleNames())" @mouseleave="hideTooltip">
+                    <div class="info-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <el-icon><User /></el-icon>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">执行人</div>
+                        <div class="info-value">{{ getResponsibleNames() }}</div>
+                    </div>
+                </div>
                 <div class="info-card" @mouseenter="showTooltip($event, '截止时间', formatTime(taskInfo.deadline))" @mouseleave="hideTooltip">
                     <div class="info-icon" style="background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">
                         <el-icon><Calendar /></el-icon>
@@ -664,6 +682,49 @@
                         placeholder="请输入任务描述" 
                     />
                 </el-form-item>
+                <el-form-item label="负责人" prop="leaderId">
+                    <el-select 
+                        v-model="editForm.leaderId" 
+                        placeholder="选择任务负责人" 
+                        filterable 
+                        clearable
+                        style="width: 100%"
+                    >
+                        <el-option 
+                            v-for="emp in employeeOptions" 
+                            :key="emp.id" 
+                            :label="emp.name" 
+                            :value="emp.id"
+                        >
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-avatar :size="24">{{ emp.name?.[0] || 'U' }}</el-avatar>
+                                <span>{{ emp.name }}</span>
+                            </div>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="执行人" prop="responsibleEmployeeIds">
+                    <el-select 
+                        v-model="editForm.responsibleEmployeeIds" 
+                        placeholder="选择任务执行人（可多选）" 
+                        filterable 
+                        multiple
+                        clearable
+                        style="width: 100%"
+                    >
+                        <el-option 
+                            v-for="emp in employeeOptions" 
+                            :key="emp.id" 
+                            :label="emp.name" 
+                            :value="emp.id"
+                        >
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-avatar :size="24">{{ emp.name?.[0] || 'U' }}</el-avatar>
+                                <span>{{ emp.name }}</span>
+                            </div>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
                 <el-form-item label="优先级" prop="priority">
                     <el-select v-model="editForm.priority" style="width: 100%">
                         <el-option label="紧急" :value="1" />
@@ -845,7 +906,9 @@ const editForm = ref({
     taskDescription: '',
     priority: 3,
     deadline: '',
-    estimatedHours: 0
+    estimatedHours: 0,
+    leaderId: '',
+    responsibleEmployeeIds: [] as string[]
 });
 const editRules: FormRules = {
     taskTitle: [
@@ -853,6 +916,15 @@ const editRules: FormRules = {
         { min: 2, max: 100, message: '标题长度2-100个字符', trigger: 'blur' }
     ]
 };
+
+// 员工选项列表（用于编辑对话框）
+const employeeOptions = computed(() => {
+    return Object.values(employeesMap.value).map((emp: any) => ({
+        id: emp.id,
+        name: emp.name,
+        avatar: emp.avatar
+    }));
+});
 
 // 判断是否可以编辑任务（使用后端返回的 isFullAccess 字段）
 const canEditTask = computed(() => {
@@ -1013,6 +1085,29 @@ function getNodeStatusType(status: number) {
     return status === 2 ? 'success' : status === 1 ? 'warning' : 'info';
 }
 
+// 获取任务负责人名称
+function getLeaderName(): string {
+    if (!taskInfo.value) return '-';
+    const leaderId = taskInfo.value.leaderId || taskInfo.value.LeaderId || '';
+    if (!leaderId) return '-';
+    const emp = employeesMap.value[String(leaderId)];
+    return emp?.name || formatId(leaderId);
+}
+
+// 获取任务执行人名称列表
+function getResponsibleNames(): string {
+    if (!taskInfo.value) return '-';
+    const respIds = taskInfo.value.responsibleEmployeeIds || taskInfo.value.ResponsibleEmployeeIds || '';
+    if (!respIds) return '-';
+    const ids = respIds.split(',').map((id: string) => id.trim()).filter(Boolean);
+    if (ids.length === 0) return '-';
+    const names = ids.map((id: string) => {
+        const emp = employeesMap.value[String(id)];
+        return emp?.name || formatId(id);
+    });
+    return names.join(', ');
+}
+
 function getLogTypeColor(logType: string) {
     if (logType.includes('创建')) return 'success';
     if (logType.includes('完成')) return 'success';
@@ -1040,13 +1135,23 @@ function goBack() {
 // 打开编辑对话框
 function openEditDialog() {
     if (!taskInfo.value) return;
+    
+    // 解析执行人ID列表
+    let responsibleIds: string[] = [];
+    const respIds = taskInfo.value.responsibleEmployeeIds || taskInfo.value.ResponsibleEmployeeIds || '';
+    if (respIds) {
+        responsibleIds = respIds.split(',').map((id: string) => id.trim()).filter(Boolean);
+    }
+    
     editForm.value = {
         taskId: taskInfo.value.id || '',
         taskTitle: taskInfo.value.taskTitle || '',
         taskDescription: taskInfo.value.taskDescription || '',
         priority: taskInfo.value.priority || 3,
         deadline: taskInfo.value.deadline || '',
-        estimatedHours: taskInfo.value.estimatedHours || 0
+        estimatedHours: taskInfo.value.estimatedHours || 0,
+        leaderId: taskInfo.value.leaderId || taskInfo.value.LeaderId || '',
+        responsibleEmployeeIds: responsibleIds
     };
     showEditDialog.value = true;
 }
@@ -1066,7 +1171,9 @@ async function submitEdit() {
                 taskDescription: editForm.value.taskDescription,
                 priority: editForm.value.priority,
                 deadline: editForm.value.deadline,
-                estimatedHours: editForm.value.estimatedHours
+                estimatedHours: editForm.value.estimatedHours,
+                leaderId: editForm.value.leaderId,
+                responsibleEmployeeIds: editForm.value.responsibleEmployeeIds.join(',')
             });
             
             if (resp.data?.code === 200) {

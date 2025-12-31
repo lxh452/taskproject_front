@@ -410,7 +410,7 @@ onMounted(() => { loadData(); });
 }
 
 .stat-icon.warning { background: #fef3c7; color: #f59e0b; }
-.stat-icon.primary { background: #e0e7ff; color: #4f46e5; }
+.stat-icon.primary { background: #e0e7ff; color: #3B82F6; }
 .stat-icon.success { background: #d1fae5; color: #10b981; }
 .stat-icon.default { background: #f3f4f6; color: #6b7280; }
 
@@ -483,7 +483,7 @@ onMounted(() => { loadData(); });
   border-radius: 4px;
 }
 
-.type-tag.task { background: #e0e7ff; color: #4f46e5; }
+.type-tag.task { background: #e0e7ff; color: #3B82F6; }
 .type-tag.leave { background: #fef3c7; color: #d97706; }
 .type-tag.node { background: #d1fae5; color: #059669; }
 
@@ -525,7 +525,7 @@ onMounted(() => { loadData(); });
 }
 
 .flow-avatar.from { background: #64748b; color: #fff; font-weight: 600; }
-.flow-avatar.to { background: #4f46e5; color: #fff; font-weight: 600; }
+.flow-avatar.to { background: #3B82F6; color: #fff; font-weight: 600; }
 
 .audit-badge {
   width: 36px;

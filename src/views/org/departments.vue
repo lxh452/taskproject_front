@@ -464,7 +464,7 @@ onMounted(() => { loadData(); });
   font-size: 22px;
 }
 
-.stat-icon.total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+.stat-icon.total { background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%); color: #fff; }
 .stat-icon.active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
 .stat-icon.inactive { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: #fff; }
 .stat-icon.members { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
@@ -542,7 +542,7 @@ onMounted(() => { loadData(); });
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -555,7 +555,7 @@ onMounted(() => { loadData(); });
 }
 
 .more-btn:hover {
-  color: #6366f1;
+  color: #3B82F6;
   background: #f3f4f6;
 }
 
@@ -623,7 +623,7 @@ onMounted(() => { loadData(); });
   flex: 1;
 }
 
-/* 空状态 */
+/* 空状�?*/
 .empty-state {
   padding: 80px 40px;
   background: #fff;
@@ -650,7 +650,7 @@ onMounted(() => { loadData(); });
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -685,7 +685,7 @@ onMounted(() => { loadData(); });
   color: #374151;
 }
 
-/* 响应式 */
+/* 响应�?*/
 @media (max-width: 1200px) {
   .stats-row {
     grid-template-columns: repeat(2, 1fr);

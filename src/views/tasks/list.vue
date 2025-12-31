@@ -342,7 +342,7 @@ onMounted(() => {
 
 .dot.danger { background: #ef4444; }
 .dot.warning { background: #f59e0b; }
-.dot.info { background: #4f46e5; }
+.dot.info { background: #3B82F6; }
 .dot.success { background: #10b981; }
 
 /* 任务网格 */
@@ -385,7 +385,7 @@ onMounted(() => {
 
 .task-icon.danger { background: #fee2e2; color: #ef4444; }
 .task-icon.warning { background: #fef3c7; color: #f59e0b; }
-.task-icon.info { background: #e0e7ff; color: #4f46e5; }
+.task-icon.info { background: #e0e7ff; color: #3B82F6; }
 .task-icon.success { background: #d1fae5; color: #10b981; }
 
 .status-badge {
@@ -431,7 +431,7 @@ onMounted(() => {
 .meta-item.priority .dot { width: 5px; height: 5px; }
 .meta-item.priority.danger { color: #ef4444; }
 .meta-item.priority.warning { color: #f59e0b; }
-.meta-item.priority.info { color: #4f46e5; }
+.meta-item.priority.info { color: #3B82F6; }
 .meta-item.priority.success { color: #10b981; }
 
 .card-footer {

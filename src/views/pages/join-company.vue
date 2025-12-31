@@ -396,10 +396,10 @@ const handleLogout = () => {
     font-weight: 900;
     font-family: 'Impact', 'Arial Black', sans-serif;
     color: transparent;
-    -webkit-text-stroke: 2px rgba(79, 70, 229, 0.15);
+    -webkit-text-stroke: 2px rgba(59, 130, 246, 0.15);
     text-shadow: 
-        0 0 80px rgba(79, 70, 229, 0.1),
-        0 0 120px rgba(79, 70, 229, 0.05);
+        0 0 80px rgba(59, 130, 246, 0.1),
+        0 0 120px rgba(59, 130, 246, 0.05);
     letter-spacing: -0.02em;
     line-height: 0.85;
     animation: letterPulse 4s ease-in-out infinite;
@@ -490,18 +490,18 @@ const handleLogout = () => {
 .action-card:hover {
     background: #eef2ff;
     transform: translateY(-2px);
-    border-color: rgba(79, 70, 229, 0.2);
+    border-color: rgba(59, 130, 246, 0.2);
 }
 
 .action-card.active {
     background: #eef2ff;
-    border-color: #4f46e5;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    border-color: #3B82F6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .card-icon {
     font-size: 32px;
-    color: #4f46e5;
+    color: #3B82F6;
     margin-bottom: 12px;
 }
 
@@ -536,8 +536,8 @@ const handleLogout = () => {
 }
 
 .form-section :deep(.el-input__wrapper.is-focus) {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     background-color: #fff;
 }
 
@@ -556,8 +556,8 @@ const handleLogout = () => {
 }
 
 .form-section :deep(.el-textarea__inner:focus) {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 邀请码输入框样式 */
@@ -655,7 +655,7 @@ const handleLogout = () => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
     color: #ffffff;
     border: none;
     transition: all 0.3s;
@@ -663,9 +663,9 @@ const handleLogout = () => {
 }
 
 .submit-btn:hover {
-    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
 }
 
 .submit-btn:disabled {
@@ -685,7 +685,7 @@ const handleLogout = () => {
 }
 
 .footer-link :deep(.el-link:hover) {
-    color: #4f46e5;
+    color: #3B82F6;
 }
 
 /* 模板选择样式 */

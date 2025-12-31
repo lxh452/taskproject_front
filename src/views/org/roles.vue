@@ -358,7 +358,7 @@ onMounted(load);
     color: var(--text-secondary); 
     margin: 0; 
 }
-.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: linear-gradient(135deg, var(--color-primary) 0%, #4338ca 100%); border: none; }
+.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: linear-gradient(135deg, var(--color-primary) 0%, #2563EB 100%); border: none; }
 
 .filter-bar { 
     display: flex; 

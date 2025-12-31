@@ -106,7 +106,7 @@ const timelineDates = computed(() => {
             });
         }
     } else {
-        // 日视图显示前后7天
+        // 日视图显示前�?�?
         start.setDate(start.getDate() - 7);
         for (let i = 0; i < 15; i++) {
             const d = new Date(start);
@@ -397,7 +397,7 @@ onMounted(() => {
 }
 
 .employee-avatar {
-    background: #6366f1;
+    background: #3B82F6;
     color: #fff;
     font-size: 12px;
 }
@@ -437,7 +437,7 @@ onMounted(() => {
 
 .task-bar.pending {
     background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
-    color: #4338ca;
+    color: #2563EB;
 }
 
 .task-bar.in-progress {

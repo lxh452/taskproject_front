@@ -552,7 +552,7 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
 }
 
 .employee-avatar {
-  background: #4f46e5;
+  background: #3B82F6;
   color: #fff;
   font-weight: 600;
   font-size: 18px;
@@ -604,7 +604,7 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
 
 .info-value.supervisor.clickable {
   cursor: pointer;
-  color: #4f46e5;
+  color: #3B82F6;
 }
 
 .info-value.supervisor.clickable:hover {
