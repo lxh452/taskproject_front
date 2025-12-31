@@ -110,7 +110,7 @@
                     <el-input 
                         v-model="passwordForm.oldPassword" 
                         type="password" 
-                        placeholder="请输入当前密�?
+                        placeholder="请输入当前密码"
                         show-password
                     />
                 </el-form-item>

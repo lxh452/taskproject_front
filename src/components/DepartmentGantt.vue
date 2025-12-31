@@ -106,7 +106,7 @@ const timelineDates = computed(() => {
             });
         }
     } else {
-        // 日视图显示前�?�?
+        // 日视图显示前后7天
         start.setDate(start.getDate() - 7);
         for (let i = 0; i < 15; i++) {
             const d = new Date(start);

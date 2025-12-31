@@ -948,9 +948,9 @@ async function loadTaskNodes() {
 }
 
 function buildFlowGraph() {
-  console.log('开始构建流程图，可用节点数�?', availableNodes.value.length)
+  console.log('开始构建流程图，可用节点数:', availableNodes.value.length)
   const nodeMap = new Map<string, any>()
-  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID�?  const newNodes: Node[] = []
+  const nodeIdMap = new Map<string, string>() // 用于ID映射（处理不同格式的ID）  const newNodes: Node[] = []
   const newEdges: Edge[] = []
   
   // 筛选出已安排的节点（有前置节点关系的节点）
@@ -2893,7 +2893,7 @@ const nodeTypes = {
   color: #94a3b8;
 }
 
-/* Vue Flow 连接点样�?- 精美设计 */
+/* Vue Flow 连接点样式 - 精美设计 */
 :deep(.vue-flow__handle) {
   width: 16px !important;
   height: 16px !important;
@@ -3271,12 +3271,12 @@ const nodeTypes = {
     font-size: 14px;
   }
 
-  /* 隐藏小地图在手机�?*/
+  /* 隐藏小地图在手机上 */
   :deep(.vue-flow__minimap) {
     display: none;
   }
 
-  /* 调整控制按钮位置和大�?*/
+  /* 调整控制按钮位置和大小 */
   :deep(.vue-flow__controls) {
     bottom: 10px !important;
     right: 10px !important;

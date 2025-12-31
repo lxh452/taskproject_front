@@ -623,7 +623,7 @@ onMounted(() => { loadData(); });
   flex: 1;
 }
 
-/* 空状�?*/
+/* 空状态 */
 .empty-state {
   padding: 80px 40px;
   background: #fff;
@@ -685,7 +685,7 @@ onMounted(() => { loadData(); });
   color: #374151;
 }
 
-/* 响应�?*/
+/* 响应式 */
 @media (max-width: 1200px) {
   .stats-row {
     grid-template-columns: repeat(2, 1fr);

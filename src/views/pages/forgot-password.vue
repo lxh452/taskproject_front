@@ -380,7 +380,7 @@ const submitReset = async () => {
     font-weight: 500;
 }
 
-/* 步骤指示�?*/
+/* 步骤指示器 */
 .steps {
     display: flex;
     align-items: center;
@@ -529,7 +529,7 @@ const submitReset = async () => {
 }
 
 .password-tips li.valid::marker {
-    content: '�?';
+    content: '✓';
 }
 
 .submit-btn {

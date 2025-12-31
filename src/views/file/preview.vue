@@ -856,7 +856,7 @@ onBeforeUnmount(() => {
 
 .sheet-select { width: 160px; }
 
-/* ========== 主内�?========== */
+/* ========== 主内容 ========== */
 .preview-main { flex: 1; display: flex; overflow: hidden; }
 
 .content-section { flex: 1; overflow: auto; background: var(--bg-page); }

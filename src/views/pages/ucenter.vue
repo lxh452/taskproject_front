@@ -882,7 +882,7 @@ onMounted(() => {
     color: #6b7280;
 }
 
-/* 头像编辑�?*/
+/* 头像编辑器 */
 .avatar-editor {
     display: flex;
     flex-direction: column;
@@ -1025,7 +1025,7 @@ onMounted(() => {
     color: #1f2937;
 }
 
-/* 响应�?*/
+/* 响应式 */
 @media (max-width: 768px) {
     .ucenter-page {
         padding: 0;
