@@ -3,10 +3,8 @@
  * 用于将后端返回的相对路径或本地路径转换为COS域名完整URL
  */
 
-// COS域名配置 - 请根据实际情况修改
-// 可以通过环境变量 VITE_COS_DOMAIN 配置，或在 .env 文件中设置
-// 例如：VITE_COS_DOMAIN=https://your-cos-bucket.cos.ap-guangzhou.myqcloud.com
-const COS_DOMAIN = import.meta.env.VITE_COS_DOMAIN || 'https://your-cos-domain.com';
+// COS域名配置（通过环境变量 VITE_COS_DOMAIN 设置）
+const COS_DOMAIN = import.meta.env.VITE_COS_DOMAIN || '';
 
 /**
  * 判断URL是否为完整URL（包含协议）

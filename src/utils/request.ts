@@ -18,6 +18,16 @@ function buildApiBaseUrl(): string {
     return `${proto}//${host}/api/v1`;
 }
 
+// 防重复提示机制
+const errorNotificationState = {
+    isShowing401: false,
+    isShowing403: false,
+    lastErrorTime: 0,
+};
+
+// 重置提示状态的延迟时间（毫秒）
+const ERROR_NOTIFICATION_COOLDOWN = 3000;
+
 const service: AxiosInstance = axios.create({
     baseURL: buildApiBaseUrl(),
     timeout: 10000
@@ -68,22 +78,24 @@ service.interceptors.response.use(
         if (status === 403) {
             const errorMsg = responseData?.msg || responseData?.message || '权限不足，无法访问该资源';
             
-            // 使用 ElNotification 显示更醒目的提示
-            ElNotification({
-                title: '权限不足',
-                message: errorMsg,
-                type: 'warning',
-                duration: 5000,
-                position: 'top-right',
-                showClose: true,
-            });
-            
-            // 同时使用 ElMessage 作为补充提示
-            ElMessage.warning({
-                message: errorMsg,
-                duration: 3000,
-                showClose: true,
-            });
+            // 防重复提示：如果已经在显示403提示，则跳过
+            if (!errorNotificationState.isShowing403) {
+                errorNotificationState.isShowing403 = true;
+                
+                // 使用 ElNotification 显示提示
+                ElNotification({
+                    title: '权限不足',
+                    message: errorMsg,
+                    type: 'warning',
+                    duration: 5000,
+                    position: 'top-right',
+                    showClose: true,
+                    onClose: () => {
+                        // 提示关闭后重置状态
+                        errorNotificationState.isShowing403 = false;
+                    }
+                });
+            }
             
             console.warn('403 鉴权失败:', {
                 url: error.config?.url,
@@ -101,24 +113,33 @@ service.interceptors.response.use(
         if (status === 401) {
             const errorMsg = responseData?.msg || responseData?.message || '登录已过期，请重新登录';
             
-            ElNotification({
-                title: '登录已过期',
-                message: errorMsg,
-                type: 'error',
-                duration: 5000,
-                position: 'top-right',
-                showClose: true,
-            });
-            
-            // 清除令牌并跳转登录
-            localStorage.removeItem('authToken');
-            sessionStorage.removeItem('authToken');
-            localStorage.removeItem('vuems_name');
-            
-            // 延迟跳转，确保通知显示
-            setTimeout(() => {
-                window.location.href = '/#/login';
-            }, 1000);
+            // 防重复提示：如果已经在显示401提示，则跳过
+            if (!errorNotificationState.isShowing401) {
+                errorNotificationState.isShowing401 = true;
+                
+                ElNotification({
+                    title: '登录已过期',
+                    message: errorMsg,
+                    type: 'error',
+                    duration: 5000,
+                    position: 'top-right',
+                    showClose: true,
+                    onClose: () => {
+                        // 提示关闭后重置状态
+                        errorNotificationState.isShowing401 = false;
+                    }
+                });
+                
+                // 清除令牌并跳转登录
+                localStorage.removeItem('authToken');
+                sessionStorage.removeItem('authToken');
+                localStorage.removeItem('vuems_name');
+                
+                // 延迟跳转，确保通知显示
+                setTimeout(() => {
+                    window.location.href = '/#/login';
+                }, 1000);
+            }
             
             return Promise.reject(error);
         }
