@@ -60,6 +60,10 @@ export const getHandoverList = (data?: any) =>
 export const listHandovers = (data?: any) =>
     getHandoverList(data);
 
+// Get my handover approvals (only items needing my approval)
+export const getMyHandoverApprovals = (data?: any) =>
+    request({ url: '/handover/my-approvals', method: 'post', data: data || { page: 1, pageSize: 100 } });
+
 export const getHandover = (data: { handoverId: string }) =>
     request({ url: '/handover/get', method: 'post', data });
 
@@ -119,6 +123,10 @@ export const getPendingJoinApplications = (data?: { page?: number; pageSize?: nu
 export const listDepartments = (data: any) =>
     request({ url: '/department/list', method: 'post', data });
 
+// Alias for compatibility
+export const getDepartmentList = (data: any) =>
+    request({ url: '/department/list', method: 'post', data });
+
 export const createDepartment = (data: any) =>
     request({ url: '/department/create', method: 'post', data });
 
@@ -126,6 +134,10 @@ export const updateDepartment = (data: any) =>
     request({ url: '/department/update', method: 'put', data });
 
 export const listPositions = (data: any) =>
+    request({ url: '/position/list', method: 'post', data });
+
+// Alias for compatibility
+export const getPositionList = (data: any) =>
     request({ url: '/position/list', method: 'post', data });
 
 export const createPosition = (data: any) =>
@@ -240,6 +252,10 @@ export const submitTaskNodeCompletionApproval = (data: { nodeId: string }) =>
 export const approveTaskNodeCompletion = (data: { approvalId: string; approved: number; comment?: string }) =>
     request({ url: '/checklist/approve/completion', method: 'post', data });
 
+// 获取我的任务节点完成审批列表
+export const getMyTaskNodeApprovals = (data?: { page?: number; pageSize?: number }) =>
+    request({ url: '/checklist/approvals/my', method: 'post', data: data || { page: 1, pageSize: 50 } });
+
 // 标记通知为已读
 export const markNotificationRead = (data: { notificationId: string }) =>
     request({ url: '/notification/read', method: 'put', data });
@@ -264,6 +280,21 @@ export const getTaskNodeAttachments = (data: { taskNodeId: string }) =>
 // 删除附件
 export const deleteAttachment = (data: { fileId: string }) =>
     request({ url: '/upload/delete', method: 'post', data });
+
+// 获取我的附件列表
+export const getMyAttachments = (data?: { page?: number; pageSize?: number; fileType?: string; module?: string }) => {
+    return request.post('/upload/my/list', data);
+};
+
+// 获取邀请码列表
+export const getInviteCodeList = (data?: { page?: number; pageSize?: number }) => {
+    return request.post('/company/invite/list', data);
+};
+
+// 撤销邀请码
+export const revokeInviteCode = (data: { inviteCode: string }) => {
+    return request.post('/company/invite/revoke', data);
+};
 
 // ===== 任务评论 API (MongoDB) =====
 // 创建任务评论

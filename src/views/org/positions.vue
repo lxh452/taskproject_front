@@ -84,15 +84,15 @@
                                 </div>
                             </div>
                             <div class="card-actions">
-                                <el-button type="primary" size="default" @click="handleEdit(row)" class="action-btn">
+                                <el-button plain size="default" @click="handleEdit(row)" class="action-btn">
                                     <el-icon><Edit /></el-icon>
                                     <span>编辑</span>
                                 </el-button>
-                                <el-button type="warning" size="default" @click="handleAssignEmployee(row)" class="action-btn">
+                                <el-button plain size="default" @click="handleAssignEmployee(row)" class="action-btn">
                                     <el-icon><User /></el-icon>
                                     <span>分配</span>
                                 </el-button>
-                                <el-button type="danger" size="default" @click="handleDelete(row)" class="action-btn">
+                                <el-button plain size="default" @click="handleDelete(row)" class="action-btn action-btn-danger">
                                     <el-icon><Delete /></el-icon>
                                     <span>删除</span>
                                 </el-button>
@@ -419,13 +419,13 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     padding: 0 20px; 
     border-radius: 10px; 
     font-weight: 500; 
-    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    background: var(--color-primary);
     border: none; 
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
 }
 .create-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
 }
 
 .main-content {
@@ -452,7 +452,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     align-items: center;
     gap: 10px;
     padding: 16px 18px;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    background: var(--color-primary-light);
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 15px;
@@ -483,8 +483,8 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     background: var(--bg-hover);
 }
 .dept-item.active {
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    border: 1px solid #a5b4fc;
+    background: var(--color-primary-light);
+    border: 1px solid var(--color-primary);
 }
 .dept-item.active .dept-item-name {
     color: #3B82F6;
@@ -606,6 +606,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     display: flex;
     flex-direction: column;
     gap: 12px;
+    cursor: pointer;
 }
 .pos-card:hover { 
     transform: translateY(-3px); 
@@ -622,11 +623,11 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    background: var(--color-primary-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3B82F6;
+    color: var(--color-primary);
     font-size: 20px;
 }
 .status-dot {
@@ -705,10 +706,19 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     align-items: center;
     justify-content: center;
     gap: 4px;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
 }
 .card-actions .action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+.card-actions .action-btn-danger:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    background: var(--color-danger-light);
 }
 
 .empty-positions {
@@ -719,29 +729,42 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     padding: 40px;
 }
 
-/* 抽屉样式 */
+/* 抽屉样式 - Swiss Minimalism */
+.pos-drawer :deep(.el-drawer) {
+    background: var(--drawer-bg);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+}
 .pos-drawer :deep(.el-drawer__header) {
     margin-bottom: 0;
     padding: 20px 24px;
     border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+.pos-drawer :deep(.el-drawer__title) {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
 }
 .pos-drawer :deep(.el-drawer__body) {
     padding: 24px;
+    background: var(--bg-card);
 }
 .pos-drawer :deep(.el-drawer__footer) {
     padding: 16px 24px;
     border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
 .pos-form :deep(.el-form-item__label) {
-    font-weight: 500;
-    color: var(--text-main);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
 }
 
 .assign-info {
     display: flex;
     align-items: center;
     gap: 14px;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    background: var(--color-primary-light);
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 20px;
@@ -750,7 +773,7 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #3B82F6;
+    background: var(--color-primary);
     color: white;
     display: flex;
     align-items: center;

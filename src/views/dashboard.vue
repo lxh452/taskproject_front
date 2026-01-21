@@ -1,122 +1,90 @@
 <template>
   <div class="dashboard">
-    <!-- 顶部欢迎区域 - 带渐变背景 -->
+    <!-- 欢迎区域 - Swiss Minimalism 简洁风格 -->
     <div class="welcome-section">
-      <div class="welcome-content">
-        <div class="welcome-text">
-          <h1 class="welcome-title">{{ greeting }}，{{ username }} <span class="wave-emoji">👋</span></h1>
-          <p class="welcome-subtitle">这是你的工作概览，今天也要加油哦！</p>
-        </div>
-        <div class="welcome-meta">
-          <!-- AI助手小圆球 -->
-          <AiAssistant />
-          <div class="date-badge">
-            <el-icon><Calendar /></el-icon>
-            <span>{{ currentDate }}</span>
-          </div>
-        </div>
+      <div class="welcome-left">
+        <h1 class="welcome-title">{{ greeting }}，{{ username }}</h1>
+        <p class="welcome-subtitle">{{ currentDate }}</p>
       </div>
-      <div class="welcome-decoration">
-        <div class="decoration-circle circle-1"></div>
-        <div class="decoration-circle circle-2"></div>
-        <div class="decoration-circle circle-3"></div>
+      <div class="welcome-right">
+        <AiAssistant />
       </div>
     </div>
 
-    <!-- 统计卡片 - 带动画效果 -->
+    <!-- 统计卡片 - Bento Grid -->
     <div class="stats-grid">
-      <div class="stat-card stat-total" @mouseenter="animateCard($event)" @mouseleave="resetCard($event)">
-        <div class="stat-icon-wrapper">
-          <div class="stat-icon">
-            <el-icon><DataLine /></el-icon>
-          </div>
-          <div class="stat-ring"></div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-total">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <path d="M9 12h6M9 16h6"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">
-            <countup :end="metrics.totalTasks" :options="{ duration: 1.5 }" />
-          </div>
-          <div class="stat-label">总任务</div>
-        </div>
-        <div class="stat-trend up">
-          <el-icon><TrendCharts /></el-icon>
-          <span>+12%</span>
+          <span class="stat-value"><countup :end="metrics.totalTasks" :options="{ duration: 1 }" /></span>
+          <span class="stat-label">总任务</span>
         </div>
       </div>
 
-      <div class="stat-card stat-pending" @mouseenter="animateCard($event)" @mouseleave="resetCard($event)">
-        <div class="stat-icon-wrapper">
-          <div class="stat-icon">
-            <el-icon><Clock /></el-icon>
-          </div>
-          <div class="stat-ring"></div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-pending">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">
-            <countup :end="metrics.pendingApprovals" :options="{ duration: 1.5 }" />
-          </div>
-          <div class="stat-label">待审批</div>
+          <span class="stat-value"><countup :end="metrics.pendingApprovals" :options="{ duration: 1 }" /></span>
+          <span class="stat-label">待审批</span>
         </div>
-        <div class="stat-badge" v-if="metrics.pendingApprovals > 0">需处理</div>
+        <span v-if="metrics.pendingApprovals > 0" class="stat-dot"></span>
       </div>
 
-      <div class="stat-card stat-completed" @mouseenter="animateCard($event)" @mouseleave="resetCard($event)">
-        <div class="stat-icon-wrapper">
-          <div class="stat-icon">
-            <el-icon><CircleCheckFilled /></el-icon>
-          </div>
-          <div class="stat-ring"></div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-completed">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <path d="M22 4L12 14.01l-3-3"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">
-            <countup :end="metrics.completed" :options="{ duration: 1.5 }" />
-          </div>
-          <div class="stat-label">已完成</div>
+          <span class="stat-value"><countup :end="metrics.completed" :options="{ duration: 1 }" /></span>
+          <span class="stat-label">已完成</span>
         </div>
         <div class="stat-progress">
           <div class="progress-bar" :style="{ width: completionRate + '%' }"></div>
         </div>
       </div>
 
-      <div class="stat-card stat-critical" @mouseenter="animateCard($event)" @mouseleave="resetCard($event)">
-        <div class="stat-icon-wrapper">
-          <div class="stat-icon">
-            <el-icon><WarningFilled /></el-icon>
-          </div>
-          <div class="stat-ring"></div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-critical">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">
-            <countup :end="metrics.critical" :options="{ duration: 1.5 }" />
-          </div>
-          <div class="stat-label">紧急任务</div>
+          <span class="stat-value"><countup :end="metrics.critical" :options="{ duration: 1 }" /></span>
+          <span class="stat-label">紧急任务</span>
         </div>
-        <div class="stat-pulse" v-if="metrics.critical > 0"></div>
+        <span v-if="metrics.critical > 0" class="stat-dot stat-dot-danger"></span>
       </div>
     </div>
 
-    <!-- 图表区域 - 双列布局 -->
+    <!-- 图表区域 -->
     <div class="charts-section">
       <div class="chart-card">
         <div class="card-header">
-          <div class="header-title">
-            <el-icon class="title-icon"><PieChart /></el-icon>
-            <span>任务状态分布</span>
-          </div>
-          <el-dropdown trigger="click">
-            <el-button text :icon="MoreFilled" />
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>导出数据</el-dropdown-item>
-                <el-dropdown-item>刷新</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <span class="header-title">任务状态分布</span>
         </div>
         <div class="card-body">
           <v-chart v-if="!statusChartEmpty" :option="statusChartOption" class="chart" autoresize />
           <div v-else class="empty-chart">
-            <el-icon class="empty-icon"><DocumentRemove /></el-icon>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+            </svg>
             <p>暂无任务数据</p>
           </div>
         </div>
@@ -124,25 +92,32 @@
 
       <div class="chart-card">
         <div class="card-header">
-          <div class="header-title">
-            <el-icon class="title-icon"><Histogram /></el-icon>
-            <span>优先级分布</span>
-          </div>
-          <el-dropdown trigger="click">
-            <el-button text :icon="MoreFilled" />
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>导出数据</el-dropdown-item>
-                <el-dropdown-item>刷新</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <span class="header-title">优先级分布</span>
         </div>
         <div class="card-body">
           <v-chart v-if="!priorityChartEmpty" :option="priorityChartOption" class="chart" autoresize />
           <div v-else class="empty-chart">
-            <el-icon class="empty-icon"><DocumentRemove /></el-icon>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
             <p>暂无优先级数据</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 任务趋势图 (占满一行) -->
+      <div class="chart-card chart-card-full">
+        <div class="card-header">
+          <span class="header-title">最近七天任务趋势</span>
+        </div>
+        <div class="card-body">
+          <v-chart v-if="!trendChartEmpty" :option="trendChartOption" class="chart chart-trend" autoresize />
+          <div v-else class="empty-chart">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+              <path d="M3 3v18h18"/>
+              <path d="M18 17l-5-5-4 4-6-6"/>
+            </svg>
+            <p>暂无趋势数据</p>
           </div>
         </div>
       </div>
@@ -152,35 +127,39 @@
     <div class="task-view-section">
       <div class="section-header">
         <div class="header-left">
-          <h2 class="section-title">
-            <el-icon class="title-icon"><Grid /></el-icon>
-            任务视图
-          </h2>
-          <span class="task-count">共 {{ metrics.totalTasks }} 个任务</span>
+          <h2 class="section-title">任务视图</h2>
+          <span class="task-count">{{ metrics.totalTasks }} 个任务</span>
         </div>
-        <div class="header-right">
-          <div class="view-switcher">
-            <button 
-              class="switch-btn" 
-              :class="{ active: activeView === 'kanban' }" 
-              @click="activeView = 'kanban'"
-            >
-              <el-icon><Menu /></el-icon>
-              <span>看板</span>
-            </button>
-            <button 
-              class="switch-btn" 
-              :class="{ active: activeView === 'gantt' }" 
-              @click="activeView = 'gantt'"
-            >
-              <el-icon><DataBoard /></el-icon>
-              <span>甘特图</span>
-            </button>
-          </div>
+        <div class="view-switcher">
+          <button 
+            class="switch-btn" 
+            :class="{ active: activeView === 'kanban' }" 
+            @click="activeView = 'kanban'"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            看板
+          </button>
+          <button 
+            class="switch-btn" 
+            :class="{ active: activeView === 'gantt' }" 
+            @click="activeView = 'gantt'"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="4" y1="12" x2="14" y2="12"/>
+              <line x1="4" y1="18" x2="18" y2="18"/>
+            </svg>
+            甘特图
+          </button>
         </div>
       </div>
       <div class="section-body">
-        <transition name="fade-slide" mode="out-in">
+        <transition name="fade" mode="out-in">
           <DashboardKanban v-if="activeView === 'kanban'" :department-id="departmentId" :key="'kanban'" />
           <DepartmentGantt v-else :department-id="departmentId" :key="'gantt'" />
         </transition>
@@ -192,23 +171,18 @@
 <script setup lang="ts" name="dashboard">
 import { ref, onMounted, computed } from 'vue';
 import { use } from 'echarts/core';
-import { PieChart as EchartsPie, BarChart } from 'echarts/charts';
+import { PieChart as EchartsPie, BarChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
-import { 
-  DataLine, Clock, CircleCheckFilled, WarningFilled, Calendar, 
-  TrendCharts, PieChart, Histogram, MoreFilled, DocumentRemove,
-  Grid, Menu, DataBoard
-} from '@element-plus/icons-vue';
-import { getHandoverList, listTasks, getMyEmployee, getMyTaskNodes, getDashboardStats } from '@/api';
+import { getMyEmployee, listTasks, getMyTaskNodes, getDashboardStats } from '@/api';
 import { useUserStore } from '@/store/user';
 import countup from '@/components/countup.vue';
 import DashboardKanban from '@/components/DashboardKanban.vue';
 import DepartmentGantt from '@/components/DepartmentGantt.vue';
 import AiAssistant from '@/components/AiAssistant.vue';
 
-use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart]);
+use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart, LineChart]);
 
 const userStore = useUserStore();
 const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
@@ -240,19 +214,10 @@ const completionRate = computed(() => {
 const metrics = ref({ totalTasks: 0, pendingApprovals: 0, completed: 0, critical: 0 });
 const statusChartOption = ref<any>({});
 const priorityChartOption = ref<any>({});
+const trendChartOption = ref<any>({});
 const statusChartEmpty = ref(false);
 const priorityChartEmpty = ref(false);
-
-// 卡片动画
-function animateCard(event: MouseEvent) {
-  const card = event.currentTarget as HTMLElement;
-  card.style.transform = 'translateY(-8px) scale(1.02)';
-}
-
-function resetCard(event: MouseEvent) {
-  const card = event.currentTarget as HTMLElement;
-  card.style.transform = 'translateY(0) scale(1)';
-}
+const trendChartEmpty = ref(false);
 
 async function loadData() {
   try {
@@ -263,22 +228,36 @@ async function loadData() {
     const rawDept = emp.departmentId ?? emp.DepartmentId ?? emp.department_id;
     departmentId.value = typeof rawDept === 'object' ? (rawDept?.String || '') : (rawDept != null ? String(rawDept) : '');
 
-    // 使用新的仪表盘统计API获取四个数据容器的数据
     try {
+      console.log('========== 开始加载仪表盘统计 ==========');
       const statsRes = await getDashboardStats({ scope: 'personal' });
       console.log('仪表盘统计API响应:', statsRes);
+      console.log('响应数据:', statsRes?.data);
+      
       const stats = statsRes?.data?.data || {};
-      console.log('解析后的统计数据:', stats);
+      console.log('解析后的stats:', stats);
+      
       metrics.value.totalTasks = stats.totalTasks || 0;
       metrics.value.pendingApprovals = stats.pendingApprovals || 0;
       metrics.value.completed = stats.completedTasks || 0;
       metrics.value.critical = stats.criticalTasks || 0;
-      console.log('更新后的metrics:', metrics.value);
+      
+      // 构建趋势图
+      console.log('任务趋势数据:', stats.taskTrend);
+      console.log('趋势数据长度:', stats.taskTrend?.length);
+      
+      if (stats.taskTrend && stats.taskTrend.length > 0) {
+        console.log('开始构建趋势图，数据:', stats.taskTrend);
+        buildTrendChart(stats.taskTrend);
+        console.log('趋势图构建完成');
+      } else {
+        console.warn('没有趋势数据，显示空状态');
+        trendChartEmpty.value = true;
+      }
     } catch (e) {
       console.error('加载仪表盘统计失败:', e);
     }
 
-    // 获取任务列表用于图表展示
     if (departmentId.value) {
       const res = await listTasks({ page: 1, pageSize: 100, departmentId: departmentId.value });
       const list = res.data?.data?.list || [];
@@ -293,6 +272,7 @@ async function loadData() {
     console.error('加载数据失败:', e);
     statusChartEmpty.value = true;
     priorityChartEmpty.value = true;
+    trendChartEmpty.value = true;
   }
 }
 
@@ -317,41 +297,38 @@ function buildCharts(list: any[]) {
   statusChartEmpty.value = total1 === 0;
   priorityChartEmpty.value = total2 === 0;
 
+  // Swiss Minimalism 风格图表配色
   if (total1 > 0) {
     statusChartOption.value = {
       tooltip: { 
         trigger: 'item', 
         formatter: '{b}: {c} ({d}%)',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        borderColor: '#e5e7eb',
+        backgroundColor: '#fff',
+        borderColor: 'var(--border-color)',
         borderWidth: 1,
-        textStyle: { color: '#374151' },
-        extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;'
+        textStyle: { color: 'var(--text-primary)', fontSize: 13 },
+        extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
       },
       legend: { 
-        bottom: 10, 
+        bottom: 16, 
         left: 'center', 
-        itemGap: 20, 
-        itemWidth: 12,
-        itemHeight: 12,
-        textStyle: { color: '#6b7280', fontSize: 13 }
+        itemGap: 24, 
+        itemWidth: 8,
+        itemHeight: 8,
+        textStyle: { color: 'var(--text-secondary)', fontSize: 13 }
       },
       series: [{
         type: 'pie',
-        radius: ['45%', '70%'],
-        center: ['50%', '42%'],
-        itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+        radius: ['50%', '72%'],
+        center: ['50%', '45%'],
+        itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
         label: { show: false },
-        emphasis: {
-          scale: true,
-          scaleSize: 10,
-          itemStyle: { shadowBlur: 20, shadowColor: 'rgba(0,0,0,0.15)' }
-        },
+        emphasis: { scale: true, scaleSize: 6 },
         data: [
-          { value: statusData.done, name: '已完成', itemStyle: { color: '#2DD4A8' } },
-          { value: statusData.inProgress, name: '进行中', itemStyle: { color: '#4A90D9' } },
-          { value: statusData.review, name: '审核中', itemStyle: { color: '#f59e0b' } },
-          { value: statusData.todo, name: '待办', itemStyle: { color: '#9ca3af' } }
+          { value: statusData.done, name: '已完成', itemStyle: { color: '#059669' } },
+          { value: statusData.inProgress, name: '进行中', itemStyle: { color: '#1E3A5F' } },
+          { value: statusData.review, name: '审核中', itemStyle: { color: '#D97706' } },
+          { value: statusData.todo, name: '待办', itemStyle: { color: '#94A3B8' } }
         ]
       }]
     };
@@ -362,41 +339,142 @@ function buildCharts(list: any[]) {
       tooltip: { 
         trigger: 'axis', 
         axisPointer: { type: 'shadow' },
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        borderColor: '#e5e7eb',
+        backgroundColor: '#fff',
+        borderColor: 'var(--border-color)',
         borderWidth: 1,
-        textStyle: { color: '#374151' },
-        extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;'
+        textStyle: { color: 'var(--text-primary)', fontSize: 13 },
+        extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
       },
-      grid: { left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true },
+      grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: ['低优先级', '中优先级', '高优先级', '紧急'],
-        axisLabel: { color: '#6b7280', fontSize: 12 },
+        data: ['低', '中', '高', '紧急'],
+        axisLabel: { color: 'var(--text-secondary)', fontSize: 13 },
         axisLine: { show: false },
         axisTick: { show: false }
       },
       yAxis: {
         type: 'value',
-        axisLabel: { color: '#9ca3af', fontSize: 11 },
-        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
+        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
+        splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
         axisLine: { show: false }
       },
       series: [{
         type: 'bar',
         data: [
-          { value: priorityData.low, itemStyle: { color: '#9ca3af', borderRadius: [6, 6, 0, 0] } },
-          { value: priorityData.medium, itemStyle: { color: '#4A90D9', borderRadius: [6, 6, 0, 0] } },
-          { value: priorityData.high, itemStyle: { color: '#f59e0b', borderRadius: [6, 6, 0, 0] } },
-          { value: priorityData.critical, itemStyle: { color: '#ef4444', borderRadius: [6, 6, 0, 0] } }
+          { value: priorityData.low, itemStyle: { color: '#94A3B8', borderRadius: [4, 4, 0, 0] } },
+          { value: priorityData.medium, itemStyle: { color: '#0284C7', borderRadius: [4, 4, 0, 0] } },
+          { value: priorityData.high, itemStyle: { color: '#D97706', borderRadius: [4, 4, 0, 0] } },
+          { value: priorityData.critical, itemStyle: { color: '#DC2626', borderRadius: [4, 4, 0, 0] } }
         ],
-        barWidth: '45%',
-        emphasis: {
-          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.15)' }
-        }
+        barWidth: '40%'
       }]
     };
   }
+}
+
+function buildTrendChart(trendData: any[]) {
+  console.log('========== buildTrendChart 被调用 ==========');
+  console.log('输入数据:', trendData);
+  
+  trendChartEmpty.value = false;
+  
+  const dates = trendData.map(item => {
+    const d = new Date(item.date);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  });
+  const created = trendData.map(item => item.created || 0);
+  const completed = trendData.map(item => item.completed || 0);
+  
+  console.log('日期数组:', dates);
+  console.log('创建数组:', created);
+  console.log('完成数组:', completed);
+  
+  trendChartOption.value = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+      backgroundColor: '#fff',
+      borderColor: 'var(--border-color)',
+      borderWidth: 1,
+      textStyle: { color: 'var(--text-primary)', fontSize: 13 },
+      extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
+    },
+    legend: {
+      data: ['创建', '完成'],
+      bottom: 16,
+      left: 'center',
+      itemGap: 24,
+      itemWidth: 12,
+      itemHeight: 12,
+      textStyle: { color: 'var(--text-secondary)', fontSize: 13 }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      top: '8%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLabel: { color: 'var(--text-secondary)', fontSize: 12 },
+      axisLine: { lineStyle: { color: 'var(--border-color)' } },
+      axisTick: { show: false }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
+      splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
+      axisLine: { show: false }
+    },
+    series: [
+      {
+        name: '创建',
+        type: 'line',
+        data: created,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { width: 2, color: '#1E3A5F' },
+        itemStyle: { color: '#1E3A5F' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(30, 58, 95, 0.2)' },
+              { offset: 1, color: 'rgba(30, 58, 95, 0.05)' }
+            ]
+          }
+        }
+      },
+      {
+        name: '完成',
+        type: 'line',
+        data: completed,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { width: 2, color: '#059669' },
+        itemStyle: { color: '#059669' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(5, 150, 105, 0.2)' },
+              { offset: 1, color: 'rgba(5, 150, 105, 0.05)' }
+            ]
+          }
+        }
+      }
+    ]
+  };
+  
+  console.log('趋势图配置:', trendChartOption.value);
+  console.log('========== buildTrendChart 完成 ==========');
 }
 
 onMounted(loadData);
@@ -404,398 +482,199 @@ onMounted(loadData);
 
 
 <style scoped>
-/* ==================== Dashboard Page Container ==================== */
+/* Dashboard Container */
 .dashboard {
-  padding: var(--page-padding, 24px);
+  padding: var(--space-6);
   min-height: 100vh;
-  background: var(--bg-page);
+  background: var(--bg-secondary);
 }
 
-/* ==================== Welcome Section ==================== */
+/* Welcome Section - Swiss Minimalism */
 .welcome-section {
-  position: relative;
-  background: linear-gradient(135deg, #4A90D9 0%, #3B82C4 50%, #2DD4A8 100%);
-  border-radius: var(--radius-xl, 16px);
-  padding: 32px 40px;
-  margin-bottom: 28px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px -10px rgba(74, 144, 217, 0.4);
-}
-
-.welcome-content {
-  position: relative;
-  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
 
-.welcome-text {
-  color: #fff;
+.welcome-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .welcome-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.wave-emoji {
-  display: inline-block;
-  animation: wave 2.5s ease-in-out infinite;
-  transform-origin: 70% 70%;
-}
-
-@keyframes wave {
-  0%, 100% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-8deg); }
-  30% { transform: rotate(14deg); }
-  40% { transform: rotate(-4deg); }
-  50% { transform: rotate(10deg); }
-  60%, 100% { transform: rotate(0deg); }
-}
-
-.welcome-subtitle {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
 }
 
-.welcome-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.welcome-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
 }
 
-.date-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  padding: 10px 18px;
-  border-radius: var(--radius-full, 9999px);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.date-badge .el-icon {
-  font-size: 16px;
-}
-
-/* Decoration Circles */
-.welcome-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.decoration-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.circle-1 {
-  width: 200px;
-  height: 200px;
-  top: -60px;
-  right: -40px;
-  animation: float 8s ease-in-out infinite;
-}
-
-.circle-2 {
-  width: 120px;
-  height: 120px;
-  bottom: -30px;
-  right: 150px;
-  animation: float 6s ease-in-out infinite reverse;
-}
-
-.circle-3 {
-  width: 80px;
-  height: 80px;
-  top: 20px;
-  right: 280px;
-  animation: float 7s ease-in-out infinite 1s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-20px) scale(1.05); }
-}
-
-/* ==================== Stats Grid ==================== */
+/* Stats Grid - Bento Layout */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 28px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
-/* ==================== Stat Card ==================== */
 .stat-card {
   position: relative;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg, 12px);
-  padding: 24px;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   cursor: pointer;
 }
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  border-radius: 12px 12px 0 0;
-  transition: height 0.3s ease;
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.stat-card:hover::before {
-  height: 4px;
-}
-
-/* Card Variants */
-.stat-total::before { background: linear-gradient(90deg, #4A90D9, #3B82C4); }
-.stat-pending::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.stat-completed::before { background: linear-gradient(90deg, #2DD4A8, #34d399); }
-.stat-critical::before { background: linear-gradient(90deg, #ef4444, #f87171); }
-
-/* Icon Wrapper */
-.stat-icon-wrapper {
-  position: relative;
-  flex-shrink: 0;
-}
-
+/* Stat Icons - Circular Background */
 .stat-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-lg, 12px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 1;
+  flex-shrink: 0;
 }
 
-.stat-icon .el-icon {
-  font-size: 24px;
-  color: #fff;
+.stat-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
-.stat-total .stat-icon { background: linear-gradient(135deg, #4A90D9, #3B82C4); }
-.stat-pending .stat-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.stat-completed .stat-icon { background: linear-gradient(135deg, #2DD4A8, #34d399); }
-.stat-critical .stat-icon { background: linear-gradient(135deg, #ef4444, #f87171); }
-
-/* Icon Ring Animation */
-.stat-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-lg, 12px);
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: all 0.3s ease;
+.stat-icon-total {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
-.stat-total .stat-ring { box-shadow: 0 0 0 0 rgba(74, 144, 217, 0.4); }
-.stat-pending .stat-ring { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-.stat-completed .stat-ring { box-shadow: 0 0 0 0 rgba(45, 212, 168, 0.4); }
-.stat-critical .stat-ring { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-
-.stat-card:hover .stat-ring {
-  opacity: 1;
-  animation: ring-pulse 1.5s ease-out infinite;
+.stat-icon-pending {
+  background: #FEF3C7;
+  color: #D97706;
 }
 
-@keyframes ring-pulse {
-  0% { 
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.6;
-  }
-  100% { 
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0;
-  }
+.stat-icon-completed {
+  background: #D1FAE5;
+  color: #059669;
 }
 
-/* Stat Content */
+.stat-icon-critical {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
 .stat-content {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .stat-value {
-  font-size: 32px;
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
-  margin-bottom: 4px;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
-  font-weight: 500;
 }
 
-/* Stat Trend */
-.stat-trend {
+/* Notification Dot */
+.stat-dot {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: var(--radius-full, 9999px);
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 8px;
+  height: 8px;
+  background: #D97706;
+  border-radius: 50%;
 }
 
-.stat-trend.up {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+.stat-dot-danger {
+  background: #DC2626;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.stat-trend.down {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.stat-trend .el-icon {
-  font-size: 14px;
-}
-
-/* Stat Badge */
-.stat-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: var(--radius-full, 9999px);
-  animation: badge-bounce 2s ease-in-out infinite;
-}
-
-@keyframes badge-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-/* Stat Progress */
+/* Progress Bar */
 .stat-progress {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: var(--border-light);
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #2DD4A8, #34d399);
-  border-radius: 0 0 0 12px;
-  transition: width 1s ease-out;
+  background: #059669;
+  transition: width 0.8s ease;
 }
 
-/* Stat Pulse (for critical) */
-.stat-pulse {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 10px;
-  height: 10px;
-  background: #ef4444;
-  border-radius: 50%;
-  animation: critical-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes critical-pulse {
-  0%, 100% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  50% { 
-    transform: scale(1.1);
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-  }
-}
-
-/* ==================== Charts Section ==================== */
+/* Charts Section */
 .charts-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 28px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .chart-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
-.chart-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+.chart-card-full {
+  grid-column: 1 / -1; /* 占满整行 */
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 20px;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-light);
 }
 
 .header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.title-icon {
-  font-size: 18px;
-  color: var(--color-primary);
-}
-
 .card-body {
-  padding: 20px;
-  min-height: 280px;
+  padding: var(--space-4);
+  min-height: 260px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -803,35 +682,37 @@ onMounted(loadData);
 
 .chart {
   width: 100%;
-  height: 260px;
+  height: 240px;
 }
 
-/* Empty Chart State */
+.chart-trend {
+  height: 280px;
+}
+
+/* Empty State */
 .empty-chart {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-3);
   color: var(--text-muted);
-  gap: 12px;
 }
 
 .empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .empty-chart p {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   margin: 0;
 }
 
-/* ==================== Task View Section ==================== */
+/* Task View Section */
 .task-view-section {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -839,67 +720,50 @@ onMounted(loadData);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-light);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-3);
 }
 
 .section-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
 }
 
-.section-title .title-icon {
-  font-size: 20px;
-  color: var(--color-primary);
-}
-
 .task-count {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
-  background: var(--bg-hover);
-  padding: 4px 12px;
-  border-radius: var(--radius-full, 9999px);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 /* View Switcher */
 .view-switcher {
   display: flex;
-  background: var(--bg-hover);
-  border-radius: var(--radius-full, 9999px);
-  padding: 4px;
-  gap: 4px;
+  gap: var(--space-1);
+  background: var(--bg-secondary);
+  padding: 3px;
+  border-radius: var(--radius-md);
 }
 
 .switch-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: none;
   background: transparent;
-  border-radius: var(--radius-full, 9999px);
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .switch-btn:hover {
@@ -907,37 +771,32 @@ onMounted(loadData);
 }
 
 .switch-btn.active {
-  background: var(--bg-card);
+  background: var(--bg-primary);
   color: var(--color-primary);
   box-shadow: var(--shadow-sm);
 }
 
-.switch-btn .el-icon {
-  font-size: 16px;
+.switch-btn svg {
+  flex-shrink: 0;
 }
 
 .section-body {
-  padding: 20px;
+  padding: var(--space-5);
   min-height: 400px;
 }
 
-/* ==================== Fade Slide Transition ==================== */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
+/* Fade Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-base);
 }
 
-.fade-slide-enter-from {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  transform: translateX(20px);
 }
 
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-/* ==================== Responsive Design ==================== */
+/* Responsive */
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -952,116 +811,85 @@ onMounted(loadData);
 
 @media (max-width: 768px) {
   .dashboard {
-    padding: 16px;
+    padding: var(--space-4);
   }
   
   .welcome-section {
-    padding: 24px;
-  }
-  
-  .welcome-content {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: var(--space-4);
+    padding: var(--space-4);
   }
   
   .welcome-title {
-    font-size: 22px;
+    font-size: var(--font-size-xl);
   }
   
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-3);
   }
   
   .stat-card {
-    padding: 20px;
+    padding: var(--space-4);
   }
   
   .stat-value {
-    font-size: 28px;
+    font-size: var(--font-size-2xl);
   }
   
   .section-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
-    padding: 16px 20px;
-  }
-  
-  .header-right {
-    width: 100%;
+    gap: var(--space-3);
+    padding: var(--space-4);
   }
   
   .view-switcher {
     width: 100%;
-    justify-content: center;
   }
   
   .switch-btn {
     flex: 1;
     justify-content: center;
   }
+  
+  .section-body {
+    padding: var(--space-4);
+  }
 }
 
-@media (max-width: 480px) {
-  .welcome-section {
-    padding: 20px;
+/* Dark Mode */
+html.dark-mode .stat-icon-total {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+}
+
+html.dark-mode .stat-icon-pending {
+  background: rgba(251, 191, 36, 0.15);
+  color: #FBBF24;
+}
+
+html.dark-mode .stat-icon-completed {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34D399;
+}
+
+html.dark-mode .stat-icon-critical {
+  background: rgba(248, 113, 113, 0.15);
+  color: #F87171;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
   }
   
-  .welcome-title {
-    font-size: 20px;
+  .stat-dot-danger {
+    animation: none;
   }
-  
-  .date-badge {
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-  
-  .stat-icon {
-    width: 44px;
-    height: 44px;
-  }
-  
-  .stat-icon .el-icon {
-    font-size: 20px;
-  }
-  
-  .stat-value {
-    font-size: 24px;
-  }
-}
-
-/* ==================== Dark Mode Adjustments ==================== */
-html.dark-mode .welcome-section {
-  background: linear-gradient(135deg, #3B82C4 0%, #2D6BA8 50%, #2DD4A8 100%);
-  box-shadow: 0 10px 40px -10px rgba(74, 144, 217, 0.3);
-}
-
-html.dark-mode .stat-card {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-}
-
-html.dark-mode .chart-card {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-}
-
-html.dark-mode .task-view-section {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-}
-
-html.dark-mode .view-switcher {
-  background: var(--bg-hover);
-}
-
-html.dark-mode .switch-btn.active {
-  background: var(--bg-active);
-}
-
-html.dark-mode .task-count {
-  background: var(--bg-active);
 }
 </style>

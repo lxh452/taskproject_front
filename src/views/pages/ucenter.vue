@@ -40,7 +40,7 @@
                 <!-- 统计卡片 -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);">
+                        <div class="stat-icon" style="background: var(--color-primary);">
                             <el-icon><Document /></el-icon>
                         </div>
                         <div class="stat-content">
@@ -49,7 +49,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="stat-icon" style="background: var(--color-success);">
                             <el-icon><CircleCheck /></el-icon>
                         </div>
                         <div class="stat-content">
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="stat-icon" style="background: var(--color-warning);">
                             <el-icon><Loading /></el-icon>
                         </div>
                         <div class="stat-content">
@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="stat-icon" style="background: var(--color-info);">
                             <el-icon><Clock /></el-icon>
                         </div>
                         <div class="stat-content">
@@ -569,7 +569,7 @@ onMounted(() => {
 <style scoped>
 .ucenter-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e8ecf1 100%);
+    background: var(--bg-page);
 }
 
 /* 英雄区域 */
@@ -585,7 +585,7 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #3B82F6 0%, #10B981 50%, #f093fb 100%);
+    background: var(--color-primary);
     z-index: 0;
 }
 
@@ -596,17 +596,11 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.15) 0%, transparent 50%);
+    background: rgba(255,255,255,0.05);
 }
 
 .hero-bg::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 70% 60%, rgba(255,255,255,0.1) 0%, transparent 40%);
+    display: none;
 }
 
 .hero-content {
@@ -791,8 +785,8 @@ onMounted(() => {
 
 .settings-tabs :deep(.el-tabs__header) {
     margin: 0;
-    background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .settings-tabs :deep(.el-tabs__nav-wrap) {
@@ -810,7 +804,7 @@ onMounted(() => {
 }
 
 .settings-tabs :deep(.el-tabs__active-bar) {
-    background: linear-gradient(90deg, #3B82F6, #10B981);
+    background: var(--color-primary);
     height: 3px;
     border-radius: 3px 3px 0 0;
 }
@@ -859,15 +853,15 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     padding: 20px 24px;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    background: var(--bg-secondary);
     border-radius: 14px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
 }
 
 .setting-item:hover {
-    border-color: #c7d2fe;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .setting-title {
@@ -1005,9 +999,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     padding: 16px 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    background: var(--bg-secondary);
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
 }
 
 .info-label {

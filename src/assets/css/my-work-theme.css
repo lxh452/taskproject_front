@@ -1,0 +1,216 @@
+/* 我的工作模块统一主题样式 - 纯色版本 */
+
+/* 页面容器 */
+.my-tasks-page,
+.my-checklists-page,
+.my-attachments-page,
+.my-approvals-page {
+  padding: var(--space-6);
+  background: var(--bg-page);
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* 页面标题 - 纯色 */
+.my-tasks-page .page-title,
+.my-checklists-page .page-title,
+.my-attachments-page .page-title,
+.my-approvals-page .page-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* 页面副标题 */
+.my-tasks-page .page-subtitle,
+.my-checklists-page .page-subtitle,
+.my-attachments-page .page-subtitle,
+.my-approvals-page .page-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* 筛选栏 */
+.my-tasks-page .filters-bar,
+.my-checklists-page .filters-bar,
+.my-attachments-page .filters-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--color-primary);
+}
+
+/* 标签页样式 */
+.my-approvals-page .approval-tabs .el-tabs__active-bar {
+  background-color: var(--color-primary) !important;
+}
+
+.my-approvals-page .approval-tabs .el-tabs__item.is-active {
+  color: var(--color-primary) !important;
+}
+
+.my-approvals-page .approval-tabs .el-tabs__item:hover {
+  color: var(--color-primary) !important;
+}
+
+/* 徽章样式 */
+.my-approvals-page .tab-badge .el-badge__content {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* 卡片样式 */
+.my-tasks-page .task-card,
+.my-approvals-page .approval-card,
+.my-attachments-page .attachment-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid transparent;
+  transition: all var(--transition-normal);
+}
+
+.my-tasks-page .task-card:hover,
+.my-approvals-page .approval-card:hover,
+.my-attachments-page .attachment-card:hover {
+  border-left-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* 主要按钮 - 纯色 */
+.my-tasks-page .el-button--primary,
+.my-checklists-page .el-button--primary,
+.my-attachments-page .el-button--primary,
+.my-approvals-page .el-button--primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  transition: all var(--transition-normal);
+}
+
+.my-tasks-page .el-button--primary:hover,
+.my-checklists-page .el-button--primary:hover,
+.my-attachments-page .el-button--primary:hover,
+.my-approvals-page .el-button--primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 链接按钮 */
+.my-tasks-page .el-button--text,
+.my-checklists-page .el-button--text,
+.my-attachments-page .el-button--text,
+.my-approvals-page .el-button--text,
+.my-tasks-page .el-button.is-link,
+.my-checklists-page .el-button.is-link,
+.my-attachments-page .el-button.is-link,
+.my-approvals-page .el-button.is-link {
+  color: var(--color-primary) !important;
+}
+
+.my-tasks-page .el-button--text:hover,
+.my-checklists-page .el-button--text:hover,
+.my-attachments-page .el-button--text:hover,
+.my-approvals-page .el-button--text:hover,
+.my-tasks-page .el-button.is-link:hover,
+.my-checklists-page .el-button.is-link:hover,
+.my-attachments-page .el-button.is-link:hover,
+.my-approvals-page .el-button.is-link:hover {
+  opacity: 0.8;
+}
+
+/* 单选按钮组 */
+.my-checklists-page .status-filter .el-radio-button__inner {
+  border-color: var(--border-color);
+}
+
+.my-checklists-page .status-filter .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: -1px 0 0 0 var(--color-primary);
+}
+
+/* 表格样式 */
+.my-checklists-page .checklist-table .el-table__header-wrapper th {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.my-checklists-page .checklist-table .el-table__row:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* 复选框 */
+.my-checklists-page .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* 标签样式 */
+.my-tasks-page .el-tag,
+.my-approvals-page .el-tag,
+.my-attachments-page .el-tag {
+  border-radius: var(--radius-md);
+}
+
+.my-tasks-page .el-tag--primary,
+.my-approvals-page .el-tag--primary,
+.my-attachments-page .el-tag--primary {
+  background-color: var(--color-primary-light-9) !important;
+  border-color: var(--color-primary-light-7) !important;
+  color: var(--color-primary) !important;
+}
+
+/* 空状态 */
+.my-tasks-page .el-empty,
+.my-checklists-page .el-empty,
+.my-attachments-page .el-empty,
+.my-approvals-page .el-empty {
+  padding: var(--space-8) 0;
+}
+
+.my-tasks-page .el-empty__description,
+.my-checklists-page .el-empty__description,
+.my-attachments-page .el-empty__description,
+.my-approvals-page .el-empty__description {
+  color: var(--text-muted);
+}
+
+/* 加载状态 */
+.my-tasks-page .el-loading-spinner .circular,
+.my-checklists-page .el-loading-spinner .circular,
+.my-attachments-page .el-loading-spinner .circular,
+.my-approvals-page .el-loading-spinner .circular {
+  stroke: var(--color-primary) !important;
+}
+
+/* 分页器 */
+.my-tasks-page .el-pagination.is-background .el-pager li:not(.is-disabled).is-active,
+.my-attachments-page .el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background-color: var(--color-primary) !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .my-tasks-page,
+  .my-checklists-page,
+  .my-attachments-page,
+  .my-approvals-page {
+    padding: var(--space-4);
+  }
+
+  .my-tasks-page .filters-bar,
+  .my-checklists-page .filters-bar,
+  .my-attachments-page .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

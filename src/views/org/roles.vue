@@ -57,15 +57,15 @@
                         </div>
 
                         <div class="card-footer">
-                            <el-button type="primary" size="default" @click="openEdit(row)" class="action-btn">
+                            <el-button plain size="default" @click="openEdit(row)" class="action-btn">
                                 <el-icon><Edit /></el-icon>
                                 <span>编辑</span>
                             </el-button>
-                            <el-button type="warning" size="default" @click="openAssign(row)" class="action-btn">
+                            <el-button plain size="default" @click="openAssign(row)" class="action-btn">
                                 <el-icon><Share /></el-icon>
                                 <span>分配</span>
                             </el-button>
-                            <el-button type="danger" size="default" @click="onDelete(row)" class="action-btn">
+                            <el-button plain size="default" @click="onDelete(row)" class="action-btn action-btn-danger">
                                 <el-icon><Delete /></el-icon>
                                 <span>删除</span>
                             </el-button>
@@ -358,7 +358,7 @@ onMounted(load);
     color: var(--text-secondary); 
     margin: 0; 
 }
-.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: linear-gradient(135deg, var(--color-primary) 0%, #2563EB 100%); border: none; }
+.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: var(--color-primary); border: none; }
 
 .filter-bar { 
     display: flex; 
@@ -388,6 +388,7 @@ onMounted(load);
     transition: all 0.3s ease;
     width: 100%;
     box-sizing: border-box;
+    cursor: pointer;
 }
 .role-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
@@ -438,10 +439,19 @@ onMounted(load);
     align-items: center;
     justify-content: center;
     gap: 4px;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
 }
 .card-footer .action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+.card-footer .action-btn-danger:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    background: var(--color-danger-light);
 }
 .empty-state { padding: 60px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
 

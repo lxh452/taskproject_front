@@ -1,50 +1,47 @@
 <template>
-  <div class="header-container">
+  <div class="header">
     <div class="header-left">
-      <div class="collapse-trigger" @click="collapseChage">
-        <el-icon :size="20">
-          <Fold v-if="!sidebar.collapse" />
-          <Expand v-else />
-        </el-icon>
-      </div>
-      <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item v-if="currentRoute">{{ currentRoute }}</el-breadcrumb-item>
-      </el-breadcrumb>
+      <!-- 折叠按钮 - 简洁设计 -->
+      <button class="collapse-btn" @click="collapseChage" aria-label="切换侧边栏">
+        <svg v-if="!sidebar.collapse" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      
+      <!-- 面包屑 - 简洁样式 -->
+      <nav class="breadcrumb" aria-label="面包屑导航">
+        <router-link to="/" class="breadcrumb-item">首页</router-link>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item current" v-if="currentRoute">{{ currentRoute }}</span>
+      </nav>
     </div>
 
     <div class="header-right">
-      <!-- 搜索 -->
-      <div class="header-action search-action">
-        <el-icon :size="18"><Search /></el-icon>
-      </div>
-
       <!-- 我的清单 -->
       <el-popover
           placement="bottom-end"
-          :width="380"
+          :width="360"
           trigger="click"
           :visible="checklistPopoverVisible"
           @update:visible="checklistPopoverVisible = $event"
           :show-arrow="false"
-          :offset="12"
-          popper-class="vben-popover"
+          :offset="8"
+          popper-class="header-popover"
       >
         <template #reference>
-          <div class="header-action checklist-action" :class="{ 'has-badge': uncompletedChecklistCount > 0, 'has-pending': uncompletedChecklistCount > 0 }">
-            <el-badge :value="uncompletedChecklistCount" :hidden="uncompletedChecklistCount === 0" :max="99">
-              <el-icon :size="18"><List /></el-icon>
-            </el-badge>
-          </div>
+          <button class="header-btn" :class="{ 'has-indicator': uncompletedChecklistCount > 0 }" aria-label="我的清单">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            <span class="indicator warning" v-if="uncompletedChecklistCount > 0"></span>
+          </button>
         </template>
-        <div class="popover-container">
+        <div class="popover-content">
           <div class="popover-header">
-            <div class="popover-title">
-              <span class="title-text">我的清单</span>
-              <el-tag v-if="uncompletedChecklistCount > 0" type="warning" size="small" effect="dark" round>
-                {{ uncompletedChecklistCount }}
-              </el-tag>
-            </div>
+            <span class="popover-title">我的清单</span>
             <el-radio-group v-model="checklistFilter" size="small" @change="fetchMyChecklist">
               <el-radio-button :value="-1">全部</el-radio-button>
               <el-radio-button :value="0">待完成</el-radio-button>
@@ -52,13 +49,13 @@
             </el-radio-group>
           </div>
           <div class="popover-body" v-loading="checklistLoading">
-            <template v-if="myChecklists.length === 0">
-              <div class="empty-placeholder">
-                <el-icon :size="48" color="#e2e8f0"><DocumentChecked /></el-icon>
-                <p>暂无清单项</p>
-              </div>
-            </template>
-            <template v-else>
+            <div v-if="myChecklists.length === 0" class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+              </svg>
+              <p>暂无清单项</p>
+            </div>
+            <div v-else class="checklist-list">
               <div
                   v-for="item in myChecklists"
                   :key="item.id"
@@ -70,63 +67,53 @@
                     @change="toggleChecklistItem(item)"
                     size="small"
                 />
-                <div class="item-content">
-                  <div class="item-text">{{ item.content }}</div>
-                  <div class="item-meta" v-if="item.taskTitle || item.taskNodeName">
-                    <div class="task-info" @click.stop="goToTaskNode(item)">
-                      <el-icon class="meta-icon"><Document /></el-icon>
-                      <span class="task-title">{{ item.taskTitle || '未知任务' }}</span>
-                    </div>
-                    <div class="node-info" @click.stop="goToTaskNode(item)">
-                      <el-icon class="meta-icon"><Connection /></el-icon>
-                      <span class="node-name">{{ item.taskNodeName || '未知节点' }}</span>
-                    </div>
+                <div class="checklist-content" @click="goToTaskNode(item)">
+                  <div class="checklist-text">{{ item.content }}</div>
+                  <div class="checklist-meta" v-if="item.taskTitle">
+                    <span>{{ item.taskTitle }}</span>
                   </div>
                 </div>
               </div>
-            </template>
+            </div>
           </div>
           <div class="popover-footer">
-            <el-button link type="primary" @click="goToAllChecklists">查看全部</el-button>
+            <button class="link-btn" @click="goToAllChecklists">查看全部</button>
           </div>
         </div>
       </el-popover>
 
-      <!-- 通知 -->
+      <!-- 通知 - 使用红点而非数字徽章 -->
       <el-popover
           placement="bottom-end"
-          :width="380"
+          :width="360"
           trigger="click"
           :visible="notificationPopoverVisible"
           @update:visible="notificationPopoverVisible = $event"
           :show-arrow="false"
-          :offset="12"
-          popper-class="vben-popover"
+          :offset="8"
+          popper-class="header-popover"
       >
         <template #reference>
-          <div class="header-action notification-action" :class="{ 'has-badge': unreadCount > 0, 'has-unread': unreadCount > 0 }">
-            <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
-              <el-icon :size="18"><Bell /></el-icon>
-            </el-badge>
-          </div>
+          <button class="header-btn" :class="{ 'has-indicator': unreadCount > 0 }" aria-label="通知">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            <span class="indicator danger" v-if="unreadCount > 0"></span>
+          </button>
         </template>
-        <div class="popover-container">
+        <div class="popover-content">
           <div class="popover-header">
-            <div class="popover-title">
-              <span class="title-text">通知中心</span>
-              <el-tag v-if="unreadCount > 0" type="danger" size="small" effect="dark" round>
-                {{ unreadCount }}
-              </el-tag>
-            </div>
+            <span class="popover-title">通知中心</span>
+            <button class="link-btn small" @click="markAllRead" v-if="unreadCount > 0">全部已读</button>
           </div>
           <div class="popover-body" v-loading="notificationLoading">
-            <template v-if="notifications.length === 0">
-              <div class="empty-placeholder">
-                <el-icon :size="48" color="#e2e8f0"><Bell /></el-icon>
-                <p>暂无通知</p>
-              </div>
-            </template>
-            <template v-else>
+            <div v-if="notifications.length === 0" class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+              <p>暂无通知</p>
+            </div>
+            <div v-else class="notification-list">
               <div
                   v-for="item in notifications"
                   :key="item.id"
@@ -134,58 +121,69 @@
                   :class="{ unread: item.isRead === 0 }"
                   @click="handleNotificationClick(item)"
               >
-                <div class="notif-icon" :class="getNotifClass(item.type)">
-                  <el-icon><InfoFilled /></el-icon>
-                </div>
+                <div class="notif-indicator" v-if="item.isRead === 0"></div>
                 <div class="notif-content">
                   <div class="notif-title">{{ item.title }}</div>
                   <div class="notif-desc">{{ item.content }}</div>
                   <div class="notif-time">{{ formatTime(item.createTime) }}</div>
                 </div>
-                <div class="unread-indicator" v-if="item.isRead === 0"></div>
               </div>
-            </template>
+            </div>
           </div>
           <div class="popover-footer">
-            <el-button link type="primary" @click="goToNotifications">查看全部</el-button>
+            <button class="link-btn" @click="goToNotifications">查看全部</button>
           </div>
         </div>
       </el-popover>
 
       <!-- 生成邀请码 -->
-      <el-tooltip content="生成邀请码" placement="bottom" v-if="canGenerateInvite">
-        <div class="header-action invite-action" @click="showInviteDialog = true">
-          <el-icon :size="18"><Ticket /></el-icon>
-        </div>
-      </el-tooltip>
+      <button class="header-btn" @click="showInviteDialog = true" v-if="canGenerateInvite" aria-label="生成邀请码">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 5v2M15 11v2M15 17v2M5 5h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7a2 2 0 012-2z"/>
+        </svg>
+      </button>
 
       <!-- 主题切换 -->
-      <el-tooltip :content="isDarkMode ? '切换到浅色模式' : '切换到深色模式'" placement="bottom">
-        <div class="header-action theme-toggle" @click="toggleTheme">
-          <el-icon :size="18"><Sunny v-if="isDarkMode" /><Moon v-else /></el-icon>
-        </div>
-      </el-tooltip>
+      <button class="header-btn theme-btn" @click="toggleTheme" :aria-label="isDarkMode ? '切换到浅色模式' : '切换到深色模式'">
+        <svg v-if="isDarkMode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
 
       <!-- 全屏 -->
-      <div class="header-action" @click="setFullScreen">
-        <el-icon :size="18"><FullScreen /></el-icon>
-      </div>
+      <button class="header-btn hide-mobile" @click="setFullScreen" aria-label="全屏">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+        </svg>
+      </button>
 
-      <!-- 用户头像 -->
+      <!-- 用户头像下拉 -->
       <el-dropdown trigger="click" class="user-dropdown">
-        <div class="user-trigger">
-          <el-avatar :size="32" class="user-avatar" :src="userAvatar">{{ !userAvatar ? username?.charAt(0) : '' }}</el-avatar>
-          <span class="user-name">{{ username }}</span>
-          <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
-        </div>
+        <button class="user-btn">
+          <el-avatar :size="32" class="user-avatar" :src="userAvatar">
+            {{ !userAvatar ? username?.charAt(0) : '' }}
+          </el-avatar>
+          <span class="user-name hide-mobile">{{ username }}</span>
+          <svg class="dropdown-arrow hide-mobile" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="goToProfile">
-              <el-icon><User /></el-icon>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
+              </svg>
               <span>个人中心</span>
             </el-dropdown-item>
             <el-dropdown-item divided @click="handleSignOut">
-              <el-icon><SwitchButton /></el-icon>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
               <span>退出登录</span>
             </el-dropdown-item>
           </el-dropdown-menu>
@@ -194,8 +192,8 @@
     </div>
 
     <!-- 生成邀请码弹窗 -->
-    <el-dialog v-model="showInviteDialog" title="生成邀请码" width="420px">
-      <el-form :model="inviteForm" label-width="100px">
+    <el-dialog v-model="showInviteDialog" title="生成邀请码" width="400px" class="invite-dialog">
+      <el-form :model="inviteForm" label-width="80px">
         <el-form-item label="有效期">
           <el-select v-model="inviteForm.expireDays" style="width: 100%">
             <el-option label="1 天" :value="1" />
@@ -206,22 +204,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="使用次数">
-          <el-input-number v-model="inviteForm.maxUses" :min="0" :max="100" style="width: 100%">
-          </el-input-number>
+          <el-input-number v-model="inviteForm.maxUses" :min="0" :max="100" style="width: 100%" />
           <div class="form-tip">0 表示不限制使用次数</div>
         </el-form-item>
       </el-form>
-
-      <!-- 生成结果 -->
       <div v-if="generatedCode" class="invite-result">
         <div class="result-label">邀请码已生成</div>
         <div class="result-code">{{ generatedCode }}</div>
-        <el-button type="primary" size="small" @click="copyInviteCode">
-          <el-icon><DocumentCopy /></el-icon>
-          复制邀请码
-        </el-button>
+        <el-button type="primary" size="small" @click="copyInviteCode">复制邀请码</el-button>
       </div>
-
       <template #footer>
         <el-button @click="showInviteDialog = false">关闭</el-button>
         <el-button type="primary" @click="handleGenerateCode" :loading="generating">
@@ -232,16 +223,13 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useSidebarStore } from '../store/sidebar';
 import { useUserStore } from '../store/user';
-import {
-  Fold, Expand, Search, Bell, List, FullScreen,
-  ArrowDown, User, SwitchButton, InfoFilled, DocumentChecked,
-  Sunny, Moon, Ticket, DocumentCopy, Document, Connection
-} from '@element-plus/icons-vue';
+import { useThemeStore } from '../store/theme';
 import { getMyEmployee, listNotifications, getMyChecklist, updateChecklist, markNotificationRead, generateInviteCode, getPendingJoinApplications } from '@/api';
 import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
@@ -250,36 +238,15 @@ const router = useRouter();
 const route = useRoute();
 const sidebar = useSidebarStore();
 const userStore = useUserStore();
+const themeStore = useThemeStore();
 const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
 const userAvatar = ref('');
 
 // 主题切换
-const isDarkMode = ref(false);
+const isDarkMode = computed(() => themeStore.isDark);
+const toggleTheme = () => themeStore.toggleDarkMode();
 
-function initTheme() {
-  const saved = localStorage.getItem('app-theme');
-  isDarkMode.value = saved === 'dark';
-  applyTheme();
-}
-
-function toggleTheme() {
-  isDarkMode.value = !isDarkMode.value;
-  localStorage.setItem('app-theme', isDarkMode.value ? 'dark' : 'light');
-  applyTheme();
-}
-
-function applyTheme() {
-  const root = document.documentElement;
-  if (isDarkMode.value) {
-    root.classList.add('dark-mode');
-  } else {
-    root.classList.remove('dark-mode');
-  }
-}
-
-const currentRoute = computed(() => {
-  return route.meta?.title as string || '';
-});
+const currentRoute = computed(() => route.meta?.title as string || '');
 
 // 通知相关
 const unreadCount = ref(0);
@@ -299,16 +266,11 @@ const canGenerateInvite = ref(false);
 const showInviteDialog = ref(false);
 const generating = ref(false);
 const generatedCode = ref('');
-const inviteForm = reactive({
-  expireDays: 7,
-  maxUses: 0
-});
+const inviteForm = reactive({ expireDays: 7, maxUses: 0 });
 
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-const collapseChage = () => {
-  sidebar.handleCollapse();
-};
+const collapseChage = () => sidebar.handleCollapse();
 
 const fetchNotifications = async () => {
   try {
@@ -321,27 +283,19 @@ const fetchNotifications = async () => {
     let notifRows: any[] = [];
     if (notifResp.data.code === 200) {
       const list = notifResp.data?.data?.list || [];
-      notifRows = list.map((n: any) => ({
-        ...n,
-        category: n.category || n.Category || '',
-        isRead: n.isRead ?? n.IsRead ?? 0,
-      }));
+      notifRows = list.map((n: any) => ({ ...n, category: n.category || '', isRead: n.isRead ?? 0 }));
     }
 
     let pendingRows: any[] = [];
     if (pendingResp?.data?.code === 200) {
       const plist = pendingResp.data?.data?.list || [];
       pendingRows = plist.map((p: any) => ({
-        id: p.id || p.ID || p.applicationId || p.ApplicationId || `ja_${p.userId || ''}`,
+        id: p.id || `ja_${p.userId || ''}`,
         title: '新员工加入申请',
         content: `${p.companyName || '公司'} 的加入申请待审批`,
-        type: 3,
-        priority: 2,
-        isRead: 0,
-        createTime: p.createTime || p.CreateTime || '',
-        relatedId: p.id || p.applicationId || '',
-        relatedType: 'join_application',
-        category: 'join_application',
+        type: 3, priority: 2, isRead: 0,
+        createTime: p.createTime || '',
+        relatedId: p.id || '', relatedType: 'join_application', category: 'join_application',
       }));
     }
 
@@ -351,9 +305,9 @@ const fetchNotifications = async () => {
       const key = n.relatedId ? `rid:${n.relatedType}:${n.relatedId}` : `id:${n.id}`;
       if (!uniqMap[key]) uniqMap[key] = n;
     });
-    const mergedList = Object.values(uniqMap).sort((a: any, b: any) => {
-      return (new Date(b.createTime || 0).getTime()) - (new Date(a.createTime || 0).getTime());
-    });
+    const mergedList = Object.values(uniqMap).sort((a: any, b: any) => 
+      (new Date(b.createTime || 0).getTime()) - (new Date(a.createTime || 0).getTime())
+    );
 
     notifications.value = mergedList;
     unreadCount.value = mergedList.filter((n: any) => (n.isRead ?? 0) === 0).length;
@@ -367,11 +321,7 @@ const fetchNotifications = async () => {
 const fetchMyChecklist = async () => {
   try {
     checklistLoading.value = true;
-    const resp = await getMyChecklist({
-      page: 1,
-      pageSize: 10,
-      isCompleted: checklistFilter.value
-    });
+    const resp = await getMyChecklist({ page: 1, pageSize: 10, isCompleted: checklistFilter.value });
     if (resp.data.code === 200) {
       const data = resp.data?.data || {};
       myChecklists.value = data.list || [];
@@ -387,10 +337,7 @@ const fetchMyChecklist = async () => {
 const toggleChecklistItem = async (item: any) => {
   try {
     const newStatus = item.isCompleted === 1 ? 0 : 1;
-    const resp = await updateChecklist({
-      checklistId: item.id,
-      isCompleted: newStatus
-    });
+    const resp = await updateChecklist({ checklistId: item.id, isCompleted: newStatus });
     if (resp.data.code === 200) {
       item.isCompleted = newStatus;
       fetchMyChecklist();
@@ -404,27 +351,37 @@ const toggleChecklistItem = async (item: any) => {
   }
 };
 
+const markAllRead = async () => {
+  // 标记所有通知为已读
+  for (const item of notifications.value) {
+    if (item.isRead === 0) {
+      try {
+        await markNotificationRead({ notificationId: item.id });
+        item.isRead = 1;
+      } catch (e) { /* ignore */ }
+    }
+  }
+  unreadCount.value = 0;
+  ElMessage.success('已全部标记为已读');
+};
+
 const handleNotificationClick = async (item: any) => {
-  if (item.isRead === 0 || item.isRead === '0') {
+  if (item.isRead === 0) {
     try {
-      const resp = await markNotificationRead({ notificationId: item.id || item.notificationId });
+      const resp = await markNotificationRead({ notificationId: item.id });
       if (resp.data.code === 200) {
         item.isRead = 1;
         unreadCount.value = Math.max(0, unreadCount.value - 1);
       }
-    } catch (error: any) {
-      console.error('标记已读失败:', error);
-    }
+    } catch (error) { console.error('标记已读失败:', error); }
   }
 
   notificationPopoverVisible.value = false;
-
-  const relatedId = item.relatedId || item.relatedID || item.related_id;
+  const relatedId = item.relatedId || item.relatedID;
   const relatedType = item.relatedType || item.related_type;
-  const category = item.category || item.Category || '';
+  const category = item.category || '';
 
   if (relatedType === 'join_application' || category === 'join_application') {
-    notificationPopoverVisible.value = false;
     router.push('/notifications');
     return;
   }
@@ -432,8 +389,7 @@ const handleNotificationClick = async (item: any) => {
   if (relatedId) {
     if (relatedType === 'task' || relatedType === 'Task') {
       router.push(`/tasks/detail/${relatedId}`);
-    } else if (relatedType === 'tasknode' || relatedType === 'taskNode' || relatedType === 'TaskNode') {
-      // 任务节点跳转到所属任务详情
+    } else if (relatedType === 'tasknode' || relatedType === 'taskNode') {
       navigateToTaskNode(relatedId);
     } else if (relatedType === 'handover' || relatedType === 'Handover') {
       router.push(`/handovers`);
@@ -445,18 +401,13 @@ const handleNotificationClick = async (item: any) => {
   }
 };
 
-// 跳转到任务节点所属的任务详情
 async function navigateToTaskNode(taskNodeId: string) {
   try {
     const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
     if (resp.data.code === 200 && resp.data.data) {
-      const data = resp.data.data;
-      const taskNode = data.taskNode || data;
-      const taskId = taskNode.taskId || taskNode.TaskId || taskNode.taskID;
-      if (taskId) {
-        router.push(`/tasks/detail/${taskId}`);
-        return;
-      }
+      const taskNode = resp.data.data.taskNode || resp.data.data;
+      const taskId = taskNode.taskId || taskNode.TaskId;
+      if (taskId) { router.push(`/tasks/detail/${taskId}`); return; }
     }
     ElMessage.warning('无法获取任务节点信息');
   } catch (error) {
@@ -465,35 +416,17 @@ async function navigateToTaskNode(taskNodeId: string) {
   }
 }
 
-const goToNotifications = () => {
-  notificationPopoverVisible.value = false;
-  router.push('/notifications');
-};
-
+const goToNotifications = () => { notificationPopoverVisible.value = false; router.push('/notifications'); };
 const goToTaskNode = (item: any) => {
   checklistPopoverVisible.value = false;
-  if (item.taskNodeId) {
-    // 跳转到任务节点所属的任务详情
-    navigateToTaskNode(item.taskNodeId);
-  } else if (item.taskId) {
-    router.push(`/tasks/detail/${item.taskId}`);
-  }
+  if (item.taskNodeId) navigateToTaskNode(item.taskNodeId);
+  else if (item.taskId) router.push(`/tasks/detail/${item.taskId}`);
 };
-
-const goToAllChecklists = () => {
-  checklistPopoverVisible.value = false;
-  router.push('/task/my');
+const goToAllChecklists = () => { 
+  checklistPopoverVisible.value = false; 
+  router.push('/my-checklists'); 
 };
-
-const goToProfile = () => {
-  router.push('/ucenter');
-};
-
-const getNotifClass = (type: number) => {
-  if (type === 1) return 'type-task';
-  if (type === 2) return 'type-warning';
-  return 'type-info';
-};
+const goToProfile = () => router.push('/ucenter');
 
 const formatTime = (time: string) => {
   if (!time) return '';
@@ -503,7 +436,6 @@ const formatTime = (time: string) => {
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-
   if (minutes < 1) return '刚刚';
   if (minutes < 60) return `${minutes}分钟前`;
   if (hours < 24) return `${hours}小时前`;
@@ -511,26 +443,12 @@ const formatTime = (time: string) => {
   return time.split('T')[0];
 };
 
-const startPolling = () => {
-  pollingTimer = setInterval(() => {
-    fetchNotifications();
-    fetchMyChecklist();
-  }, 30000);
-};
-
-const stopPolling = () => {
-  if (pollingTimer) {
-    clearInterval(pollingTimer);
-    pollingTimer = null;
-  }
-};
+const startPolling = () => { pollingTimer = setInterval(() => { fetchNotifications(); fetchMyChecklist(); }, 30000); };
+const stopPolling = () => { if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; } };
 
 const setFullScreen = () => {
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-  } else {
-    document.body.requestFullscreen.call(document.body);
-  }
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.body.requestFullscreen.call(document.body);
 };
 
 function handleSignOut() {
@@ -544,10 +462,7 @@ function handleSignOut() {
 const handleGenerateCode = async () => {
   generating.value = true;
   try {
-    const res = await generateInviteCode({
-      expireDays: inviteForm.expireDays,
-      maxUses: inviteForm.maxUses
-    });
+    const res = await generateInviteCode({ expireDays: inviteForm.expireDays, maxUses: inviteForm.maxUses });
     if (res.data.code === 200) {
       generatedCode.value = res.data.data?.inviteCode || '';
       ElMessage.success('邀请码生成成功');
@@ -563,53 +478,19 @@ const handleGenerateCode = async () => {
 };
 
 const copyInviteCode = async () => {
-  if (!generatedCode.value) {
-    ElMessage.warning('没有可复制的邀请码');
-    return;
-  }
-
+  if (!generatedCode.value) { ElMessage.warning('没有可复制的邀请码'); return; }
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(generatedCode.value);
-      ElMessage.success('邀请码已复制到剪贴板');
-    } else {
-      const textArea = document.createElement('textarea');
-      textArea.value = generatedCode.value;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      textArea.style.top = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-
-      if (successful) {
-        ElMessage.success('邀请码已复制到剪贴板');
-      } else {
-        ElMessage.error('复制失败，请手动复制');
-      }
-    }
-  } catch (err) {
-    console.error('复制失败:', err);
+    await navigator.clipboard.writeText(generatedCode.value);
+    ElMessage.success('邀请码已复制到剪贴板');
+  } catch {
     const textArea = document.createElement('textarea');
     textArea.value = generatedCode.value;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-9999px';
-    textArea.style.top = '-9999px';
+    textArea.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
     document.body.appendChild(textArea);
-    textArea.focus();
     textArea.select();
-
-    try {
-      document.execCommand('copy');
-      ElMessage.success('邀请码已复制到剪贴板');
-    } catch {
-      ElMessage.error('复制失败，请手动复制邀请码: ' + generatedCode.value);
-    } finally {
-      document.body.removeChild(textArea);
-    }
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    ElMessage.success('邀请码已复制到剪贴板');
   }
 };
 
@@ -623,22 +504,16 @@ const checkInvitePermission = async () => {
       const isManager = emp.isManagement === 1 || emp.positionName?.includes('经理');
       canGenerateInvite.value = isFounder || isHR || isManager;
     }
-  } catch (error) {
-    console.error('检查邀请码权限失败:', error);
-  }
+  } catch (error) { console.error('检查邀请码权限失败:', error); }
 };
 
 onMounted(async () => {
-  initTheme();
-
   try {
     const empRes = await getMyEmployee();
     const emp = empRes?.data?.data || {};
     username.value = emp.realName || emp.name || username.value;
     userAvatar.value = emp.avatar || '';
-  } catch (error: any) {
-    console.error('获取用户信息失败:', error);
-  }
+  } catch (error) { console.error('获取用户信息失败:', error); }
 
   checkInvitePermission();
   fetchNotifications();
@@ -646,346 +521,347 @@ onMounted(async () => {
   startPolling();
 });
 
-onUnmounted(() => {
-  stopPolling();
-});
+onUnmounted(() => stopPolling());
 </script>
 
+
 <style scoped>
-.header-container {
+/* ==================== Swiss Minimalism Header ==================== */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 64px;
-  padding: 0 24px;
-  background: var(--bg-card, #ffffff);
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-  transition: background-color 0.3s, border-color 0.3s;
+  height: var(--header-height);
+  padding: 0 var(--space-6);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
-.collapse-trigger {
+/* 折叠按钮 - 简洁 */
+.collapse-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
-  color: var(--text-secondary, #475569);
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
-.collapse-trigger:hover {
-  background: var(--bg-hover, #f1f5f9);
-  color: var(--text-main, #0f172a);
+.collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
+/* 面包屑 - 简洁样式 */
 .breadcrumb {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
 }
 
-.breadcrumb :deep(.el-breadcrumb__inner) {
-  color: var(--text-secondary, #475569);
+.breadcrumb-item {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-.breadcrumb :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
-  color: var(--text-main, #0f172a);
-  font-weight: 500;
+.breadcrumb-item:hover {
+  color: var(--color-primary);
+}
+
+.breadcrumb-item.current {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.breadcrumb-separator {
+  color: var(--text-muted);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
-.header-action {
+/* Header 按钮 - 统一简洁风格 */
+.header-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
-  color: var(--text-secondary, #475569);
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
-.header-action:hover {
-  background: var(--bg-hover, #f1f5f9);
-  color: var(--text-main, #0f172a);
+.header-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
-.header-action.has-badge {
-  color: #dc2626;
+/* 红点指示器 - 替代数字徽章 */
+.indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
 }
 
-.header-action.checklist-action.has-pending {
-  color: #f59e0b;
-  animation: pulse-checklist 2s ease-in-out infinite;
+.indicator.danger {
+  background: var(--color-danger);
 }
 
-.header-action.notification-action.has-unread {
-  color: #dc2626;
-  animation: pulse-notification 2s ease-in-out infinite;
+.indicator.warning {
+  background: var(--color-warning);
 }
 
-@keyframes pulse-checklist {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* 主题切换按钮 */
+.theme-btn {
+  color: var(--color-warning);
 }
 
-@keyframes pulse-notification {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+.theme-btn:hover {
+  background: var(--color-warning-light);
 }
 
-.header-action.theme-toggle {
-  color: #f59e0b;
-}
-
-.header-action.theme-toggle:hover {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.header-action.invite-action {
-  color: #10b981;
-}
-
-.header-action.invite-action:hover {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.search-action {
-  width: auto;
-  padding: 0 12px;
-  gap: 6px;
-}
-
+/* 用户下拉 */
 .user-dropdown {
-  margin-left: 8px;
+  margin-left: var(--space-2);
 }
 
-.user-trigger {
+.user-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px 4px 4px;
-  border-radius: 8px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
-.user-trigger:hover {
-  background: var(--bg-hover, #f1f5f9);
+.user-btn:hover {
+  background: var(--bg-hover);
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, var(--color-primary, #3B82F6) 0%, var(--color-primary-hover, #2563EB) 100%);
+  background: var(--color-primary);
   color: #fff;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
 }
 
 .user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-main, #0f172a);
-  max-width: 120px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dropdown-icon {
-  color: var(--text-muted, #94a3b8);
-  font-size: 12px;
+.dropdown-arrow {
+  color: var(--text-muted);
 }
 
-/* Popover Styles */
-.popover-container {
+/* ==================== Popover 样式 - 简洁版 ==================== */
+.popover-content {
   margin: -12px;
-  max-width: 380px;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
+  background: var(--bg-card);
 }
 
 .popover-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
 }
 
 .popover-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.title-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-main, #0f172a);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .popover-body {
   max-height: 400px;
   overflow-y: auto;
-  padding: 6px 0;
+  background: var(--bg-card);
+}
+
+.popover-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popover-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popover-body::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+}
+
+.popover-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .popover-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border-color);
   text-align: center;
+  background: var(--bg-card);
 }
 
-.empty-placeholder {
-  padding: 40px 20px;
+.link-btn {
+  background: var(--color-primary) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: var(--font-size-sm) !important;
+  font-weight: var(--font-weight-bold) !important;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: var(--space-3) var(--space-6) !important;
+  border-radius: var(--radius-md);
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+}
+
+.link-btn:hover {
+  background: var(--color-primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.link-btn.small {
+  font-size: var(--font-size-xs) !important;
+  padding: var(--space-2) var(--space-4) !important;
+  width: auto;
+  font-weight: var(--font-weight-semibold) !important;
+}
+
+/* 空状态 - 简洁版 */
+.empty-state {
+  padding: var(--space-10) var(--space-6);
   text-align: center;
+  color: var(--text-muted);
 }
 
-.empty-placeholder p {
-  margin-top: 12px;
-  color: var(--text-muted, #94a3b8);
-  font-size: 14px;
+.empty-state svg {
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+  opacity: 0.3;
 }
 
-/* Checklist Item */
+.empty-state p {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* 清单列表 - 简洁版 */
+.checklist-list {
+  padding: var(--space-2) 0;
+}
+
 .checklist-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  transition: all 0.2s;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
-  margin: 3px 0;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .checklist-item:hover {
-  background: var(--bg-hover, #f1f5f9);
-  border-left-color: var(--color-primary, #3B82F6);
-  transform: translateX(2px);
+  background: var(--bg-hover);
 }
 
 .checklist-item.completed {
-  opacity: 0.65;
-  border-left-color: #10b981;
+  opacity: 0.5;
 }
 
-.item-content {
+.checklist-content {
   flex: 1;
   min-width: 0;
 }
 
-.item-text {
-  font-size: 14px;
-  color: var(--text-main, #0f172a);
+.checklist-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
   line-height: 1.6;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
-.checklist-item.completed .item-text {
+.checklist-item.completed .checklist-text {
   text-decoration: line-through;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted);
 }
 
-.item-meta {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.checklist-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
 }
 
-.task-info,
-.node-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted, #94a3b8);
-  cursor: pointer;
-  transition: all 0.2s;
+/* 通知列表 - 简洁版 */
+.notification-list {
+  padding: var(--space-2) 0;
 }
 
-.task-info:hover,
-.node-info:hover {
-  color: var(--color-primary, #3B82F6);
-}
-
-.meta-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.task-title,
-.node-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Notification Item */
 .notification-item {
   display: flex;
-  gap: 12px;
-  padding: 14px 16px;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   position: relative;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
-  margin: 3px 0;
 }
 
 .notification-item:hover {
-  background: var(--bg-hover, #f1f5f9);
-  border-left-color: var(--color-primary, #3B82F6);
-  transform: translateX(2px);
+  background: var(--bg-hover);
 }
 
 .notification-item.unread {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
-  border-left-color: #3b82f6;
+  background: var(--bg-hover);
 }
 
-.notif-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* 蓝点指示未读 - 简洁版 */
+.notif-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
   flex-shrink: 0;
-}
-
-.notif-icon.type-task {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
-}
-
-.notif-icon.type-warning {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #d97706;
-}
-
-.notif-icon.type-info {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb;
+  margin-top: 6px;
 }
 
 .notif-content {
@@ -994,185 +870,145 @@ onUnmounted(() => {
 }
 
 .notif-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: var(--text-main, #0f172a);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  line-height: 1.4;
 }
 
 .notif-desc {
-  font-size: 12px;
-  color: var(--text-secondary, #475569);
-  line-height: 1.4;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin-bottom: var(--space-1);
 }
 
 .notif-time {
-  font-size: 11px;
-  color: var(--text-muted, #94a3b8);
-  margin-top: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
 }
 
-.unread-indicator {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  background: var(--color-danger, #ef4444);
-  border-radius: 50%;
+/* 邀请码结果 */
+.form-tip {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
 }
 
-/* 响应式布局 - 平板 */
-@media (max-width: 1024px) {
-  .header-container {
-    padding: 0 20px;
-  }
-
-  .header-right {
-    gap: 2px;
-  }
-
-  .header-action {
-    width: 36px;
-    height: 36px;
-  }
-
-  .user-name {
-    max-width: 80px;
-  }
+.invite-result {
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-success-light);
+  border-radius: var(--radius-lg);
+  text-align: center;
 }
 
-/* 响应式布局 - 移动端 */
+.result-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+  margin-bottom: var(--space-2);
+}
+
+.result-code {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-mono);
+  letter-spacing: 4px;
+  color: var(--color-success-dark);
+  margin-bottom: var(--space-3);
+}
+
+/* 隐藏移动端 */
+.hide-mobile {
+  display: flex;
+}
+
+/* ==================== 响应式 ==================== */
 @media (max-width: 768px) {
-  .header-container {
-    padding: 0 12px;
-    height: 56px;
-  }
-
-  .header-left {
-    gap: 8px;
-  }
-
-  .collapse-trigger {
-    width: 36px;
-    height: 36px;
+  .header {
+    padding: 0 var(--space-3);
   }
 
   .breadcrumb {
     display: none;
   }
 
-  .header-right {
-    gap: 0;
-  }
-
-  .header-action {
+  .header-btn {
     width: 36px;
     height: 36px;
   }
 
-  .header-action .el-icon {
-    font-size: 16px !important;
+  .collapse-btn {
+    width: 36px;
+    height: 36px;
   }
 
-  /* 移动端隐藏搜索和全屏按钮 */
-  .search-action,
-  .header-action:has(.el-icon > svg[class*="FullScreen"]) {
-    display: none;
+  .hide-mobile {
+    display: none !important;
   }
 
-  .user-dropdown {
-    margin-left: 4px;
-  }
-
-  .user-trigger {
-    padding: 4px;
+  .user-btn {
+    padding: var(--space-1);
   }
 
   .user-avatar {
     width: 28px !important;
     height: 28px !important;
   }
-
-  .user-name {
-    display: none;
-  }
-
-  .dropdown-icon {
-    display: none;
-  }
 }
 
-/* 响应式布局 - 小屏幕 */
 @media (max-width: 480px) {
-  .header-container {
-    padding: 0 8px;
-    height: 52px;
+  .header {
+    padding: 0 var(--space-2);
   }
 
-  .collapse-trigger {
+  .header-btn {
     width: 32px;
     height: 32px;
   }
 
-  .header-action {
-    width: 32px;
-    height: 32px;
-  }
-
-  /* 小屏幕只保留核心功能 */
-  .theme-toggle,
-  .invite-action {
+  .theme-btn {
     display: none;
   }
 }
 </style>
 
 <style>
-/* Global Popover Style */
-.vben-popover {
-  border-radius: 12px !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid var(--border-color, #e2e8f0) !important;
+/* Global Popover Style - 改进版 */
+.header-popover {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid var(--border-color) !important;
   padding: 0 !important;
-  background: var(--bg-card, #ffffff) !important;
-  max-width: 380px !important;
-  width: 380px !important;
+  background: var(--bg-card) !important;
+  overflow: hidden;
 }
 
-/* 邀请码弹窗样式 */
-.form-tip {
-  font-size: 12px;
-  color: var(--text-secondary, #475569);
-  margin-top: 4px;
+.header-popover .el-radio-group {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 2px;
 }
 
-.invite-result {
-  margin-top: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 1px solid #6ee7b7;
-  border-radius: 12px;
-  text-align: center;
+.header-popover .el-radio-button__inner {
+  border: none !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-xs) !important;
+  padding: 4px 12px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all var(--transition-fast) !important;
 }
 
-.result-label {
-  font-size: 12px;
-  color: #047857;
-  margin-bottom: 8px;
-}
-
-.result-code {
-  font-size: 28px;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 4px;
-  color: #065f46;
-  margin-bottom: 12px;
+.header-popover .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background: var(--bg-card) !important;
+  color: var(--color-primary) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 </style>

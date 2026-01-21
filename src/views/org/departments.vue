@@ -464,10 +464,10 @@ onMounted(() => { loadData(); });
   font-size: 22px;
 }
 
-.stat-icon.total { background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%); color: #fff; }
-.stat-icon.active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
-.stat-icon.inactive { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: #fff; }
-.stat-icon.members { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+.stat-icon.total { background: var(--color-primary); color: #fff; }
+.stat-icon.active { background: var(--color-success); color: #fff; }
+.stat-icon.inactive { background: var(--text-muted); color: #fff; }
+.stat-icon.members { background: var(--color-warning); color: #fff; }
 
 .stat-value {
   font-size: 28px;
@@ -542,7 +542,7 @@ onMounted(() => { loadData(); });
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
+  background: var(--color-primary);
   color: #fff;
   display: flex;
   align-items: center;
@@ -650,7 +650,7 @@ onMounted(() => { loadData(); });
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%);
+  background: var(--color-primary);
   color: #fff;
   display: flex;
   align-items: center;

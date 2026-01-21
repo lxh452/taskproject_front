@@ -18,15 +18,41 @@ function buildApiBaseUrl(): string {
     return `${proto}//${host}/api/v1`;
 }
 
+// CSRF Token管理
+let csrfToken: string | null = null;
+
+/**
+ * 设置CSRF Token（登录成功后调用）
+ */
+export function setCsrfToken(token: string) {
+    csrfToken = token;
+    // 同时存储到sessionStorage，页面刷新后可恢复
+    sessionStorage.setItem('csrfToken', token);
+}
+
+/**
+ * 获取CSRF Token
+ */
+export function getCsrfToken(): string | null {
+    if (!csrfToken) {
+        csrfToken = sessionStorage.getItem('csrfToken');
+    }
+    return csrfToken;
+}
+
+/**
+ * 清除CSRF Token（登出时调用）
+ */
+export function clearCsrfToken() {
+    csrfToken = null;
+    sessionStorage.removeItem('csrfToken');
+}
+
 // 防重复提示机制
 const errorNotificationState = {
     isShowing401: false,
     isShowing403: false,
-    lastErrorTime: 0,
 };
-
-// 重置提示状态的延迟时间（毫秒）
-const ERROR_NOTIFICATION_COOLDOWN = 3000;
 
 const service: AxiosInstance = axios.create({
     baseURL: buildApiBaseUrl(),
@@ -47,12 +73,23 @@ service.interceptors.request.use(
             };
         }
         
+        // 添加CSRF Token（非GET/HEAD/OPTIONS请求）
+        const method = (config.method || 'GET').toUpperCase();
+        const currentCsrfToken = getCsrfToken();
+        if (currentCsrfToken && !['GET', 'HEAD', 'OPTIONS'].includes(method) && !isAuthEndpoint) {
+            (config.headers as any) = {
+                ...(config.headers || {}),
+                'X-CSRF-Token': currentCsrfToken,
+            };
+        }
+        
         // 调试日志
         if (import.meta.env?.DEV) {
             console.log('发送请求:', {
                 url: config.url,
                 method: config.method,
                 hasToken: !!token,
+                hasCsrfToken: !!currentCsrfToken,
                 isAuthEndpoint,
                 baseURL: config.baseURL
             });
@@ -68,6 +105,11 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
     (response: AxiosResponse) => {
+        // 检查响应头中是否有CSRF Token（登录成功后返回）
+        const newCsrfToken = response.headers['x-csrf-token'];
+        if (newCsrfToken) {
+            setCsrfToken(newCsrfToken);
+        }
         return response;
     },
     (error: AxiosError) => {
@@ -78,16 +120,34 @@ service.interceptors.response.use(
         if (status === 403) {
             const errorMsg = responseData?.msg || responseData?.message || '权限不足，无法访问该资源';
             
+            // 判断是否是账号被封禁或公司被禁用
+            const isBanned = errorMsg.includes('封禁') || errorMsg.includes('banned');
+            const isCompanyDisabled = errorMsg.includes('公司') && errorMsg.includes('禁用');
+            
             // 防重复提示：如果已经在显示403提示，则跳过
             if (!errorNotificationState.isShowing403) {
                 errorNotificationState.isShowing403 = true;
                 
+                let title = '权限不足';
+                let notificationType: 'warning' | 'error' = 'warning';
+                let shouldLogout = false;
+                
+                if (isBanned) {
+                    title = '账号已被封禁';
+                    notificationType = 'error';
+                    shouldLogout = true;
+                } else if (isCompanyDisabled) {
+                    title = '公司已被禁用';
+                    notificationType = 'error';
+                    shouldLogout = true;
+                }
+                
                 // 使用 ElNotification 显示提示
                 ElNotification({
-                    title: '权限不足',
+                    title: title,
                     message: errorMsg,
-                    type: 'warning',
-                    duration: 5000,
+                    type: notificationType,
+                    duration: shouldLogout ? 8000 : 5000,
                     position: 'top-right',
                     showClose: true,
                     onClose: () => {
@@ -95,17 +155,29 @@ service.interceptors.response.use(
                         errorNotificationState.isShowing403 = false;
                     }
                 });
+                
+                // 如果是封禁或公司禁用，清除登录状态并跳转到登录页
+                if (shouldLogout) {
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                    localStorage.removeItem('vuems_name');
+                    clearCsrfToken();
+                    
+                    setTimeout(() => {
+                        window.location.href = '/#/login';
+                    }, 2000);
+                }
             }
             
             console.warn('403 鉴权失败:', {
                 url: error.config?.url,
                 method: error.config?.method,
                 message: errorMsg,
+                isBanned,
+                isCompanyDisabled,
                 response: responseData
             });
             
-            // 可以选择跳转到 403 页面
-            // 注意：这里不直接跳转，让业务代码决定如何处理
             return Promise.reject(error);
         }
         
@@ -134,6 +206,7 @@ service.interceptors.response.use(
                 localStorage.removeItem('authToken');
                 sessionStorage.removeItem('authToken');
                 localStorage.removeItem('vuems_name');
+                clearCsrfToken();
                 
                 // 延迟跳转，确保通知显示
                 setTimeout(() => {

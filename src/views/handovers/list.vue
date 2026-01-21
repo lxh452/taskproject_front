@@ -1,52 +1,63 @@
 <template>
   <div class="handovers-page">
-    <!-- 页面头部 -->
+    <!-- 页面头部 - Swiss Minimalism -->
     <div class="page-header">
       <div class="header-left">
         <h1 class="page-title">审批管理</h1>
         <p class="page-desc">管理任务交接申请与审批流程</p>
       </div>
-      <el-button type="primary" :icon="Plus" @click="createHandover" class="create-btn">
+      <button class="btn-primary" @click="createHandover">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
         发起审批
-      </el-button>
+      </button>
     </div>
 
     <!-- 统计卡片 -->
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-icon warning">
-          <el-icon><User /></el-icon>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.waitingConfirm }}</div>
-          <div class="stat-label">待接收确认</div>
+          <span class="stat-value">{{ stats.waitingConfirm }}</span>
+          <span class="stat-label">待接收确认</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon primary">
-          <el-icon><Clock /></el-icon>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.pending }}</div>
-          <div class="stat-label">待上级审批</div>
+          <span class="stat-value">{{ stats.pending }}</span>
+          <span class="stat-label">待上级审批</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon success">
-          <el-icon><CircleCheck /></el-icon>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.approved }}</div>
-          <div class="stat-label">已通过</div>
+          <span class="stat-value">{{ stats.approved }}</span>
+          <span class="stat-label">已通过</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon default">
-          <el-icon><CircleClose /></el-icon>
+        <div class="stat-icon danger">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
+          </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.rejected }}</div>
-          <div class="stat-label">已拒绝</div>
+          <span class="stat-value">{{ stats.rejected }}</span>
+          <span class="stat-label">已拒绝</span>
         </div>
       </div>
     </div>
@@ -54,7 +65,12 @@
     <!-- 筛选栏 -->
     <div class="filter-bar">
       <div class="filter-left">
-        <el-input v-model="query.keyword" placeholder="搜索任务 / 人员..." clearable class="search-input" :prefix-icon="Search" />
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input v-model="query.keyword" placeholder="搜索任务 / 人员..." class="search-input" />
+        </div>
         <el-select v-model="query.status" placeholder="状态" clearable class="filter-select">
           <el-option label="待接收" :value="0" />
           <el-option label="待审批" :value="1" />
@@ -66,84 +82,109 @@
           <el-option label="待我审批" value="to" />
         </el-select>
       </div>
-      <el-button :icon="Refresh" circle @click="resetFilter" />
+      <button class="btn-icon" @click="resetFilter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+      </button>
     </div>
 
     <!-- 交接卡片列表 -->
     <div class="content-area">
-      <el-skeleton :rows="3" animated v-if="loading" />
+      <div v-if="loading" class="skeleton-grid">
+        <div v-for="i in 4" :key="i" class="skeleton-card">
+          <div class="skeleton-header"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line w-70"></div>
+            <div class="skeleton-line w-100"></div>
+          </div>
+        </div>
+      </div>
       <template v-else>
         <div v-if="filteredRows.length > 0" class="handovers-grid">
-          <div v-for="row in filteredRows" :key="row.id" class="handover-card" @click="viewHandover(row)">
+          <div 
+            v-for="row in filteredRows" 
+            :key="row.id" 
+            class="handover-card"
+            :class="'status-' + row.statusType"
+            @click="viewHandover(row)"
+          >
             <div class="card-header">
-              <div class="type-tag" :class="row.isNodeCompletion ? 'node' : (row.isLeaveRequest ? 'leave' : 'task')">
+              <span class="type-tag" :class="row.isNodeCompletion ? 'node' : (row.isLeaveRequest ? 'leave' : 'task')">
                 {{ row.isNodeCompletion ? '节点审批' : (row.isLeaveRequest ? '离职' : '任务') }}
-              </div>
-              <div class="status-badge" :class="row.statusType">
-                {{ row.statusText }}
-              </div>
+              </span>
+              <span class="status-badge" :class="row.statusType">{{ row.statusText }}</span>
             </div>
 
-            <div class="card-body">
-              <h3 class="card-title">{{ row.task }}</h3>
+            <h3 class="card-title">{{ row.task }}</h3>
 
-              <div class="flow-visual">
-                <div class="flow-node">
-                  <el-avatar :size="36" class="flow-avatar from">{{ row.from?.charAt(0) }}</el-avatar>
-                  <span class="flow-name">{{ row.from }}</span>
-                </div>
-                <div class="flow-arrow">
-                  <el-icon><Right /></el-icon>
-                </div>
-                <div class="flow-node">
-                  <template v-if="row.isNodeCompletion">
-                    <div class="audit-badge node">审</div>
-                    <span class="flow-name">{{ row.to || '待审批' }}</span>
-                  </template>
-                  <template v-else-if="!row.isLeaveRequest">
-                    <el-avatar :size="36" class="flow-avatar to">{{ row.to?.charAt(0) }}</el-avatar>
-                    <span class="flow-name">{{ row.to }}</span>
-                  </template>
-                  <template v-else>
-                    <div class="audit-badge">审</div>
-                    <span class="flow-name">待审批</span>
-                  </template>
-                </div>
+            <div class="flow-visual">
+              <div class="flow-node">
+                <div class="flow-avatar from">{{ row.from?.charAt(0) }}</div>
+                <span class="flow-name">{{ row.from }}</span>
+              </div>
+              <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              <div class="flow-node">
+                <template v-if="row.isNodeCompletion">
+                  <div class="flow-avatar audit node">审</div>
+                  <span class="flow-name">{{ row.to || '待审批' }}</span>
+                </template>
+                <template v-else-if="!row.isLeaveRequest">
+                  <div class="flow-avatar to">{{ row.to?.charAt(0) }}</div>
+                  <span class="flow-name">{{ row.to }}</span>
+                </template>
+                <template v-else>
+                  <div class="flow-avatar audit">审</div>
+                  <span class="flow-name">待审批</span>
+                </template>
               </div>
             </div>
 
             <div class="card-footer">
-              <div class="time-info">
-                <el-icon><Calendar /></el-icon>
-                <span>{{ row.time }}</span>
-              </div>
+              <span class="time-info">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ row.time }}
+              </span>
               <div class="action-btns">
-                <el-button
-                    v-if="!row.isLeaveRequest && !row.isNodeCompletion && row.status === 0 && row.toEmployeeId === currentEmployeeId"
-                    size="small" type="success" plain
-                    @click.stop="quickApprove(row)"
-                >确认</el-button>
-                <el-button
-                    v-if="row.isNodeCompletion && row.status === 1"
-                    size="small" type="success" plain
-                    @click.stop="handleNodeApprove(row, true)"
-                >通过</el-button>
-                <el-button
-                    v-if="row.isNodeCompletion && row.status === 1"
-                    size="small" type="danger" plain
-                    @click.stop="handleNodeApprove(row, false)"
-                >拒绝</el-button>
-                <el-button
-                    v-if="!row.isNodeCompletion && row.status === 1 && row.approverId === currentEmployeeId"
-                    size="small" type="warning" plain
-                    @click.stop="quickApprove(row)"
-                >审批</el-button>
+                <button
+                  v-if="!row.isLeaveRequest && !row.isNodeCompletion && row.status === 0 && row.toEmployeeId === currentEmployeeId"
+                  class="action-btn success"
+                  @click.stop="quickApprove(row)"
+                >确认</button>
+                <button
+                  v-if="row.isNodeCompletion && row.status === 1"
+                  class="action-btn success"
+                  @click.stop="handleNodeApprove(row, true)"
+                >通过</button>
+                <button
+                  v-if="row.isNodeCompletion && row.status === 1"
+                  class="action-btn danger"
+                  @click.stop="handleNodeApprove(row, false)"
+                >拒绝</button>
+                <button
+                  v-if="!row.isNodeCompletion && row.status === 1 && row.approverId === currentEmployeeId"
+                  class="action-btn warning"
+                  @click.stop="quickApprove(row)"
+                >审批</button>
               </div>
             </div>
           </div>
         </div>
         <div v-else class="empty-state">
-          <el-empty description="暂无交接记录" />
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 14l2 2 4-4"/>
+          </svg>
+          <p>暂无交接记录</p>
         </div>
       </template>
     </div>
@@ -153,7 +194,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { Search, Refresh, Plus, Right, Clock, CircleCheck, CircleClose, User, Calendar } from '@element-plus/icons-vue';
 import { listHandovers, getMyEmployee, approveTaskNodeCompletion } from '@/api';
 import request from '@/utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -175,16 +215,13 @@ const filteredRows = computed(() => {
   const { keyword, status, type } = query.value;
   return rows.value.filter((r) => {
     const byKw = !keyword ||
-        (r.task && r.task.toLowerCase().includes(keyword.toLowerCase())) ||
-        (r.from && r.from.toLowerCase().includes(keyword.toLowerCase())) ||
-        (r.to && r.to.toLowerCase().includes(keyword.toLowerCase()));
+      (r.task && r.task.toLowerCase().includes(keyword.toLowerCase())) ||
+      (r.from && r.from.toLowerCase().includes(keyword.toLowerCase())) ||
+      (r.to && r.to.toLowerCase().includes(keyword.toLowerCase()));
     const bySt = (status === '' || status === null || status === undefined) || r.status === status;
     let byType = true;
     if (type === 'from') byType = r.fromEmployeeId === currentEmployeeId.value;
-    else if (type === 'to') {
-      // 待我审批：包括作为接收人或审批人的记录
-      byType = r.toEmployeeId === currentEmployeeId.value || r.approverId === currentEmployeeId.value;
-    }
+    else if (type === 'to') byType = r.toEmployeeId === currentEmployeeId.value || r.approverId === currentEmployeeId.value;
     return byKw && bySt && byType;
   });
 });
@@ -192,111 +229,58 @@ const filteredRows = computed(() => {
 const resetFilter = () => { query.value = { keyword: '', status: null, type: null }; };
 const createHandover = () => { router.push('/handovers/create'); };
 
-// 跳转到任务节点所属的任务详情
 async function navigateToTaskNode(taskNodeId: string) {
   try {
     const resp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId } });
     if (resp.data.code === 200 && resp.data.data) {
-      const data = resp.data.data;
-      // 从 taskNode 对象中获取 taskId
-      const taskNode = data.taskNode || data;
+      const taskNode = resp.data.data.taskNode || resp.data.data;
       const taskId = taskNode.taskId || taskNode.TaskID || taskNode.taskID;
-      if (taskId) {
-        router.push(`/tasks/detail/${taskId}`);
-        return;
-      }
+      if (taskId) { router.push(`/tasks/detail/${taskId}`); return; }
     }
     ElMessage.warning('无法获取任务节点信息');
-  } catch (error) {
-    console.error('获取任务节点失败:', error);
-    ElMessage.error('获取任务节点信息失败');
-  }
+  } catch { ElMessage.error('获取任务节点信息失败'); }
 }
 
 function viewHandover(row: any) {
-  if (row.isNodeCompletion && row.taskNodeId) {
-    // 任务节点完成审批，跳转到任务节点所属的任务详情
-    navigateToTaskNode(row.taskNodeId);
-  } else {
-    router.push(`/handovers/detail/${row.id}`);
-  }
+  if (row.isNodeCompletion && row.taskNodeId) navigateToTaskNode(row.taskNodeId);
+  else router.push(`/handovers/detail/${row.id}`);
 }
 
-function quickApprove(row: any) {
-  router.push(`/handovers/detail/${row.id}`);
-}
+function quickApprove(row: any) { router.push(`/handovers/detail/${row.id}`); }
 
-// 处理任务节点完成审批
 async function handleNodeApprove(row: any, approved: boolean) {
   try {
     const { value: comment } = await ElMessageBox.prompt(
-        approved ? '确定要通过此任务节点的完成审批吗？' : '确定要拒绝此任务节点的完成审批吗？',
-        approved ? '审批通过' : '审批拒绝',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          inputType: 'textarea',
-          inputPlaceholder: '请输入审批意见（可选）',
-          inputValidator: () => true,
-        }
+      approved ? '确定要通过此任务节点的完成审批吗？' : '确定要拒绝此任务节点的完成审批吗？',
+      approved ? '审批通过' : '审批拒绝',
+      { confirmButtonText: '确定', cancelButtonText: '取消', inputType: 'textarea', inputPlaceholder: '请输入审批意见（可选）', inputValidator: () => true }
     ).catch(() => ({ value: '' }));
 
-    // 获取审批ID - 从row中获取，或者通过taskNodeId查询
     let approvalId = row.approvalId || row.id;
-    
-    // 如果没有approvalId，尝试通过taskNodeId获取
     if (!approvalId && row.taskNodeId) {
       try {
-        const nodeResp = await request({
-          url: '/tasknode/get',
-          method: 'post',
-          data: { taskNodeId: row.taskNodeId }
-        });
+        const nodeResp = await request({ url: '/tasknode/get', method: 'post', data: { taskNodeId: row.taskNodeId } });
         if (nodeResp.data.code === 200) {
-          const data = nodeResp.data.data || {};
-          const approvals = data.approvals || [];
+          const approvals = nodeResp.data.data?.approvals || [];
           const pendingApproval = approvals.find((a: any) => a.approvalType === 0);
-          if (pendingApproval) {
-            approvalId = pendingApproval.approvalId;
-          }
+          if (pendingApproval) approvalId = pendingApproval.approvalId;
         }
-      } catch (error) {
-        console.error('获取审批记录失败:', error);
-      }
+      } catch { console.error('获取审批记录失败'); }
     }
 
-    if (!approvalId) {
-      ElMessage.error('无法找到审批记录，请刷新页面重试');
-      return;
-    }
+    if (!approvalId) { ElMessage.error('无法找到审批记录，请刷新页面重试'); return; }
 
-    const resp = await approveTaskNodeCompletion({
-      approvalId: approvalId,
-      approved: approved ? 1 : 2,
-      comment: comment || ''
-    });
-    
-    if (resp.data.code === 200) {
-      ElMessage.success(approved ? '审批通过' : '审批已拒绝');
-      await loadData();
-    } else {
-      ElMessage.error(resp.data.msg || '审批失败');
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      console.error('审批失败:', error);
-      ElMessage.error('审批失败');
-    }
-  }
+    const resp = await approveTaskNodeCompletion({ approvalId, approved: approved ? 1 : 2, comment: comment || '' });
+    if (resp.data.code === 200) { ElMessage.success(approved ? '审批通过' : '审批已拒绝'); await loadData(); }
+    else ElMessage.error(resp.data.msg || '审批失败');
+  } catch (error: any) { if (error !== 'cancel') ElMessage.error('审批失败'); }
 }
 
 async function loadData() {
   loading.value = true;
   try {
     const meResp = await getMyEmployee();
-    if (meResp.data.code === 200 && meResp.data.data) {
-      currentEmployeeId.value = meResp.data.data.id || meResp.data.data.Id || meResp.data.data.ID;
-    }
+    if (meResp.data.code === 200 && meResp.data.data) currentEmployeeId.value = meResp.data.data.id || meResp.data.data.Id || meResp.data.data.ID;
 
     const resp = await listHandovers({ page: 1, pageSize: 100 });
     if (resp.data.code !== 200) { ElMessage.error(resp.data.msg || '加载交接列表失败'); rows.value = []; return; }
@@ -312,15 +296,9 @@ async function loadData() {
       const statusInfo = statusMap[handoverStatus] || { text: '未知', type: 'default' };
       const isLeaveRequest = !h.taskId || h.taskTitle === '离职审批';
       const isNodeCompletion = h.approvalType === 'node_completion';
-      
-      // 离职审批时，显示审批人而不是接收人
       let toName = h.toEmployeeName || h.toEmployeeId || '-';
       let toId = h.toEmployeeId || '';
-      if (isLeaveRequest && h.approverId) {
-        toName = h.approverName || h.approverId || '待审批';
-        toId = h.approverId;
-      }
-      
+      if (isLeaveRequest && h.approverId) { toName = h.approverName || h.approverId || '待审批'; toId = h.approverId; }
       return {
         id: h.handoverId || h.id,
         task: isLeaveRequest ? '离职审批' : (h.taskTitle || h.taskId || '-'),
@@ -329,419 +307,430 @@ async function loadData() {
         to: isLeaveRequest ? toName : (h.toEmployeeName || h.toEmployeeId || '-'),
         toEmployeeId: isLeaveRequest ? toId : (h.toEmployeeId || ''),
         approverId: h.approverId || '',
-        approverName: h.approverName || '',
         status: handoverStatus,
         statusText: statusInfo.text,
         statusType: statusInfo.type,
         time: h.handoverTime || h.createTime || '-',
-        isLeaveRequest,
-        isNodeCompletion,
-        approvalType: h.approvalType || 'handover',
+        isLeaveRequest, isNodeCompletion,
         taskNodeId: h.taskNodeId || '',
       };
     });
-  } catch (error: any) { console.error('加载交接列表失败:', error); rows.value = []; }
+  } catch { rows.value = []; }
   finally { loading.value = false; }
 }
 
 onMounted(() => { loadData(); });
 </script>
 
+
 <style scoped>
-/* 使用全局主题色变量 */
 .handovers-page {
-  --page-primary: var(--color-primary, #4A90D9);
-  --page-primary-rgb: var(--color-primary-rgb, 74, 144, 217);
-  --page-primary-light: var(--color-primary-light, #E8F4FD);
-  
-  padding: 20px;
-  background: var(--bg-page, #f9fafb);
-  min-height: calc(100vh - 64px);
+  padding: var(--space-6);
+  background: var(--bg-secondary);
+  min-height: 100vh;
 }
 
-/* 页面头部 */
+/* Page Header */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-6);
 }
+
+.header-left { display: flex; flex-direction: column; gap: var(--space-1); }
 
 .page-title {
-  font-size: 22px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 4px;
-}
-
-.page-desc {
-  font-size: 14px;
-  color: #6b7280;
+  color: var(--text-primary);
   margin: 0;
 }
 
-.create-btn {
-  height: 40px;
-  padding: 0 20px;
-  font-weight: 500;
+.page-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
 }
 
-/* 统计卡片 */
+/* Buttons */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-primary:hover { background: var(--color-primary-hover); }
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* Stats Row */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
 
 .stat-icon {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  flex-shrink: 0;
 }
 
-.stat-icon.warning { background: #fef3c7; color: #f59e0b; }
-.stat-icon.primary { background: var(--page-primary-light); color: var(--page-primary); }
-.stat-icon.success { background: #d1fae5; color: #10b981; }
-.stat-icon.default { background: #f3f4f6; color: #6b7280; }
+.stat-icon.warning { background: #FEF3C7; color: #D97706; }
+.stat-icon.primary { background: var(--color-primary-light); color: var(--color-primary); }
+.stat-icon.success { background: #D1FAE5; color: #059669; }
+.stat-icon.danger { background: #FEE2E2; color: #DC2626; }
 
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
-}
+.stat-content { display: flex; flex-direction: column; gap: 2px; }
+.stat-value { font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary); line-height: 1; }
+.stat-label { font-size: var(--font-size-xs); color: var(--text-muted); }
 
-.stat-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-/* 筛选栏 */
+/* Filter Bar */
 .filter-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 20px;
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--space-5);
 }
 
-.filter-left {
+.filter-left { display: flex; gap: var(--space-3); align-items: center; }
+
+.search-box {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  height: 36px;
 }
 
-.search-input { width: 200px; }
-.filter-select { width: 120px; }
+.search-box svg { color: var(--text-muted); flex-shrink: 0; }
 
-/* 交接网格 */
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  width: 180px;
+}
+
+.search-input::placeholder { color: var(--text-muted); }
+.filter-select { width: 110px; }
+
+/* Skeleton */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.skeleton-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-5);
+}
+
+.skeleton-header {
+  height: 16px;
+  width: 40%;
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--bg-secondary) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  margin-bottom: var(--space-4);
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-body { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--bg-secondary) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-line.w-70 { width: 70%; }
+.skeleton-line.w-100 { width: 100%; }
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Handovers Grid */
 .handovers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
-/* 交接卡片 */
+/* Handover Card with Status Left Line */
 .handover-card {
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  padding: 18px;
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-5);
+  padding-left: calc(var(--space-5) + 3px);
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
+
+.handover-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.handover-card.status-info::before { background: #94A3B8; }
+.handover-card.status-warning::before { background: #D97706; }
+.handover-card.status-success::before { background: #059669; }
+.handover-card.status-danger::before { background: #DC2626; }
 
 .handover-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14px;
+  align-items: center;
+  margin-bottom: var(--space-3);
 }
 
 .type-tag {
   font-size: 11px;
   font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
 }
 
-.type-tag.task { background: var(--page-primary-light); color: var(--page-primary); }
-.type-tag.leave { background: #fef3c7; color: #d97706; }
-.type-tag.node { background: #d1fae5; color: #059669; }
+.type-tag.task { background: var(--color-primary-light); color: var(--color-primary); }
+.type-tag.leave { background: #FEF3C7; color: #D97706; }
+.type-tag.node { background: #D1FAE5; color: #059669; }
 
 .status-badge {
   font-size: 11px;
   font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
 }
 
-.status-badge.info { background: #f3f4f6; color: #6b7280; }
-.status-badge.warning { background: #fef3c7; color: #d97706; }
-.status-badge.success { background: #d1fae5; color: #059669; }
-.status-badge.danger { background: #fee2e2; color: #dc2626; }
+.status-badge.info { background: var(--bg-tertiary); color: var(--text-muted); }
+.status-badge.warning { background: #FEF3C7; color: #D97706; }
+.status-badge.success { background: #D1FAE5; color: #059669; }
+.status-badge.danger { background: #FEE2E2; color: #DC2626; }
 
 .card-title {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 14px;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4) 0;
   line-height: 1.4;
 }
 
-/* 流程可视化 */
+/* Flow Visual */
 .flow-visual {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f9fafb;
-  padding: 14px;
-  border-radius: 6px;
+  background: var(--bg-secondary);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
 }
 
 .flow-node {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
-.flow-avatar.from { background: #64748b; color: #fff; font-weight: 600; }
-.flow-avatar.to { background: var(--page-primary); color: #fff; font-weight: 600; }
-
-.audit-badge {
+.flow-avatar {
   width: 36px;
   height: 36px;
-  background: #f59e0b;
-  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
+  color: #fff;
 }
 
-.audit-badge.node {
-  background: #10b981;
-}
+.flow-avatar.from { background: #64748B; }
+.flow-avatar.to { background: var(--color-primary); }
+.flow-avatar.audit { background: #D97706; }
+.flow-avatar.audit.node { background: #059669; }
 
-.flow-name { font-size: 11px; color: #6b7280; }
-.flow-arrow { color: #9ca3af; font-size: 18px; }
+.flow-name { font-size: var(--font-size-xs); color: var(--text-muted); }
+.flow-arrow { color: var(--text-muted); opacity: 0.5; }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #f3f4f6;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
 }
 
 .time-info {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #9ca3af;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
 }
 
-/* 空状态 */
+.time-info svg { opacity: 0.6; }
+
+.action-btns { display: flex; gap: var(--space-2); }
+
+.action-btn {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.action-btn.success { background: #D1FAE5; color: #059669; }
+.action-btn.success:hover { background: #059669; color: #fff; }
+.action-btn.warning { background: #FEF3C7; color: #D97706; }
+.action-btn.warning:hover { background: #D97706; color: #fff; }
+.action-btn.danger { background: #FEE2E2; color: #DC2626; }
+.action-btn.danger:hover { background: #DC2626; color: #fff; }
+
+/* Empty State */
 .empty-state {
-  padding: 60px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
 }
 
-/* 平板适配 */
+.empty-state svg { opacity: 0.4; }
+.empty-state p { font-size: var(--font-size-sm); margin: 0; }
+
+/* Responsive */
 @media (max-width: 1024px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .handovers-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* 移动端适配 */
 @media (max-width: 768px) {
-  .handovers-page {
-    padding: 16px;
-  }
+  .handovers-page { padding: var(--space-4); }
 
   .page-header {
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-4);
     align-items: stretch;
   }
 
-  .page-title {
-    font-size: 20px;
-  }
+  .btn-primary { width: 100%; justify-content: center; }
 
-  .page-desc {
-    font-size: 13px;
-  }
-
-  .create-btn {
-    width: 100%;
-    height: 44px;
-  }
-
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .stat-card {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .stat-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
-  }
-
-  .stat-value {
-    font-size: 20px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-  }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
 
   .filter-bar {
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: var(--space-3);
+    padding: var(--space-3);
   }
 
   .filter-left {
     flex-direction: column;
     width: 100%;
-    gap: 10px;
   }
 
-  .search-input,
-  .filter-select {
-    width: 100%;
-  }
+  .search-box, .filter-select { width: 100%; }
+  .search-input { width: 100%; }
 
-  .handovers-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  .handovers-grid { grid-template-columns: 1fr; }
 
-  .handover-card {
-    padding: 14px;
-  }
-
-  .card-title {
-    font-size: 14px;
-  }
-
-  .flow-visual {
-    padding: 12px;
-  }
-
-  .flow-avatar,
-  .audit-badge {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 11px;
-  }
-
-  .flow-name {
-    font-size: 10px;
-  }
-
-  .card-footer {
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-  }
-
-  .action-btns {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .action-btns .el-button {
-    flex: 1;
-  }
-
-  .empty-state {
-    padding: 40px 20px;
-  }
+  .card-footer { flex-direction: column; gap: var(--space-3); align-items: stretch; }
+  .action-btns { width: 100%; }
+  .action-btn { flex: 1; text-align: center; }
 }
 
-/* 小屏幕适配 */
-@media (max-width: 480px) {
-  .handovers-page {
-    padding: 12px;
-  }
+/* Dark Mode */
+html.dark-mode .stat-icon.warning { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+html.dark-mode .stat-icon.success { background: rgba(52, 211, 153, 0.15); color: #34D399; }
+html.dark-mode .stat-icon.danger { background: rgba(248, 113, 113, 0.15); color: #F87171; }
 
-  .page-title {
-    font-size: 18px;
-  }
+html.dark-mode .type-tag.leave { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+html.dark-mode .type-tag.node { background: rgba(52, 211, 153, 0.15); color: #34D399; }
 
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
+html.dark-mode .status-badge.warning { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+html.dark-mode .status-badge.success { background: rgba(52, 211, 153, 0.15); color: #34D399; }
+html.dark-mode .status-badge.danger { background: rgba(248, 113, 113, 0.15); color: #F87171; }
 
-  .stat-card {
-    padding: 14px;
-  }
+html.dark-mode .action-btn.success { background: rgba(52, 211, 153, 0.15); color: #34D399; }
+html.dark-mode .action-btn.warning { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+html.dark-mode .action-btn.danger { background: rgba(248, 113, 113, 0.15); color: #F87171; }
 
-  .filter-bar {
-    padding: 10px;
-  }
-
-  .handover-card {
-    padding: 12px;
-  }
-
-  .flow-visual {
-    padding: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .flow-arrow {
-    display: none;
-  }
-
-  .flow-node {
-    flex: 1;
-    min-width: 80px;
-  }
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .handover-card, .skeleton-header, .skeleton-line { animation: none; transition: none; }
 }
 </style>

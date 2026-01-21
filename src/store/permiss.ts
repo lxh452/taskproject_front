@@ -36,16 +36,25 @@ export const usePermissStore = defineStore('permiss', {
                 '42',
                 '5',
                 '7',
+                // my work module - NEW
+                'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals',
                 // task module
                 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming',
                 // tasknodes module (independent menu)
                 'tasknodes','tasknodes_my','flow_designer','tasknodes_create','tasknodes_designer',
-                'handover', 'handover_list',
+                // team module
+                'team', 'handover', 'handover_list',
                 'employee', 'employee_list', 'my_nodes',
-                'org', 'company', 'department', 'position', 'role', 'join_applications',
-                'notify', 'settings'
+                // org module
+                'org', 'company', 'department', 'position', 'role', 'invites', 'join_apps', 'join_applications',
+                // reports module - NEW
+                'reports',
+                // notification module
+                'notify', 'settings',
+                // user center - NEW
+                'ucenter'
             ],
-            user: ['0', 'org_tree_global', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming'],
+            user: ['0', 'org_tree_global', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'reports', 'notify', 'ucenter'],
         };
         // 初始化时使用默认权限，避免刷新时菜单变化
         // 权限会在登录后通过 applyPermissions 更新
@@ -84,7 +93,7 @@ export const usePermissStore = defineStore('permiss', {
                 return;
             }
 
-            const result = new Set<string>(['0','org_tree_global']);
+            const result = new Set<string>(['0','org_tree_global','reports','ucenter']);
 
             const grantByCode = (code: number) => {
                 // 任务模块 (1-5)
@@ -97,16 +106,23 @@ export const usePermissStore = defineStore('permiss', {
                     result.add('task_timeline'); 
                     result.add('task_upcoming');
                 }
-                // 任务节点模块 (10-13)
+                // 任务节点模块 (10-13) - 映射到"我的工作"
                 if (code >= 10 && code <= 13) {
+                    result.add('my_work');
+                    result.add('my_tasks');
+                    result.add('my_checklists');
+                    result.add('my_attachments');
                     result.add('tasknodes'); 
                     result.add('tasknodes_my'); 
                     result.add('tasknodes_create'); 
                     result.add('tasknodes_designer');
                     result.add('flow_designer');
                 }
-                // 交接模块 (20-23)
-                if (code >= 20 && code <= 23) { 
+                // 交接模块 (20-23) - 映射到"待我审批"和"团队管理"
+                if (code >= 20 && code <= 23) {
+                    result.add('my_work');
+                    result.add('my_approvals');
+                    result.add('team');
                     result.add('handover'); 
                     result.add('handover_list'); 
                 }
@@ -134,12 +150,16 @@ export const usePermissStore = defineStore('permiss', {
                     result.add('org'); 
                     result.add('role'); 
                 }
-                // 员工模块 (70-74)
-                if (code >= 70 && code <= 74) { 
+                // 员工模块 (70-74) - 包含邀请码和加入申请
+                if (code >= 70 && code <= 74) {
+                    result.add('team');
                     result.add('employee'); 
                     result.add('employee_list'); 
                     result.add('my_nodes');
-                    result.add('join_applications'); // 加入申请管理
+                    result.add('org');
+                    result.add('invites');
+                    result.add('join_apps');
+                    result.add('join_applications');
                 }
             };
 
@@ -150,17 +170,23 @@ export const usePermissStore = defineStore('permiss', {
                 if (p === 'task:read') { 
                     ['task','task_overview','task_list_page','task_kanban','task_gantt','task_timeline'].forEach(x=>result.add(x)); 
                 }
-                if (p.startsWith('tasknode')) { 
-                    ['tasknodes','tasknodes_my','tasknodes_create','tasknodes_designer','flow_designer'].forEach(x=>result.add(x)); 
+                if (p.startsWith('tasknode')) {
+                    ['my_work','my_tasks','my_checklists','my_attachments','tasknodes','tasknodes_my','tasknodes_create','tasknodes_designer','flow_designer'].forEach(x=>result.add(x)); 
                 }
-                if (p.startsWith('handover')) { 
-                    ['handover','handover_list'].forEach(x=>result.add(x)); 
+                if (p.startsWith('handover')) {
+                    ['my_work','my_approvals','team','handover','handover_list'].forEach(x=>result.add(x)); 
                 }
                 if (p.startsWith('notification')) { 
                     result.add('notify'); 
                 }
-                if (p.startsWith('org:') || p === 'org:*') { 
-                    ['org','company','department','position','role','join_applications'].forEach(x=>result.add(x)); 
+                if (p.startsWith('org:') || p === 'org:*') {
+                    ['org','company','department','position','role','invites','join_apps','join_applications'].forEach(x=>result.add(x)); 
+                }
+                if (p.startsWith('report')) {
+                    result.add('reports');
+                }
+                if (p === 'ucenter' || p === 'user:profile') {
+                    result.add('ucenter');
                 }
             };
 

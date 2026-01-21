@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: '/flow-designer',
                 name: 'flow-designer',
-                meta: { title: '流程设计器（新版）' },
+                meta: { title: '流程设计' },
                 component: () => import('../views/flow/designer-vue.vue'),
             },
             {
@@ -75,10 +75,38 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/tasks/detail.vue'),
             },
             {
+                path: '/my-tasks',
+                name: 'my-tasks',
+                meta: { title: '我的任务' },
+                component: () => import('../views/my-tasks/index.vue'),
+            },
+            {
+                path: '/my-checklists',
+                name: 'my-checklists',
+                meta: { title: '我的清单' },
+                component: () => import('../views/my-checklists/index.vue'),
+            },
+            {
+                path: '/my-attachments',
+                name: 'my-attachments',
+                meta: { title: '我的附件' },
+                component: () => import('../views/my-attachments/index.vue'),
+            },
+            {
+                path: '/my-approvals',
+                name: 'my-approvals',
+                meta: { title: '待我审批' },
+                component: () => import('../views/my-approvals/index.vue'),
+            },
+            {
+                path: '/organization/invites',
+                name: 'org-invites',
+                meta: { title: '邀请码管理' },
+                component: () => import('../views/org/invites.vue'),
+            },
+            {
                 path: '/task-nodes/my',
-                name: 'task-nodes-my',
-                meta: { title: '我的任务节点' },
-                component: () => import('../views/tasknodes/my.vue'),
+                redirect: '/my-tasks',
             },
             {
                 path: '/task-nodes/create',
@@ -118,9 +146,11 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/organization/companies',
-                name: 'organization-companies',
-                meta: { title: '公司管理' },
-                component: () => import('../views/org/companies.vue'),
+                redirect: '/organization/departments',
+            },
+            {
+                path: '/organization/tree',
+                redirect: '/dashboard',
             },
             {
                 path: '/organization/departments',
@@ -142,9 +172,8 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/organization/tree',
-                name: 'organization-tree',
-                meta: { title: '企业关系树' },
-                component: () => import('../views/org/tree.vue'),
+                name: 'organization-tree-old',
+                redirect: '/dashboard',
             },
             {
                 path: '/organization/join-applications',
@@ -236,6 +265,14 @@ const routes: RouteRecordRaw[] = [
             noAuth: true,
         },
         component: () => import(/* webpackChunkName: "404" */ '../views/pages/404.vue'),
+    },
+    {
+        path: '/500',
+        meta: {
+            title: '服务器错误',
+            noAuth: true,
+        },
+        component: () => import(/* webpackChunkName: "500" */ '../views/pages/500.vue'),
     },
     { path: '/:path(.*)', redirect: '/404' },
 ];

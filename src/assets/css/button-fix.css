@@ -1,0 +1,244 @@
+/* ============================================
+   BUTTON STYLE UNIFICATION
+   Ensures all buttons use responsive variables
+   ============================================ */
+
+/* === Element Plus Button Overrides === */
+
+/* Small Buttons */
+:deep(.el-button--small) {
+    height: var(--button-height-sm) !important;
+    min-height: var(--button-height-sm) !important;
+    padding: 0 var(--space-4) !important;
+    font-size: var(--font-size-sm) !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: var(--font-weight-medium) !important;
+}
+
+/* Default/Medium Buttons */
+:deep(.el-button),
+:deep(.el-button--default) {
+    height: var(--button-height-base) !important;
+    min-height: var(--button-height-base) !important;
+    padding: 0 var(--space-5) !important;
+    font-size: var(--font-size-base) !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: var(--font-weight-medium) !important;
+}
+
+/* Large Buttons */
+:deep(.el-button--large) {
+    height: var(--button-height-lg) !important;
+    min-height: var(--button-height-lg) !important;
+    padding: 0 var(--space-6) !important;
+    font-size: var(--font-size-lg) !important;
+    border-radius: var(--radius-lg) !important;
+    font-weight: var(--font-weight-medium) !important;
+}
+
+/* Button with icons */
+:deep(.el-button .el-icon) {
+    font-size: var(--icon-size-base) !important;
+}
+
+:deep(.el-button--small .el-icon) {
+    font-size: var(--icon-size-sm) !important;
+}
+
+:deep(.el-button--large .el-icon) {
+    font-size: var(--icon-size-lg) !important;
+}
+
+/* Link buttons - no height restriction */
+:deep(.el-button.is-link) {
+    height: auto !important;
+    min-height: auto !important;
+    padding: var(--space-2) var(--space-3) !important;
+}
+
+/* Text buttons - no height restriction */
+:deep(.el-button.is-text) {
+    height: auto !important;
+    min-height: auto !important;
+    padding: var(--space-2) var(--space-3) !important;
+}
+
+/* Button transitions */
+:deep(.el-button) {
+    transition: all var(--transition-base) !important;
+}
+
+/* Button hover states */
+:deep(.el-button:hover) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+:deep(.el-button:active) {
+    transform: translateY(0);
+}
+
+/* === Mobile Touch Targets === */
+@media (max-width: 768px) {
+    /* Ensure minimum touch target on mobile */
+    :deep(.el-button) {
+        min-height: var(--touch-target-min) !important;
+        height: var(--touch-target-min) !important;
+    }
+    
+    :deep(.el-button--small) {
+        min-height: 40px !important;
+        height: 40px !important;
+    }
+    
+    :deep(.el-button--large) {
+        min-height: 48px !important;
+        height: 48px !important;
+    }
+    
+    /* Increase tap area spacing */
+    :deep(.el-button) {
+        margin: var(--space-2) 0 !important;
+    }
+}
+
+/* === Button Groups === */
+:deep(.el-button-group .el-button) {
+    margin: 0 !important;
+}
+
+/* === Icon-only buttons === */
+:deep(.el-button.is-circle) {
+    width: var(--button-height-base) !important;
+    height: var(--button-height-base) !important;
+    padding: 0 !important;
+}
+
+:deep(.el-button--small.is-circle) {
+    width: var(--button-height-sm) !important;
+    height: var(--button-height-sm) !important;
+}
+
+:deep(.el-button--large.is-circle) {
+    width: var(--button-height-lg) !important;
+    height: var(--button-height-lg) !important;
+}
+
+/* === Loading state === */
+:deep(.el-button.is-loading) {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* === Disabled state === */
+:deep(.el-button.is-disabled),
+:deep(.el-button:disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* === Button spacing in forms === */
+.el-form-item__content .el-button + .el-button {
+    margin-left: var(--space-3);
+}
+
+/* === Action button groups === */
+.action-buttons {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .action-buttons .el-button {
+        width: 100%;
+    }
+}
+
+/* === Pagination buttons === */
+:deep(.el-pagination .el-pager li) {
+    min-width: var(--button-height-base) !important;
+    height: var(--button-height-base) !important;
+    line-height: var(--button-height-base) !important;
+    font-size: var(--font-size-base) !important;
+}
+
+:deep(.el-pagination button) {
+    min-width: var(--button-height-base) !important;
+    height: var(--button-height-base) !important;
+    font-size: var(--font-size-base) !important;
+}
+
+@media (max-width: 768px) {
+    :deep(.el-pagination .el-pager li),
+    :deep(.el-pagination button) {
+        min-width: 40px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+    }
+}
+
+/* === Dialog footer buttons === */
+:deep(.el-dialog__footer) {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: flex-end;
+    padding: var(--space-5) var(--space-6);
+}
+
+@media (max-width: 768px) {
+    :deep(.el-dialog__footer) {
+        flex-direction: column-reverse;
+    }
+    
+    :deep(.el-dialog__footer .el-button) {
+        width: 100%;
+        margin: 0 !important;
+    }
+}
+
+/* === Dropdown buttons === */
+:deep(.el-dropdown .el-button) {
+    height: var(--button-height-base) !important;
+}
+
+/* === Tab buttons === */
+:deep(.el-tabs__nav-wrap .el-tabs__nav-scroll .el-tabs__item) {
+    height: var(--button-height-base) !important;
+    line-height: var(--button-height-base) !important;
+    font-size: var(--font-size-base) !important;
+    padding: 0 var(--space-5) !important;
+}
+
+/* === Upload button === */
+:deep(.el-upload .el-button) {
+    height: var(--button-height-base) !important;
+}
+
+/* === Custom button classes === */
+.btn-responsive {
+    height: var(--button-height-base);
+    padding: 0 var(--space-5);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-base);
+}
+
+.btn-responsive:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+    .btn-responsive {
+        min-height: var(--touch-target-min);
+        height: var(--touch-target-min);
+    }
+}

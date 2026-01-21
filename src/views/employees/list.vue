@@ -1,23 +1,20 @@
 <template>
   <div class="employees-page">
-    <!-- 页面头部 -->
+    <!-- 页面头部 - Swiss Minimalism -->
     <div class="page-header">
-      <div class="header-left">
-        <h1 class="page-title">员工管理</h1>
-        <p class="page-desc">查看和管理公司员工信息</p>
-      </div>
+      <h1 class="page-title">员工管理</h1>
+      <p class="page-desc">查看和管理公司员工信息</p>
     </div>
 
     <!-- 筛选栏 -->
     <div class="filter-bar">
       <div class="filter-left">
-        <el-input
-            v-model="query.keyword"
-            placeholder="搜索姓名 / 邮箱..."
-            clearable
-            class="search-input"
-            :prefix-icon="Search"
-        />
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input v-model="query.keyword" placeholder="搜索姓名 / 邮箱..." class="search-input" />
+        </div>
         <el-select v-model="query.department" placeholder="部门" clearable filterable class="filter-select">
           <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.name" />
         </el-select>
@@ -27,111 +24,149 @@
         </el-select>
       </div>
       <div class="filter-right">
-        <el-button type="primary" :icon="Search" @click="loadData">查询</el-button>
-        <el-button :icon="Refresh" circle @click="resetFilter" />
+        <button class="btn-primary" @click="loadData">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          查询
+        </button>
+        <button class="btn-icon" @click="resetFilter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+          </svg>
+        </button>
       </div>
     </div>
 
     <!-- 员工卡片网格 -->
     <div class="content-area">
-      <el-skeleton :rows="3" animated v-if="loading" />
+      <div v-if="loading" class="skeleton-grid">
+        <div v-for="i in 6" :key="i" class="skeleton-card">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line w-60"></div>
+            <div class="skeleton-line w-40"></div>
+          </div>
+        </div>
+      </div>
       <template v-else>
         <div v-if="filteredRows.length > 0" class="employees-grid">
           <div
-              v-for="row in filteredRows"
-              :key="row.id"
-              class="employee-card"
-              :class="{ 'is-resigned': row.status === 0 }"
+            v-for="row in filteredRows"
+            :key="row.id"
+            class="employee-card"
+            :class="{ 'is-resigned': row.status === 0 }"
           >
-            <div class="card-status" :class="row.status === 1 ? 'active' : 'inactive'">
-              {{ row.status === 1 ? '在职' : '离职' }}
-            </div>
-
-            <div class="card-header">
-              <el-avatar :size="56" :src="row.avatar" class="employee-avatar">
-                {{ row.realName?.charAt(0) }}
-              </el-avatar>
-              <div class="employee-info">
-                <h3 class="employee-name">{{ row.realName }}</h3>
-                <p class="employee-position">{{ getPosName(row.position) }}</p>
-              </div>
-            </div>
-
-            <div class="card-body">
-              <div class="info-row">
-                <span class="info-label">部门</span>
-                <el-tag size="small" type="info" effect="plain">{{ getDeptName(row.department) }}</el-tag>
-              </div>
-              <div class="info-row">
-                <span class="info-label">直属上级</span>
-                <span class="info-value supervisor" :class="{ 'clickable': canEditSupervisor }" @click="canEditSupervisor && openSupervisorDialog(row)">
-                  {{ getSupervisorName(row.supervisorId) || '自动推断' }}
-                  <el-tooltip v-if="!row.supervisorId" content="系统将根据部门经理/职位级别自动推断" placement="top">
-                    <el-icon class="info-icon"><InfoFilled /></el-icon>
-                  </el-tooltip>
-                  <el-icon v-if="canEditSupervisor" class="edit-icon"><Edit /></el-icon>
+            <!-- 左侧状态指示线 -->
+            <div class="card-indicator" :class="row.status === 1 ? 'active' : 'inactive'"></div>
+            
+            <div class="card-content">
+              <div class="card-header">
+                <el-avatar :size="48" :src="row.avatar" class="employee-avatar">
+                  {{ row.realName?.charAt(0) }}
+                </el-avatar>
+                <div class="employee-info">
+                  <h3 class="employee-name">{{ row.realName }}</h3>
+                  <span class="employee-position">{{ getPosName(row.position) }}</span>
+                </div>
+                <span class="status-badge" :class="row.status === 1 ? 'active' : 'inactive'">
+                  {{ row.status === 1 ? '在职' : '离职' }}
                 </span>
               </div>
-              <div class="info-row">
-                <span class="info-label">邮箱</span>
-                <span class="info-value email" :title="row.workEmail">{{ row.workEmail || '未绑定' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">入职时间</span>
-                <span class="info-value">{{ formatDate(row.createTime) }}</span>
-              </div>
-            </div>
 
-            <div class="card-footer">
-              <el-button text size="small" @click="openRoles(row)">
-                <el-icon><Key /></el-icon> 权限
-              </el-button>
-              <el-button
+              <div class="card-body">
+                <div class="info-item">
+                  <span class="info-label">部门</span>
+                  <span class="info-value">{{ getDeptName(row.department) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">上级</span>
+                  <span 
+                    class="info-value supervisor" 
+                    :class="{ 'clickable': canEditSupervisor }" 
+                    @click="canEditSupervisor && openSupervisorDialog(row)"
+                  >
+                    {{ getSupervisorName(row.supervisorId) || '自动推断' }}
+                    <svg v-if="canEditSupervisor" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">邮箱</span>
+                  <span class="info-value email" :title="row.workEmail">{{ row.workEmail || '未绑定' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">入职</span>
+                  <span class="info-value">{{ formatDate(row.createTime) }}</span>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <button class="btn-text" @click="openRoles(row)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                  </svg>
+                  权限
+                </button>
+                <button
                   v-if="row.status === 1"
-                  text
-                  size="small"
-                  type="danger"
+                  class="btn-text btn-danger"
                   @click="openLeaveDialog(row)"
                   :disabled="row.isFounder === true || row.positionCode === 'FOUNDER'"
-                  :title="(row.isFounder === true || row.positionCode === 'FOUNDER') ? '不能给公司创始人递交离职申请' : ''"
-              >
-                <el-icon><CircleClose /></el-icon> 离职
-              </el-button>
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
+                  </svg>
+                  离职
+                </button>
+              </div>
             </div>
           </div>
         </div>
         <div v-else class="empty-state">
-          <el-empty description="暂无员工数据" />
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <p>暂无员工数据</p>
         </div>
       </template>
     </div>
 
     <!-- 角色查看抽屉 -->
-    <el-drawer v-model="rolesVisible" title="员工权限配置" size="450px" class="vben-drawer" destroy-on-close>
+    <el-drawer v-model="rolesVisible" title="员工权限配置" size="400px" destroy-on-close>
       <div v-if="rolesLoading" class="drawer-loading">
-        <el-icon class="is-loading"><Loading /></el-icon>
+        <div class="loading-spinner"></div>
         <span>加载中...</span>
       </div>
       <div v-else-if="roleRows.length === 0" class="drawer-empty">
-        <el-empty description="暂无角色权限" :image-size="80" />
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        <p>暂无角色权限</p>
       </div>
       <div v-else class="roles-list">
         <div class="role-item" v-for="r in roleRows" :key="r.id">
           <div class="role-header">
             <span class="role-name">{{ r.roleName }}</span>
-            <el-tag size="small" type="info">{{ r.roleCode }}</el-tag>
+            <span class="role-code">{{ r.roleCode }}</span>
           </div>
           <div class="perm-tags">
-            <el-tag v-for="p in r.perms" :key="p" size="small" effect="plain">{{ p }}</el-tag>
+            <span v-for="p in r.perms" :key="p" class="perm-tag">{{ p }}</span>
           </div>
         </div>
       </div>
     </el-drawer>
 
     <!-- 离职对话框 -->
-    <el-dialog v-model="leaveDialogVisible" title="办理离职" width="480px" class="vben-dialog" :close-on-click-modal="false" destroy-on-close>
-      <el-form :model="leaveForm" label-position="top" class="leave-form">
-        <div class="dialog-user-info">
+    <el-dialog v-model="leaveDialogVisible" title="办理离职" width="440px" :close-on-click-modal="false" destroy-on-close>
+      <el-form :model="leaveForm" label-position="top">
+        <div class="dialog-info">
           <span class="label">员工：</span>
           <span class="value">{{ leaveForm.employeeName }}</span>
         </div>
@@ -153,14 +188,16 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="leaveDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleLeave" :loading="leaveSubmitting">确认办理</el-button>
+        <button class="btn-secondary" @click="leaveDialogVisible = false">取消</button>
+        <button class="btn-danger" @click="handleLeave" :disabled="leaveSubmitting">
+          {{ leaveSubmitting ? '处理中...' : '确认办理' }}
+        </button>
       </template>
     </el-dialog>
 
     <!-- 设置直属上级对话框 -->
-    <el-dialog v-model="supervisorDialogVisible" title="设置直属上级" width="420px" class="vben-dialog" :close-on-click-modal="false" destroy-on-close>
-      <div class="dialog-user-info">
+    <el-dialog v-model="supervisorDialogVisible" title="设置直属上级" width="400px" :close-on-click-modal="false" destroy-on-close>
+      <div class="dialog-info">
         <span class="label">员工：</span>
         <span class="value">{{ supervisorForm.employeeName }}</span>
       </div>
@@ -180,23 +217,22 @@
               :value="emp.id"
             />
           </el-select>
-          <div class="form-tip">
-            <p>• 如果不指定，系统将自动推断上级</p>
-            <p>• 推断规则：部门经理 → 上级部门经理 → 公司创始人</p>
-          </div>
+          <p class="form-tip">如果不指定，系统将根据部门经理/职位级别自动推断</p>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="supervisorDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSetSupervisor" :loading="supervisorSubmitting">确认</el-button>
+        <button class="btn-secondary" @click="supervisorDialogVisible = false">取消</button>
+        <button class="btn-primary" @click="handleSetSupervisor" :disabled="supervisorSubmitting">
+          {{ supervisorSubmitting ? '处理中...' : '确认' }}
+        </button>
       </template>
     </el-dialog>
   </div>
 </template>
 
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { Search, Refresh, Loading, Key, CircleClose, Edit, InfoFilled } from '@element-plus/icons-vue';
 import { listEmployees, employeeRoles, listDepartments, listPositions, employeeLeave, getMyEmployee, updateEmployeeSupervisor } from '@/api';
 import { useUserStore } from '@/store/user';
 import { PERM_NAMES } from '@/perm/defs';
@@ -213,7 +249,7 @@ const deptMap = ref<Record<string, string>>({});
 const posMap = ref<Record<string, string>>({});
 
 const filteredRows = computed(() => {
-  const { keyword, department, position, status } = query.value;
+  const { keyword, department, status } = query.value;
   return rows.value.filter((r) => {
     const byKw = !keyword ||
         (r.realName && r.realName.toLowerCase().includes(keyword.toLowerCase())) ||
@@ -274,73 +310,49 @@ const leaveDialogVisible = ref(false);
 const leaveSubmitting = ref(false);
 const leaveForm = ref({ employeeId: '', employeeName: '', leaveType: 'hr', leaveDate: '', leaveReason: '' });
 const currentUser = ref<any>(null);
-const currentUserPosition = ref<any>(null);
 const leaveTypeError = ref('');
 
-// 直属上级相关
 const supervisorDialogVisible = ref(false);
 const supervisorSubmitting = ref(false);
 const supervisorForm = ref({ employeeId: '', employeeName: '', supervisorId: '' });
 const employeeMap = ref<Record<string, any>>({});
 
-// 检查当前用户是否有权限编辑上级（创始人或管理岗）
 const canEditSupervisor = computed(() => {
   if (!currentUser.value) return false;
   const currentEmp = rows.value.find(r => r.id === currentUser.value.employeeId);
   if (!currentEmp) return false;
-  // 创始人或管理岗可以编辑
   return currentEmp.isFounder === true || currentEmp.positionCode === 'FOUNDER' || currentEmp.isManagement === 1;
 });
 
-// 获取可选的上级列表（排除自己和已离职的）
 const availableSupervisors = computed(() => {
-  return rows.value.filter(emp =>
-    emp.id !== supervisorForm.value.employeeId &&
-    emp.status === 1
-  );
+  return rows.value.filter(emp => emp.id !== supervisorForm.value.employeeId && emp.status === 1);
 });
 
-// 获取上级名称
 function getSupervisorName(supervisorId: string) {
   if (!supervisorId) return '';
   const supervisor = employeeMap.value[supervisorId];
   return supervisor ? supervisor.realName : supervisorId;
 }
 
-// 打开设置上级对话框
 function openSupervisorDialog(row: any) {
-  supervisorForm.value = {
-    employeeId: row.id,
-    employeeName: row.realName,
-    supervisorId: row.supervisorId || ''
-  };
+  supervisorForm.value = { employeeId: row.id, employeeName: row.realName, supervisorId: row.supervisorId || '' };
   supervisorDialogVisible.value = true;
 }
 
-// 设置直属上级
 async function handleSetSupervisor() {
   supervisorSubmitting.value = true;
   try {
-    const resp = await updateEmployeeSupervisor({
-      employeeId: supervisorForm.value.employeeId,
-      supervisorId: supervisorForm.value.supervisorId || ''
-    });
+    const resp = await updateEmployeeSupervisor({ employeeId: supervisorForm.value.employeeId, supervisorId: supervisorForm.value.supervisorId || '' });
     if (resp.data.code === 200) {
       ElMessage.success('设置成功');
       supervisorDialogVisible.value = false;
-      // 更新本地数据
       const emp = rows.value.find(r => r.id === supervisorForm.value.employeeId);
-      if (emp) {
-        emp.supervisorId = supervisorForm.value.supervisorId;
-      }
+      if (emp) emp.supervisorId = supervisorForm.value.supervisorId;
     } else {
       ElMessage.error(resp.data.msg || '设置失败');
     }
-  } catch (error: any) {
-    ElMessage.error('设置失败');
-  } finally {
-    supervisorSubmitting.value = false;
-  }
+  } catch { ElMessage.error('设置失败'); }
+  finally { supervisorSubmitting.value = false; }
 }
 
 async function openRoles(row: any) {
@@ -356,19 +368,16 @@ async function openRoles(row: any) {
       roleCode: r.roleCode || r.RoleCode,
       perms: parsePerms(r.permissions || r.Permissions),
     }));
-  } catch (error: any) { console.error('加载角色失败:', error); }
+  } catch { console.error('加载角色失败'); }
   finally { rolesLoading.value = false; }
 }
 
 async function openLeaveDialog(row: any) {
   if (!currentUser.value) { ElMessage.warning('无法获取当前用户信息'); return; }
-
-  // 检查是否是创始人，不能给创始人递交离职
   if (row.isFounder === true || row.positionCode === 'FOUNDER') {
     ElMessage.warning('不能给公司创始人递交离职申请');
     return;
   }
-
   const isSelf = currentUser.value.employeeId === row.id || currentUser.value.userId === row.userId;
   leaveForm.value = {
     employeeId: row.id,
@@ -412,7 +421,7 @@ async function loadCurrentUser() {
       const emp = resp.data.data || resp.data.employee || {};
       currentUser.value = { employeeId: emp.id || emp.employeeId, userId: emp.userId || emp.UserId, positionId: emp.positionId || emp.PositionId };
     }
-  } catch (error: any) { console.error('获取当前用户信息失败:', error); }
+  } catch { console.error('获取当前用户信息失败'); }
 }
 
 async function loadData() {
@@ -438,156 +447,378 @@ async function loadData() {
       positionCode: e.positionCode || '',
       isManagement: e.isManagement || 0,
     }));
-    // 构建员工映射
-    rows.value.forEach((emp: any) => {
-      employeeMap.value[emp.id] = emp;
-    });
-  } catch (error: any) { rows.value = []; }
+    rows.value.forEach((emp: any) => { employeeMap.value[emp.id] = emp; });
+  } catch { rows.value = []; }
   finally { loading.value = false; }
 }
 
 onMounted(async () => { await loadCurrentUser(); loadData(); });
 </script>
 
+
 <style scoped>
 .employees-page {
-  padding: 20px;
-  background: #f9fafb;
-  min-height: calc(100vh - 64px);
+  padding: var(--space-6);
+  background: var(--bg-secondary);
+  min-height: 100vh;
 }
 
-/* 页面头部 */
+/* Page Header */
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-6);
 }
 
 .page-title {
-  font-size: 22px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 4px;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
 }
 
 .page-desc {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   margin: 0;
 }
 
-/* 筛选栏 */
+/* Filter Bar */
 .filter-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 20px;
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--space-5);
 }
 
 .filter-left {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
 }
 
-.search-input { width: 200px; }
-.filter-select { width: 140px; }
-.filter-select-sm { width: 100px; }
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  height: 36px;
+}
+
+.search-box svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  width: 180px;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.filter-select {
+  width: 130px;
+}
+
+.filter-select-sm {
+  width: 100px;
+}
 
 .filter-right {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
-/* 员工网格 */
-.employees-grid {
+/* Buttons */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-text:hover {
+  background: var(--bg-secondary);
+  color: var(--color-primary);
+}
+
+.btn-text.btn-danger:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.btn-text:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  padding: var(--space-2) var(--space-4);
+  background: #DC2626;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-danger:hover {
+  background: #B91C1C;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Skeleton Loading */
+.skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
-/* 员工卡片 */
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--bg-secondary) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--bg-secondary) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-40 { width: 40%; }
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Employees Grid */
+.employees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Employee Card */
 .employee-card {
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  padding: 18px;
   position: relative;
-  transition: box-shadow 0.15s;
+  display: flex;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: pointer;
 }
 
 .employee-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .employee-card.is-resigned {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-.card-status {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 10px;
+/* Left Indicator Line */
+.card-indicator {
+  width: 3px;
+  flex-shrink: 0;
 }
 
-.card-status.active { background: #d1fae5; color: #059669; }
-.card-status.inactive { background: #f3f4f6; color: #6b7280; }
+.card-indicator.active {
+  background: var(--color-success);
+}
+
+.card-indicator.inactive {
+  background: var(--text-muted);
+}
+
+.card-content {
+  flex: 1;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f3f4f6;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .employee-avatar {
-  background: #3B82F6;
+  background: var(--color-primary);
   color: #fff;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
-.employee-info { flex: 1; min-width: 0; }
+.employee-info {
+  flex: 1;
+  min-width: 0;
+}
 
 .employee-name {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 2px;
+  color: var(--text-primary);
+  margin: 0 0 2px 0;
 }
 
 .employee-position {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.status-badge.active {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.status-badge.inactive {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
 }
 
 .card-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2);
+  flex: 1;
 }
 
-.info-row {
+.info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
-.info-label { color: #9ca3af; }
-.info-value { color: #1f2937; font-weight: 500; }
+.info-label {
+  color: var(--text-muted);
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 .info-value.email {
   max-width: 140px;
   overflow: hidden;
@@ -599,150 +830,190 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #6b7280;
 }
 
 .info-value.supervisor.clickable {
+  color: var(--color-primary);
   cursor: pointer;
-  color: #3B82F6;
 }
 
 .info-value.supervisor.clickable:hover {
   text-decoration: underline;
 }
 
-.info-value.supervisor .edit-icon {
-  font-size: 12px;
+.info-value.supervisor svg {
   opacity: 0.6;
-}
-
-.info-value.supervisor .info-icon {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.form-tip {
-  font-size: 12px;
-  color: #9ca3af;
-  margin-top: 6px;
-}
-
-.form-tip p {
-  margin: 2px 0;
 }
 
 .card-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #f3f4f6;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
 }
 
-/* 空状态 */
+/* Empty State */
 .empty-state {
-  padding: 60px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-
-/* 抽屉 */
-.drawer-loading, .drawer-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 180px;
-  color: #6b7280;
-  gap: 10px;
+  gap: var(--space-3);
+  padding: var(--space-12);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.empty-state svg {
+  opacity: 0.4;
+}
+
+.empty-state p {
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+/* Drawer */
+.drawer-loading,
+.drawer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted);
+  gap: var(--space-3);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.drawer-empty svg {
+  opacity: 0.4;
+}
+
+.drawer-empty p {
+  font-size: var(--font-size-sm);
+  margin: 0;
 }
 
 .roles-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .role-item {
-  background: #f9fafb;
-  border-radius: 6px;
-  padding: 14px;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
 }
 
 .role-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-3);
 }
 
-.role-name { font-weight: 600; color: #1f2937; font-size: 14px; }
+.role-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.role-code {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
 
 .perm-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
-/* 对话框 */
-.dialog-user-info {
-  background: #f9fafb;
-  padding: 12px 14px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  font-size: 13px;
+.perm-tag {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
 }
 
-.dialog-user-info .label { color: #6b7280; }
-.dialog-user-info .value { font-weight: 600; color: #1f2937; }
-
-.error-tip { color: #ef4444; font-size: 12px; margin-top: 4px; }
-
-/* 平板适配 */
-@media (max-width: 1024px) {
-  .employees-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Dialog */
+.dialog-info {
+  background: var(--bg-secondary);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-sm);
 }
 
-/* 移动端适配 */
+.dialog-info .label {
+  color: var(--text-muted);
+}
+
+.dialog-info .value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-tip {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+
+.error-tip {
+  color: #DC2626;
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .employees-page {
-    padding: 16px;
-  }
-
-  .page-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .page-title {
-    font-size: 20px;
-  }
-
-  .page-desc {
-    font-size: 13px;
+    padding: var(--space-4);
   }
 
   .filter-bar {
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: var(--space-3);
+    padding: var(--space-3);
   }
 
   .filter-left {
     flex-direction: column;
     width: 100%;
-    gap: 10px;
   }
 
-  .search-input,
+  .search-box,
   .filter-select,
   .filter-select-sm {
+    width: 100%;
+  }
+
+  .search-input {
     width: 100%;
   }
 
@@ -753,86 +1024,32 @@ onMounted(async () => { await loadCurrentUser(); loadData(); });
 
   .employees-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .employee-card {
-    padding: 14px;
-  }
-
-  .card-header {
-    margin-bottom: 14px;
-    padding-bottom: 14px;
-  }
-
-  .employee-avatar {
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 16px;
-  }
-
-  .employee-name {
-    font-size: 14px;
-  }
-
-  .info-row {
-    font-size: 12px;
-  }
-
-  .info-value.email {
-    max-width: 120px;
-  }
-
-  .card-footer {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .empty-state {
-    padding: 40px 20px;
   }
 }
 
-/* 小屏幕适配 */
-@media (max-width: 480px) {
-  .employees-page {
-    padding: 12px;
-  }
-
-  .page-title {
-    font-size: 18px;
-  }
-
-  .filter-bar {
-    padding: 10px;
-  }
-
-  .employee-card {
-    padding: 12px;
-  }
-
-  .employee-avatar {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 14px;
-  }
-
-  .info-value.email {
-    max-width: 100px;
-  }
+/* Dark Mode */
+html.dark-mode .search-box {
+  background: var(--bg-tertiary);
 }
 
-/* 抽屉和对话框移动端适配 */
-@media (max-width: 768px) {
-  :deep(.el-drawer) {
-    width: 100% !important;
-    max-width: 100vw !important;
-  }
+html.dark-mode .status-badge.active {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34D399;
+}
 
-  :deep(.el-dialog) {
-    width: 90% !important;
-    max-width: 90vw !important;
-    margin: 5vh auto !important;
+html.dark-mode .btn-text.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.15);
+  color: #F87171;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .employee-card,
+  .skeleton-avatar,
+  .skeleton-line,
+  .loading-spinner {
+    animation: none;
+    transition: none;
   }
 }
 </style>

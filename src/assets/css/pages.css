@@ -1,111 +1,115 @@
 /* ============================================
-   基于 Gemini 3 Pro 设计理念的统一页面样式
+   Swiss Minimalism 统一页面样式
+   Clean, Functional, Professional
    ============================================ */
 
 /* 页面容器 */
 .page-wrap {
-    padding: 20px;
+    padding: var(--page-padding, 24px);
     min-height: calc(100vh - 140px);
-    animation: fadeIn 0.4s ease-out;
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* 卡片头部统一样式 */
+/* 卡片头部统一样式 - Swiss Minimalism */
 .card-header {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 4px 0;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
 }
 
 .card-header-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #303133;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .card-header-title::before {
     content: '';
-    width: 4px;
+    width: 3px;
     height: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-primary);
     border-radius: 2px;
 }
 
 .card-header-desc {
-    color: #909399;
-    font-size: 14px;
-    line-height: 1.6;
-    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    margin-top: var(--space-1);
 }
 
-/* 搜索表单样式 */
+/* 搜索表单样式 - Swiss Minimalism */
 .search-form {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    padding: 20px 24px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    border: 1px solid #e4e7ed;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    background: var(--bg-secondary);
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
 }
 
 .search-form :deep(.el-form-item) {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .search-form :deep(.el-input__wrapper) {
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
 }
 
 .search-form :deep(.el-input__wrapper:hover) {
-    box-shadow: 0 0 0 1px var(--el-color-primary-light-7) inset;
+    box-shadow: 0 0 0 1px var(--border-dark) inset;
 }
 
 .search-form :deep(.el-select) {
     width: 100%;
 }
 
-/* 表格容器 */
+/* 表格容器 - Swiss Minimalism */
 .table-container {
-    background: #fff;
-    border-radius: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
 }
 
 .table-container:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-md);
 }
 
-/* 表格样式优化 */
+/* 表格样式优化 - Swiss Minimalism */
 :deep(.el-table) {
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
 :deep(.el-table__header) {
-    background: linear-gradient(135deg, #f8f9fa 0%, #f5f7fa 100%);
+    background: var(--bg-secondary);
 }
 
 :deep(.el-table th) {
-    background: transparent !important;
-    font-weight: 600;
-    color: #606266;
-    border-bottom: 2px solid #e4e7ed;
-    padding: 16px 0;
+    background: var(--bg-secondary) !important;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-4) 0;
+    height: 56px;
 }
 
 :deep(.el-table td) {
-    padding: 16px 0;
-    border-bottom: 1px solid #f0f0f0;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-light);
+    height: 56px;
 }
 
 :deep(.el-table tr:hover > td) {
-    background: #f8f9fa !important;
+    background: var(--bg-hover) !important;
 }
 
 :deep(.el-table--border) {
@@ -120,162 +124,169 @@
     display: none;
 }
 
-/* 按钮组样式 */
+/* 按钮组样式 - Swiss Minimalism */
 .action-buttons {
     display: flex;
-    gap: 12px;
+    gap: var(--space-3);
     align-items: center;
     flex-wrap: wrap;
 }
 
 .action-buttons :deep(.el-button) {
-    border-radius: 8px;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
     padding: 10px 20px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 }
 
+/* Primary Button - Deep blue solid fill */
 .action-buttons :deep(.el-button--primary) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: none;
 }
 
 .action-buttons :deep(.el-button--primary:hover) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+    transform: none;
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.25);
 }
 
+/* Secondary Button - White + border */
 .action-buttons :deep(.el-button--default) {
-    border: 1px solid #dcdfe6;
-    background: #fff;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .action-buttons :deep(.el-button--default:hover) {
-    border-color: var(--el-color-primary);
-    color: var(--el-color-primary);
-    background: var(--el-color-primary-light-9);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
 }
 
-/* 标签样式 */
+/* 标签样式 - Swiss Minimalism (Solid colors, no gradients) */
 :deep(.el-tag) {
-    border-radius: 6px;
-    font-weight: 500;
-    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-medium);
+    padding: 4px 10px;
     border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 :deep(.el-tag--danger) {
-    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-    color: #fff;
+    background: var(--color-danger-light);
+    color: var(--color-danger);
 }
 
 :deep(.el-tag--warning) {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: #fff;
+    background: var(--color-warning-light);
+    color: var(--color-warning);
 }
 
 :deep(.el-tag--success) {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: #fff;
+    background: var(--color-success-light);
+    color: var(--color-success);
 }
 
 :deep(.el-tag--info) {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: #fff;
+    background: var(--color-info-light);
+    color: var(--color-info);
 }
 
-/* 进度条样式 */
+/* 进度条样式 - Swiss Minimalism */
 :deep(.el-progress) {
     display: flex;
     align-items: center;
 }
 
 :deep(.el-progress-bar__outer) {
-    border-radius: 10px;
-    background: #f0f0f0;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
     overflow: hidden;
 }
 
 :deep(.el-progress-bar__inner) {
-    border-radius: 10px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
     transition: width 0.6s ease;
 }
 
-/* 链接按钮样式 */
+/* 链接按钮样式 - Swiss Minimalism */
 :deep(.el-button.is-link) {
-    padding: 4px 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    padding: var(--space-1) var(--space-2);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-base);
+    color: var(--color-primary);
 }
 
 :deep(.el-button.is-link:hover) {
-    transform: translateX(4px);
+    color: var(--color-primary-hover);
+    transform: none;
 }
 
-/* 空状态样式 */
+/* 空状态样式 - Swiss Minimalism */
 .empty-state {
-    padding: 60px 20px;
+    padding: var(--space-12) var(--space-5);
     text-align: center;
 }
 
 .empty-state :deep(.el-empty__description) {
-    color: #909399;
-    font-size: 14px;
+    color: var(--text-muted);
+    font-size: var(--font-size-base);
 }
 
-/* 对话框样式优化 */
+/* 对话框样式优化 - Swiss Minimalism */
 :deep(.el-dialog) {
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
     overflow: hidden;
 }
 
 :deep(.el-dialog__header) {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    padding: 24px;
-    border-bottom: 1px solid #e4e7ed;
+    background: var(--bg-card);
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.el-dialog__title) {
-    font-size: 20px;
-    font-weight: 700;
-    color: #303133;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
 }
 
 :deep(.el-dialog__body) {
-    padding: 24px;
+    padding: var(--space-6);
 }
 
 :deep(.el-dialog__footer) {
-    padding: 20px 24px;
-    background: #f8f9fa;
-    border-top: 1px solid #e4e7ed;
+    padding: var(--space-5) var(--space-6);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
 }
 
-/* 分页样式 */
+/* 分页样式 - Swiss Minimalism */
 :deep(.el-pagination) {
-    margin-top: 20px;
+    margin-top: var(--space-5);
     display: flex;
     justify-content: flex-end;
     align-items: center;
 }
 
 :deep(.el-pagination .el-pager li) {
-    border-radius: 6px;
-    margin: 0 4px;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-sm);
+    margin: 0 var(--space-1);
+    transition: all var(--transition-base);
 }
 
 :deep(.el-pagination .el-pager li:hover) {
-    background: var(--el-color-primary-light-9);
-    color: var(--el-color-primary);
+    background: var(--bg-hover);
+    color: var(--color-primary);
 }
 
 :deep(.el-pagination .el-pager li.is-active) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-primary);
     color: #fff;
 }
 
@@ -284,18 +295,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 60px 20px;
+    padding: var(--space-12) var(--space-5);
     min-height: 200px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
     .page-wrap {
-        padding: 12px;
+        padding: var(--space-3);
     }
     
     .search-form {
-        padding: 16px;
+        padding: var(--space-4);
     }
     
     .action-buttons {
@@ -308,11 +319,11 @@
     }
 }
 
-/* 动画效果 */
+/* 动画效果 - Swiss Minimalism (Subtle) */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(4px);
     }
     to {
         opacity: 1;
@@ -323,7 +334,7 @@
 @keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateX(20px);
+        transform: translateX(8px);
     }
     to {
         opacity: 1;
@@ -332,28 +343,62 @@
 }
 
 .fade-in {
-    animation: fadeIn 0.4s ease-out;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .slide-in-right {
-    animation: slideInRight 0.4s ease-out;
+    animation: slideInRight 0.3s ease-out;
 }
 
-/* 工具类 */
-.text-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+/* 工具类 - Swiss Minimalism (No gradients) */
+.text-primary-color {
+    color: var(--color-primary);
 }
 
 .shadow-hover {
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 }
 
 .shadow-hover:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+}
+
+/* 深色模式适配 */
+html.dark-mode .search-form {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+html.dark-mode .table-container {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+html.dark-mode .card-header-title {
+    color: var(--text-primary);
+}
+
+html.dark-mode .card-header-desc {
+    color: var(--text-secondary);
+}
+
+html.dark-mode :deep(.el-dialog) {
+    background: var(--bg-card);
+}
+
+html.dark-mode :deep(.el-dialog__header) {
+    background: var(--bg-card);
+    border-bottom-color: var(--border-color);
+}
+
+html.dark-mode :deep(.el-dialog__title) {
+    color: var(--text-primary);
+}
+
+html.dark-mode :deep(.el-dialog__footer) {
+    background: var(--bg-secondary);
+    border-top-color: var(--border-color);
 }
 
 

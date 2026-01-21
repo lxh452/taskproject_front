@@ -5,7 +5,7 @@
       <div class="toolbar-left">
         <div class="toolbar-title">
           <el-icon class="title-icon"><Connection /></el-icon>
-          <span>流程设计器</span>
+          <span>流程设计</span>
         </div>
         <el-select 
           v-model="selectedTaskId" 
@@ -1054,7 +1054,7 @@ function buildFlowGraph() {
     position: { x: 100, y: 200 },
     data: { label: '开始' },
     style: {
-      background: 'linear-gradient(135deg, #3B82F6 0%, #10B981 100%)',
+      background: '#1E3A5F',
       color: '#fff',
       border: 'none',
       borderRadius: '12px',
@@ -1128,12 +1128,12 @@ function buildFlowGraph() {
           },
         },
         style: {
-          background: `linear-gradient(135deg, ${deptColor.bgFrom} 0%, ${deptColor.bgTo} 100%)`,
-          border: `2.5px solid ${deptColor.color}`,
+          background: deptColor.bgFrom || '#FFFFFF',
+          border: `2px solid ${deptColor.color || '#E2E8F0'}`,
           borderRadius: '12px',
           padding: '16px',
           minWidth: '200px',
-          color: '#1f2937',
+          color: '#0F172A',
         },
       })
     })
@@ -1148,7 +1148,7 @@ function buildFlowGraph() {
     position: { x: endX, y: 200 },
     data: { label: '结束' },
     style: {
-      background: 'linear-gradient(135deg, #f5576c 0%, #ef4444 100%)',
+      background: '#DC2626',
       color: '#fff',
       border: 'none',
       borderRadius: '12px',
@@ -1548,12 +1548,12 @@ function onDrop(event: DragEvent) {
       },
     },
     style: {
-      background: `linear-gradient(135deg, ${deptColor.bgFrom} 0%, ${deptColor.bgTo} 100%)`,
-      border: `2.5px solid ${deptColor.color}`,
+      background: deptColor.bgFrom || '#FFFFFF',
+      border: `2px solid ${deptColor.color || '#E2E8F0'}`,
       borderRadius: '12px',
       padding: '16px',
       minWidth: '200px',
-      color: '#1f2937',
+      color: '#0F172A',
     },
   }
   
@@ -2012,16 +2012,18 @@ const StartNode = defineComponent({
     return h('div', {
       class: 'custom-start-node',
       style: {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#1E3A5F',
         color: '#fff',
         padding: '16px 24px',
-      borderRadius: '12px',
+        borderRadius: '12px',
         fontWeight: '600',
         fontSize: '16px',
-      textAlign: 'center',
-        boxShadow: props.selected ? '0 8px 20px rgba(102, 126, 234, 0.4)' : '0 4px 12px rgba(102, 126, 234, 0.2)',
+        textAlign: 'center',
+        boxShadow: props.selected ? '0 4px 16px rgba(30, 58, 95, 0.35)' : '0 2px 8px rgba(30, 58, 95, 0.15)',
         position: 'relative',
-        overflow: 'visible', // 确保连接点可以显示在节点外部
+        overflow: 'visible',
+        border: props.selected ? '2px solid #3B82F6' : '2px solid transparent',
+        transition: 'all 0.2s ease',
       }
     }, [
       h('div', { style: { marginBottom: '8px' } }, [
@@ -2043,16 +2045,18 @@ const EndNode = defineComponent({
     return h('div', {
       class: 'custom-end-node',
       style: {
-        background: 'linear-gradient(135deg, #f5576c 0%, #ef4444 100%)',
+        background: '#DC2626',
         color: '#fff',
         padding: '16px 24px',
-      borderRadius: '12px',
+        borderRadius: '12px',
         fontWeight: '600',
         fontSize: '16px',
-      textAlign: 'center',
-        boxShadow: props.selected ? '0 8px 20px rgba(245, 87, 108, 0.4)' : '0 4px 12px rgba(245, 87, 108, 0.2)',
+        textAlign: 'center',
+        boxShadow: props.selected ? '0 4px 16px rgba(220, 38, 38, 0.35)' : '0 2px 8px rgba(220, 38, 38, 0.15)',
         position: 'relative',
-        overflow: 'visible', // 确保连接点可以显示在节点外部
+        overflow: 'visible',
+        border: props.selected ? '2px solid #EF4444' : '2px solid transparent',
+        transition: 'all 0.2s ease',
       }
     }, [
       h('div', { style: { marginBottom: '8px' } }, [
@@ -2074,7 +2078,7 @@ const TaskNode = defineComponent({
     const isLeader = props.data?.canDrag !== false
     const status = props.data?.status ?? 0
     const progress = props.data?.progress ?? 0
-    const statusColor = status === 2 ? '#22c55e' : status === 1 ? '#eab308' : status === 0 ? '#3b82f6' : '#9ca3af'
+    const statusColor = status === 2 ? '#059669' : status === 1 ? '#D97706' : status === 0 ? '#0284C7' : '#64748B'
     const sv = props.data?.styleVars || {}
     
     // 获取负责人和执行人信息
@@ -2085,14 +2089,15 @@ const TaskNode = defineComponent({
     return h('div', {
       class: ['custom-task-node', props.selected ? 'selected' : '', !isLeader ? 'readonly' : ''].filter(Boolean).join(' '),
       style: {
-      background: `linear-gradient(135deg, ${sv.bgFrom || '#ffffff'} 0%, ${sv.bgTo || '#f9fafb'} 100%)`,
-        border: `2.5px solid ${sv.borderColor || '#4ade80'}`,
-      borderRadius: '12px',
+        background: sv.bgFrom || '#FFFFFF',
+        border: `2px solid ${sv.borderColor || '#E2E8F0'}`,
+        borderRadius: '12px',
         padding: '16px',
         minWidth: '200px',
-        boxShadow: props.selected ? '0 8px 20px rgba(0, 0, 0, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.1)',
+        boxShadow: props.selected ? '0 4px 16px rgba(0, 0, 0, 0.12)' : '0 2px 8px rgba(0, 0, 0, 0.06)',
         position: 'relative',
-        overflow: 'visible', // 确保连接点可以显示在节点外部
+        overflow: 'visible',
+        transition: 'all 0.2s ease',
       }
     }, [
       // 状态指示器
@@ -2101,20 +2106,20 @@ const TaskNode = defineComponent({
           position: 'absolute',
           top: '8px',
           right: '8px',
-          width: '12px',
-          height: '12px',
+          width: '10px',
+          height: '10px',
           borderRadius: '50%',
           background: statusColor,
           border: '2px solid #fff',
-          boxShadow: `0 0 0 2px ${statusColor}40`,
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }
       }),
       // 节点名称
       h('div', {
         style: {
-          fontSize: '15px',
+          fontSize: '14px',
           fontWeight: '600',
-          color: '#1f2937',
+          color: '#0F172A',
           marginBottom: '12px',
           letterSpacing: '-0.01em',
         }
@@ -2133,22 +2138,22 @@ const TaskNode = defineComponent({
             width: '24px',
             height: '24px',
             borderRadius: '50%',
-            background: leaderAvatar ? `url(${leaderAvatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+            background: leaderAvatar ? `url(${leaderAvatar}) center/cover` : '#1E3A5F',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             fontSize: '11px',
             fontWeight: '600',
             color: '#fff',
             flexShrink: 0,
             border: '2px solid #fff',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }
         }, leaderAvatar ? '' : (leaderName !== '-' ? leaderName[0].toUpperCase() : 'L')),
         h('div', {
           style: {
             fontSize: '12px',
-            color: '#6b7280',
+            color: '#475569',
             fontWeight: '500',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -2173,7 +2178,7 @@ const TaskNode = defineComponent({
               width: '20px',
               height: '20px',
               borderRadius: '50%',
-              background: executor.avatar ? `url(${executor.avatar}) center/cover` : 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+              background: executor.avatar ? `url(${executor.avatar}) center/cover` : '#059669',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2189,7 +2194,7 @@ const TaskNode = defineComponent({
         executors.length > 2 && h('div', {
           style: {
             fontSize: '11px',
-            color: '#9ca3af',
+            color: '#64748B',
             fontWeight: '500',
           }
         }, `+${executors.length - 2}`)
@@ -2199,7 +2204,7 @@ const TaskNode = defineComponent({
         style: {
           width: '100%',
           height: '4px',
-          background: '#e5e7eb',
+          background: '#E2E8F0',
           borderRadius: '2px',
           overflow: 'hidden',
           marginTop: '8px',
@@ -2209,7 +2214,7 @@ const TaskNode = defineComponent({
           style: {
             width: `${progress}%`,
             height: '100%',
-            background: `linear-gradient(90deg, ${statusColor} 0%, ${statusColor}dd 100%)`,
+            background: statusColor,
             borderRadius: '2px',
             transition: 'width 0.3s ease',
           }
@@ -2237,73 +2242,69 @@ const nodeTypes = {
 </script>
 
 <style scoped>
+/* ==================== Swiss Minimalism Flow Designer ==================== */
 .flow-designer-page {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  background: var(--bg-secondary);
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .toolbar-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .toolbar-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a2e;
-  letter-spacing: -0.3px;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .title-icon {
-  font-size: 22px;
-  color: #3B82F6;
+  font-size: 20px;
+  color: var(--color-primary);
 }
 
 .task-selector {
-  width: 300px;
+  width: 280px;
 }
 
 .task-selector :deep(.el-input__wrapper) {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--border-color) inset;
+  transition: all var(--transition-base);
 }
 
 .task-selector :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 1px var(--border-dark) inset;
 }
 
 .task-selector :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px var(--color-primary) inset;
 }
 
 .toolbar-right {
   display: flex;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .toolbar-right :deep(.el-button) {
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
 }
 
 .toolbar-right :deep(.el-button:hover) {
@@ -2318,10 +2319,9 @@ const nodeTypes = {
 
 .sidebar-left,
 .sidebar-right {
-  width: 320px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  width: 300px;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2329,22 +2329,22 @@ const nodeTypes = {
 
 .sidebar-right {
   border-right: none;
-  border-left: 1px solid rgba(0, 0, 0, 0.06);
+  border-left: 1px solid var(--border-color);
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.5);
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .filter-section {
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(248, 250, 252, 0.8);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .department-filter {
@@ -2352,27 +2352,27 @@ const nodeTypes = {
 }
 
 .department-filter :deep(.el-input__wrapper) {
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .header-icon {
-  font-size: 20px;
-  color: #3B82F6;
+  font-size: 18px;
+  color: var(--color-primary);
 }
 
 .header-title {
-  font-size: 15px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--text-primary);
 }
 
 .nodes-list {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .nodes-list::-webkit-scrollbar {
@@ -2380,17 +2380,16 @@ const nodeTypes = {
 }
 
 .nodes-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 10px;
+  background: transparent;
 }
 
 .nodes-list::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.2);
-  border-radius: 10px;
+  background: var(--border-color);
+  border-radius: 3px;
 }
 
 .nodes-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.4);
+  background: var(--text-muted);
 }
 
 .empty-nodes {
@@ -2398,66 +2397,446 @@ const nodeTypes = {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 50px 20px;
+  padding: var(--space-10) var(--space-5);
   text-align: center;
 }
 
 .empty-icon {
   font-size: 48px;
-  color: #94a3b8;
-  margin-bottom: 16px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
 }
 
 .empty-text {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  color: #64748b;
-  margin-bottom: 8px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
 }
 
 .empty-hint {
-  font-size: 13px;
-  color: #94a3b8;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
+/* Node Card - Swiss Minimalism */
 .node-card {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 16px;
-  padding: 16px;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.node-card.draggable {
+  cursor: grab;
+  border-left: 3px solid var(--color-primary);
+}
+
+.node-card.draggable:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.node-card.readonly {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.node-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.node-type-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.node-type-badge.type-task {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.node-type-badge.type-condition {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.node-type-badge.type-approval {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.node-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.prereq-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.tip-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: var(--space-1) 0;
+  line-height: 1.5;
+}
+
+/* Canvas Area */
+.canvas-area {
+  flex: 1;
   position: relative;
   overflow: hidden;
+  background: var(--bg-secondary);
 }
 
-.node-card::before {
-  content: '';
+.canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  min-width: 400px;
+  min-height: 400px;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(168, 85, 247, 0.04) 100%);
-  opacity: 0;
-  transition: opacity 0.35s ease;
+}
+
+.canvas-wrapper :deep(.vue-flow) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.canvas-wrapper :deep(.vue-flow__viewport) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Detail Panel */
+.detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.detail-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.detail-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detail-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.detail-section {
+  margin-bottom: var(--space-6);
+}
+
+.section-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-primary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+}
+
+.detail-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.detail-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-description {
+  padding: var(--space-4);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.action-buttons :deep(.el-button) {
+  border-radius: var(--radius-md);
+}
+
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detail-avatar {
+  flex-shrink: 0;
+}
+
+.executors-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.executor-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+}
+
+.executor-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.executor-item.executor-requested {
+  background: var(--color-success-light);
+  border-color: var(--color-success);
+}
+
+.executor-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.requested-check {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.no-data-text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.role-form {
+  margin-top: var(--space-3);
+}
+
+.role-form :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.role-form :deep(.el-select .el-input__wrapper) {
+  border-radius: var(--radius-md);
+}
+
+.employee-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) 0;
+}
+
+.employee-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+}
+
+.role-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.role-badge {
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.leader-badge {
+  color: var(--color-success) !important;
+  background: var(--color-success-light);
+}
+
+.executor-badge {
+  color: var(--color-primary) !important;
+  background: var(--color-primary-light);
+}
+
+.employee-option.is-leader {
+  background: var(--color-success-light);
+  border-left: 3px solid var(--color-success);
+  padding-left: var(--space-2);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.employee-option.is-executor {
+  background: var(--color-primary-light);
+  border-left: 3px solid var(--color-primary);
+  padding-left: var(--space-2);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.employee-option.is-leader.is-executor {
+  background: linear-gradient(90deg, var(--color-success-light) 0%, var(--color-primary-light) 100%);
+  border-left: 3px solid var(--color-success);
+  padding-left: var(--space-2);
+}
+
+.option-avatar {
+  flex-shrink: 0;
+}
+
+.detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-5);
+  text-align: center;
+}
+
+.detail-empty .empty-icon {
+  font-size: 48px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.detail-empty .empty-text {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.detail-empty .empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.node-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
 
 .node-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.2);
-}
-
-.node-card:hover::before {
-  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
 }
 
 .node-card.draggable {
   cursor: grab;
-  border-color: rgba(99, 102, 241, 0.3);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(168, 85, 247, 0.02) 100%);
+  border-color: var(--color-primary);
+  background: var(--bg-card);
 }
 
 .node-card.draggable:active {
@@ -2525,21 +2904,21 @@ const nodeTypes = {
 }
 
 .node-type-badge.type-task {
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  color: #3B82F6;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  box-shadow: none;
 }
 
 .node-type-badge.type-condition {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #22c55e;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  box-shadow: none;
 }
 
 .node-type-badge.type-approval {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #ef4444;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  box-shadow: none;
 }
 
 .node-info {
@@ -2605,7 +2984,7 @@ const nodeTypes = {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-secondary);
 }
 
 .canvas-wrapper {
@@ -2676,15 +3055,14 @@ const nodeTypes = {
   flex-direction: column;
   gap: 6px;
   padding: 14px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
 }
 
 .detail-item:hover {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  transform: translateX(4px);
+  background: var(--bg-tertiary);
 }
 
 .detail-label {
@@ -2706,12 +3084,12 @@ const nodeTypes = {
 
 .detail-description {
   padding: 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-light);
   font-size: 13px;
   line-height: 1.6;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .action-buttons {
@@ -2750,20 +3128,19 @@ const nodeTypes = {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-secondary);
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
 }
 
 .executor-item:hover {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  transform: translateX(4px);
+  background: var(--bg-tertiary);
 }
 
 .executor-item.executor-requested {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border-color: rgba(34, 197, 94, 0.2);
+  background: var(--color-success-light);
+  border-color: var(--color-success);
 }
 
 .executor-name {
@@ -2840,26 +3217,22 @@ const nodeTypes = {
 }
 
 .employee-option.is-leader {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.08) 0%, transparent 100%);
-  border-left: 3px solid #22c55e;
+  background: var(--color-success-light);
+  border-left: 3px solid var(--color-success);
   padding-left: 10px;
   border-radius: 0 8px 8px 0;
 }
 
 .employee-option.is-executor {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
-  border-left: 3px solid #3b82f6;
+  background: var(--color-primary-light);
+  border-left: 3px solid var(--color-primary);
   padding-left: 10px;
   border-radius: 0 8px 8px 0;
 }
 
 .employee-option.is-leader.is-executor {
-  background: linear-gradient(90deg, 
-    rgba(34, 197, 94, 0.08) 0%, 
-    rgba(59, 130, 246, 0.08) 50%, 
-    transparent 100%);
-  border-left: 3px solid;
-  border-image: linear-gradient(180deg, #22c55e 0%, #3b82f6 100%) 1;
+  background: var(--color-success-light);
+  border-left: 3px solid var(--color-success);
   padding-left: 10px;
 }
 
@@ -2894,16 +3267,16 @@ const nodeTypes = {
   color: #94a3b8;
 }
 
-/* Vue Flow 连接点样式 - 精美设计 */
+/* Vue Flow Handle Styles - Swiss Minimalism */
 :deep(.vue-flow__handle) {
-  width: 16px !important;
-  height: 16px !important;
+  width: 14px !important;
+  height: 14px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #3B82F6 0%, #8b5cf6 100%) !important;
-  border: 3px solid #fff !important;
+  background: var(--color-primary) !important;
+  border: 2px solid var(--bg-primary) !important;
   opacity: 0 !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+  transition: all var(--transition-base) !important;
+  box-shadow: var(--shadow-sm) !important;
   cursor: grab !important;
   z-index: 100 !important;
   position: absolute !important;
@@ -2911,55 +3284,33 @@ const nodeTypes = {
 
 :deep(.vue-flow__node:hover .vue-flow__handle) {
   opacity: 1 !important;
-  transform: scale(1.1);
 }
 
 :deep(.vue-flow__node.selected .vue-flow__handle) {
   opacity: 1 !important;
-  animation: handlePulse 2s ease-in-out infinite;
 }
 
 :deep(.vue-flow__handle:hover) {
-  width: 20px !important;
-  height: 20px !important;
-  background: linear-gradient(135deg, #3B82F6 0%, #7c3aed 100%) !important;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+  width: 18px !important;
+  height: 18px !important;
+  box-shadow: var(--shadow-md) !important;
   cursor: grabbing !important;
 }
 
 :deep(.vue-flow__handle.connecting) {
   opacity: 1 !important;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3) !important;
-  animation: connectPulse 1s ease-in-out infinite;
-}
-
-@keyframes handlePulse {
-  0%, 100% {
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-  }
-  50% {
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.6), 0 0 0 6px rgba(99, 102, 241, 0.15);
-  }
-}
-
-@keyframes connectPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
+  background: var(--color-success) !important;
+  box-shadow: 0 0 0 4px var(--color-success-light) !important;
 }
 
 :deep(.vue-flow__handle.h-left) {
-  left: -8px !important;
+  left: -7px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
 }
 
 :deep(.vue-flow__handle.h-right) {
-  right: -8px !important;
+  right: -7px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
 }
@@ -2968,33 +3319,24 @@ const nodeTypes = {
   overflow: visible !important;
 }
 
-:deep(.custom-start-node),
-:deep(.custom-end-node),
-:deep(.custom-task-node) {
-  overflow: visible !important;
-}
-
 :deep(.vue-flow__edge) {
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 :deep(.vue-flow__edge:hover) {
-  stroke-width: 4 !important;
-  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+  stroke-width: 3 !important;
 }
 
 :deep(.vue-flow__edge.selected) {
-  stroke-width: 4 !important;
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+  stroke-width: 3 !important;
 }
 
 :deep(.vue-flow__controls) {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-1);
   overflow: hidden;
 }
 
@@ -3003,11 +3345,11 @@ const nodeTypes = {
   height: 32px;
   min-width: 32px;
   min-height: 32px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border-light);
   background-color: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin: 2px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3019,8 +3361,8 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__controls-button:hover) {
-  background: rgba(99, 102, 241, 0.1);
-  color: #3B82F6;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 :deep(.vue-flow__controls-button:last-child) {
@@ -3028,17 +3370,65 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__minimap) {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
-/* ========== 移动端适配 ========== */
+/* Dark Mode */
+html.dark-mode .flow-designer-page {
+  background: var(--bg-page);
+}
 
-/* 平板适配 (768px - 1024px) */
+html.dark-mode .toolbar,
+html.dark-mode .sidebar-left,
+html.dark-mode .sidebar-right {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+html.dark-mode .sidebar-header,
+html.dark-mode .filter-section,
+html.dark-mode .sidebar-footer {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+html.dark-mode .node-card {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+html.dark-mode .node-card:hover {
+  border-color: var(--color-primary);
+}
+
+html.dark-mode .node-name {
+  color: var(--text-primary);
+}
+
+html.dark-mode .detail-item,
+html.dark-mode .executor-item,
+html.dark-mode .detail-description {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+html.dark-mode :deep(.vue-flow__controls) {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+html.dark-mode :deep(.vue-flow__minimap) {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+/* ==================== Responsive - Swiss Minimalism ==================== */
+
+/* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
   .flow-designer-page {
     height: auto;
@@ -3047,14 +3437,14 @@ const nodeTypes = {
 
   .toolbar {
     flex-direction: column;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
   }
 
   .toolbar-left {
     width: 100%;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .toolbar-title {
@@ -3078,16 +3468,16 @@ const nodeTypes = {
   .sidebar-left,
   .sidebar-right {
     width: 100%;
-    max-height: 300px;
+    max-height: 280px;
     border-right: none;
     border-left: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid var(--border-color);
   }
 
   .sidebar-right {
     border-bottom: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    max-height: 400px;
+    border-top: 1px solid var(--border-color);
+    max-height: 360px;
   }
 
   .canvas-area {
@@ -3104,8 +3494,8 @@ const nodeTypes = {
     flex-direction: row;
     flex-wrap: wrap;
     overflow-x: auto;
-    padding: 12px;
-    gap: 10px;
+    padding: var(--space-3);
+    gap: var(--space-2);
   }
 
   .node-card {
@@ -3114,7 +3504,7 @@ const nodeTypes = {
   }
 }
 
-/* 手机适配 (< 768px) */
+/* Mobile (< 768px) */
 @media (max-width: 768px) {
   .flow-designer-page {
     height: auto;
@@ -3122,12 +3512,12 @@ const nodeTypes = {
   }
 
   .toolbar {
-    padding: 10px 12px;
-    gap: 10px;
+    padding: var(--space-3);
+    gap: var(--space-2);
   }
 
   .toolbar-title {
-    font-size: 16px;
+    font-size: var(--font-size-base);
   }
 
   .title-icon {
@@ -3140,7 +3530,7 @@ const nodeTypes = {
 
   .toolbar-right {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .toolbar-right :deep(.el-button) {
@@ -3153,18 +3543,18 @@ const nodeTypes = {
   }
 
   .sidebar-left {
-    min-height: 320px;
-    max-height: 380px;
+    min-height: 280px;
+    max-height: 320px;
     order: 1;
   }
 
   .nodes-list {
-    min-height: 180px;
-    max-height: 220px;
+    min-height: 160px;
+    max-height: 200px;
   }
 
   .canvas-area {
-    min-height: 350px;
+    min-height: 320px;
     height: 45vh;
     order: 2;
   }
@@ -3175,25 +3565,25 @@ const nodeTypes = {
   }
 
   .sidebar-header {
-    padding: 14px 16px;
+    padding: var(--space-3) var(--space-4);
   }
 
   .header-title {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
   }
 
   .filter-section {
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
   }
 
   .nodes-list {
-    padding: 10px;
-    gap: 8px;
+    padding: var(--space-3);
+    gap: var(--space-2);
   }
 
   .node-card {
     min-width: 160px;
-    padding: 12px;
+    padding: var(--space-3);
   }
 
   .node-type-badge {
@@ -3203,7 +3593,7 @@ const nodeTypes = {
   }
 
   .node-name {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
   }
 
   .node-meta {
@@ -3211,21 +3601,21 @@ const nodeTypes = {
   }
 
   .detail-content {
-    padding: 14px;
+    padding: var(--space-4);
   }
 
   .detail-section {
-    margin-bottom: 18px;
+    margin-bottom: var(--space-4);
   }
 
   .section-title {
     font-size: 11px;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-2);
   }
 
   .detail-item {
-    padding: 10px;
+    padding: var(--space-2);
   }
 
   .detail-label {
@@ -3233,19 +3623,19 @@ const nodeTypes = {
   }
 
   .detail-value {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
   }
 
   .role-form :deep(.el-form-item) {
-    margin-bottom: 14px;
+    margin-bottom: var(--space-3);
   }
 
   .role-form :deep(.el-form-item__label) {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .empty-nodes {
-    padding: 30px 16px;
+    padding: var(--space-6) var(--space-4);
   }
 
   .empty-icon {
@@ -3253,15 +3643,15 @@ const nodeTypes = {
   }
 
   .empty-text {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
   }
 
   .empty-hint {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .detail-empty {
-    padding: 30px 16px;
+    padding: var(--space-6) var(--space-4);
   }
 
   .detail-empty .empty-icon {
@@ -3269,19 +3659,18 @@ const nodeTypes = {
   }
 
   .detail-empty .empty-text {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
   }
 
-  /* 隐藏小地图在手机上 */
+  /* Hide minimap on mobile */
   :deep(.vue-flow__minimap) {
     display: none;
   }
 
-  /* 调整控制按钮位置和大小 */
   :deep(.vue-flow__controls) {
-    bottom: 10px !important;
-    right: 10px !important;
-    padding: 4px;
+    bottom: var(--space-2) !important;
+    right: var(--space-2) !important;
+    padding: var(--space-1);
   }
 
   :deep(.vue-flow__controls-button) {
@@ -3290,22 +3679,17 @@ const nodeTypes = {
     min-width: 32px;
     min-height: 32px;
   }
-
-  :deep(.vue-flow__controls-button svg) {
-    width: 16px;
-    height: 16px;
-  }
 }
 
-/* 超小屏幕适配 (< 480px) */
+/* Extra small (< 480px) */
 @media (max-width: 480px) {
   .toolbar {
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-3);
   }
 
   .toolbar-title {
-    font-size: 14px;
-    gap: 6px;
+    font-size: var(--font-size-sm);
+    gap: var(--space-1);
   }
 
   .title-icon {
@@ -3318,47 +3702,47 @@ const nodeTypes = {
 
   .toolbar-right :deep(.el-button) {
     min-width: 40px;
-    padding: 8px;
+    padding: var(--space-2);
   }
 
   .sidebar-left {
-    min-height: 280px;
-    max-height: 320px;
+    min-height: 240px;
+    max-height: 280px;
   }
 
   .nodes-list {
-    min-height: 150px;
-    max-height: 180px;
+    min-height: 140px;
+    max-height: 160px;
   }
 
   .canvas-area {
-    min-height: 300px;
+    min-height: 280px;
     height: 40vh;
   }
 
   .node-card {
     min-width: 140px;
-    padding: 10px;
+    padding: var(--space-2);
   }
 
   .node-card-header {
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
   }
 
   .node-type-badge {
     width: 28px;
     height: 28px;
     font-size: 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   .node-name {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .node-card-footer {
-    padding-top: 8px;
+    padding-top: var(--space-2);
   }
 
   .prereq-tag :deep(.el-tag) {
@@ -3367,7 +3751,7 @@ const nodeTypes = {
   }
 
   .sidebar-footer {
-    padding: 10px;
+    padding: var(--space-2);
   }
 
   .tip-text {
@@ -3375,18 +3759,17 @@ const nodeTypes = {
   }
 
   .detail-item {
-    padding: 8px;
+    padding: var(--space-2);
   }
 
   .executor-item {
-    padding: 8px 10px;
+    padding: var(--space-2);
   }
 
   .executor-name {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
-  /* 控制按钮统一大小 */
   :deep(.vue-flow__controls-button) {
     width: 30px;
     height: 30px;
@@ -3400,7 +3783,7 @@ const nodeTypes = {
   }
 }
 
-/* 横屏手机适配 */
+/* Landscape mobile */
 @media (max-width: 768px) and (orientation: landscape) {
   .flow-container {
     flex-direction: row;
@@ -3422,8 +3805,23 @@ const nodeTypes = {
 
   .sidebar-right {
     width: 100%;
-    max-height: 300px;
+    max-height: 280px;
     order: 3;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .node-card,
+  .detail-item,
+  .executor-item,
+  :deep(.vue-flow__handle),
+  :deep(.vue-flow__edge) {
+    transition: none !important;
+  }
+  
+  .node-card:hover {
+    transform: none;
   }
 }
 </style>

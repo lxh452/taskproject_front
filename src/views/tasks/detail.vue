@@ -45,63 +45,70 @@
         </div>
 
         <div v-if="taskInfo" class="content-wrapper">
-            <!-- 关键信息卡片 -->
-            <div class="key-info-grid">
-                <div class="info-card" @mouseenter="showTooltip($event, '任务ID', taskInfo.id)" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <el-icon><Document /></el-icon>
+            <!-- 关键信息卡片 - 统一卡片 -->
+            <el-card shadow="hover" class="key-info-card">
+                <div class="info-items-row">
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-primary">
+                            <el-icon><Document /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">任务ID</span>
+                            <span class="info-item-value">{{ formatId(taskInfo.id) }}</span>
+                        </div>
                     </div>
-                    <div class="info-content">
-                        <div class="info-label">任务ID</div>
-                        <div class="info-value">{{ formatId(taskInfo.id) }}</div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-info">
+                            <el-icon><User /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">负责人</span>
+                            <span class="info-item-value">{{ getLeaderName() }}</span>
+                        </div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-success">
+                            <el-icon><User /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">执行人</span>
+                            <span class="info-item-value">{{ getResponsibleNames() }}</span>
+                        </div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-danger">
+                            <el-icon><Calendar /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">截止时间</span>
+                            <span class="info-item-value">{{ formatTime(taskInfo.deadline) || '-' }}</span>
+                        </div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-info">
+                            <el-icon><Timer /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">预计工时</span>
+                            <span class="info-item-value">{{ taskInfo.estimatedHours || 0 }}h</span>
+                        </div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <div class="info-item-icon icon-container-success">
+                            <el-icon><Clock /></el-icon>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-item-label">实际工时</span>
+                            <span class="info-item-value">{{ taskInfo.actualHours || 0 }}h</span>
+                        </div>
                     </div>
                 </div>
-                <div class="info-card" @mouseenter="showTooltip($event, '负责人', getLeaderName())" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
-                        <el-icon><User /></el-icon>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">负责人</div>
-                        <div class="info-value">{{ getLeaderName() }}</div>
-                    </div>
-                </div>
-                <div class="info-card" @mouseenter="showTooltip($event, '执行人', getResponsibleNames())" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                        <el-icon><User /></el-icon>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">执行人</div>
-                        <div class="info-value">{{ getResponsibleNames() }}</div>
-                    </div>
-                </div>
-                <div class="info-card" @mouseenter="showTooltip($event, '截止时间', formatTime(taskInfo.deadline))" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">
-                        <el-icon><Calendar /></el-icon>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">截止时间</div>
-                        <div class="info-value">{{ formatTime(taskInfo.deadline) || '-' }}</div>
-                    </div>
-                </div>
-                <div class="info-card" @mouseenter="showTooltip($event, '预计工时', `${taskInfo.estimatedHours || 0} 小时`)" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <el-icon><Timer /></el-icon>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">预计工时</div>
-                        <div class="info-value">{{ taskInfo.estimatedHours || 0 }}h</div>
-                    </div>
-                </div>
-                <div class="info-card" @mouseenter="showTooltip($event, '实际工时', `${taskInfo.actualHours || 0} 小时`)" @mouseleave="hideTooltip">
-                    <div class="info-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <el-icon><Clock /></el-icon>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">实际工时</div>
-                        <div class="info-value">{{ taskInfo.actualHours || 0 }}h</div>
-                    </div>
-                </div>
-            </div>
+            </el-card>
 
             <!-- 详细信息区域 -->
             <div class="detail-grid">
@@ -950,18 +957,10 @@ const tooltipStyle = ref({ top: '0px', left: '0px' });
 const tooltipTitle = ref('');
 const tooltipContent = ref('');
 
-// 英雄区域渐变背景
+// 英雄区域渐变背景 - 使用CSS变量
 const heroGradient = computed(() => {
-    const priority = taskInfo.value?.priority || 3;
-    if (priority === 1) {
-        return { background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 50%, #4facfe 100%)' };
-    } else if (priority === 2) {
-        return { background: 'linear-gradient(135deg, #fa709a 0%, #fee140 50%, #30cfd0 100%)' };
-    } else if (priority === 3) {
-        return { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)' };
-    } else {
-        return { background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #d299c2 100%)' };
-    }
+    // 使用统一的主题色渐变，不再根据优先级改变背景色
+    return { background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)' };
 });
 
 const priorityText = computed(() => {
@@ -1165,16 +1164,27 @@ async function submitEdit() {
         
         submittingEdit.value = true;
         try {
-            const resp = await updateTask({
+            // 构建请求数据，确保所有字段正确传递
+            const requestData: any = {
                 taskId: editForm.value.taskId,
                 taskTitle: editForm.value.taskTitle,
                 taskDescription: editForm.value.taskDescription,
                 priority: editForm.value.priority,
-                deadline: editForm.value.deadline,
-                estimatedHours: editForm.value.estimatedHours,
-                leaderId: editForm.value.leaderId,
-                responsibleEmployeeIds: editForm.value.responsibleEmployeeIds.join(',')
-            });
+                estimatedHours: editForm.value.estimatedHours || 0,
+                leaderId: editForm.value.leaderId || '',
+                responsibleEmployeeIds: Array.isArray(editForm.value.responsibleEmployeeIds) 
+                    ? editForm.value.responsibleEmployeeIds.join(',')
+                    : editForm.value.responsibleEmployeeIds || ''
+            };
+            
+            // 只有当deadline有值时才添加到请求中
+            if (editForm.value.deadline) {
+                requestData.deadline = editForm.value.deadline;
+            }
+            
+            console.log('提交编辑任务数据:', requestData);
+            
+            const resp = await updateTask(requestData);
             
             if (resp.data?.code === 200) {
                 ElMessage.success('任务更新成功');
@@ -1185,7 +1195,7 @@ async function submitEdit() {
             }
         } catch (error: any) {
             console.error('更新任务失败:', error);
-            ElMessage.error('更新任务失败');
+            ElMessage.error(error.response?.data?.msg || '更新任务失败');
         } finally {
             submittingEdit.value = false;
         }
@@ -1275,11 +1285,11 @@ function selectCandidate(nodeId: string, employeeId: string) {
     }
 }
 
-// 获取分数颜色
+// 获取分数颜色 - 使用CSS变量
 function getScoreColor(score: number): string {
-    if (score >= 80) return '#67c23a';
-    if (score >= 60) return '#e6a23c';
-    return '#f56c6c';
+    if (score >= 80) return 'var(--color-success)';
+    if (score >= 60) return 'var(--color-warning)';
+    return 'var(--color-danger)';
 }
 
 // 确认派发
@@ -2103,11 +2113,22 @@ function renderFlowChart() {
         const edges: any[] = [];
         const nodeMap = new Map<string, any>();
 
+        // Get computed CSS variable values for ECharts
+        const rootStyles = getComputedStyle(document.documentElement);
+        const primaryColor = rootStyles.getPropertyValue('--color-primary').trim() || '#1E3A5F';
+        const successColor = rootStyles.getPropertyValue('--color-success').trim() || '#059669';
+        const warningColor = rootStyles.getPropertyValue('--color-warning').trim() || '#D97706';
+        const infoColor = rootStyles.getPropertyValue('--color-info').trim() || '#0284C7';
+        const dangerColor = rootStyles.getPropertyValue('--color-danger').trim() || '#DC2626';
+        const mutedColor = rootStyles.getPropertyValue('--text-muted').trim() || '#94A3B8';
+        const bgCard = rootStyles.getPropertyValue('--bg-card').trim() || '#FFFFFF';
+        const textPrimary = rootStyles.getPropertyValue('--text-primary').trim() || '#0F172A';
+
         nodes.push({
             id: 'start',
             name: '开始',
             symbolSize: 60,
-            itemStyle: { color: '#667eea' },
+            itemStyle: { color: primaryColor },
             label: { fontSize: 14, fontWeight: 'bold' }
         });
 
@@ -2116,10 +2137,10 @@ function renderFlowChart() {
             const status = node.status || 0;
             const progress = node.progress || 0;
             
-            let color = '#9ca3af';
-            if (status === 2) color = '#22c55e';
-            else if (status === 1) color = '#eab308';
-            else if (status === 0) color = '#3b82f6';
+            let color = mutedColor;
+            if (status === 2) color = successColor;
+            else if (status === 1) color = warningColor;
+            else if (status === 0) color = infoColor;
 
             const leader = node.leaderId ? employeesMap.value[String(node.leaderId)] : null;
             const leaderName = leader?.name || formatId(node.leaderId) || '-';
@@ -2130,7 +2151,7 @@ function renderFlowChart() {
                 symbolSize: 100,
                 itemStyle: { 
                     color: color,
-                    borderColor: '#fff',
+                    borderColor: bgCard,
                     borderWidth: 3
                 },
                 label: { 
@@ -2142,7 +2163,7 @@ function renderFlowChart() {
                         return name.length > maxLen ? name.substring(0, maxLen) + '...' : name;
                     },
                     position: 'inside',
-                    color: '#1f2937'
+                    color: textPrimary
                 },
                 nodeData: {
                     status,
@@ -2161,7 +2182,7 @@ function renderFlowChart() {
             id: 'end',
             name: '结束',
             symbolSize: 60,
-            itemStyle: { color: '#f5576c' },
+            itemStyle: { color: dangerColor },
             label: { fontSize: 14, fontWeight: 'bold' }
         });
 
@@ -2178,7 +2199,7 @@ function renderFlowChart() {
                             source: sourceId,
                             target: nodeId,
                             lineStyle: {
-                                color: '#6366f1',
+                                color: primaryColor,
                                 width: 2,
                                 curveness: 0.2
                             }
@@ -2190,7 +2211,7 @@ function renderFlowChart() {
                     source: 'start',
                     target: nodeId,
                     lineStyle: {
-                        color: '#6366f1',
+                        color: primaryColor,
                         width: 2,
                         curveness: 0.2
                     }
@@ -2206,7 +2227,7 @@ function renderFlowChart() {
                     source: nodeId,
                     target: 'end',
                     lineStyle: {
-                        color: '#6366f1',
+                        color: primaryColor,
                         width: 2,
                         curveness: 0.2
                     }
@@ -2219,7 +2240,7 @@ function renderFlowChart() {
             tooltip: {
                 trigger: 'item',
                 backgroundColor: 'rgba(31, 41, 55, 0.95)',
-                borderColor: '#667eea',
+                borderColor: primaryColor,
                 borderWidth: 1,
                 textStyle: {
                     color: '#f9fafb',
@@ -2230,9 +2251,9 @@ function renderFlowChart() {
                     if (params.dataType === 'node') {
                         const nodeData = params.data.nodeData;
                         if (nodeData) {
-                            const statusColor = nodeData.status === 2 ? '#22c55e' : 
-                                              nodeData.status === 1 ? '#eab308' : 
-                                              nodeData.status === 0 ? '#3b82f6' : '#9ca3af';
+                            const statusColor = nodeData.status === 2 ? successColor : 
+                                              nodeData.status === 1 ? warningColor : 
+                                              nodeData.status === 0 ? infoColor : mutedColor;
                             return `
                                 <div style="padding: 4px 0;">
                                     <div style="font-weight: 700; font-size: 15px; margin-bottom: 10px; color: #ffffff;">
@@ -2243,10 +2264,10 @@ function renderFlowChart() {
                                             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${statusColor};"></span>
                                             <span>状态: <strong style="color: ${statusColor};">${getNodeStatusText(nodeData.status)}</strong></span>
                                         </div>
-                                        <div style="margin-bottom: 6px;">📊 进度: <strong>${nodeData.progress}%</strong></div>
-                                        <div style="margin-bottom: 6px;">👤 负责人: <strong>${nodeData.leader || '-'}</strong></div>
-                                        <div style="margin-bottom: 6px;">👥 执行人: ${nodeData.executor || '-'}</div>
-                                        <div>📅 截止: ${nodeData.deadline || '-'}</div>
+                                        <div style="margin-bottom: 6px;">进度: <strong>${nodeData.progress}%</strong></div>
+                                        <div style="margin-bottom: 6px;">负责人: <strong>${nodeData.leader || '-'}</strong></div>
+                                        <div style="margin-bottom: 6px;">执行人: ${nodeData.executor || '-'}</div>
+                                        <div>截止: ${nodeData.deadline || '-'}</div>
                                     </div>
                                 </div>
                             `;
@@ -2274,15 +2295,15 @@ function renderFlowChart() {
                     position: 'inside',
                     fontSize: 13,
                     fontWeight: '600',
-                    color: '#1f2937'
+                    color: textPrimary
                 },
                 itemStyle: {
-                    borderColor: '#fff',
+                    borderColor: bgCard,
                     borderWidth: 3
                 },
                 symbol: 'circle',
                 lineStyle: {
-                    color: '#6366f1',
+                    color: primaryColor,
                     width: 2.5,
                     curveness: 0.3,
                     opacity: 0.8
@@ -2292,11 +2313,11 @@ function renderFlowChart() {
                     scale: true,
                     lineStyle: {
                         width: 4,
-                        color: '#2563eb'
+                        color: primaryColor
                     },
                     itemStyle: {
                         shadowBlur: 15,
-                        shadowColor: 'rgba(37, 99, 235, 0.4)',
+                        shadowColor: `rgba(${rootStyles.getPropertyValue('--color-primary-rgb').trim() || '30, 58, 95'}, 0.4)`,
                         borderWidth: 3
                     }
                 },
@@ -2485,64 +2506,93 @@ watch(() => taskInfo.value?.nodes, () => {
     padding: 24px;
 }
 
-/* 关键信息网格 */
-.key-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+/* 关键信息统一卡片 */
+.key-info-card {
     margin-bottom: 24px;
+    border-radius: 16px;
 }
 
-.info-card {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 20px;
+.key-info-card :deep(.el-card__body) {
+    padding: 20px 24px;
+}
+
+.info-items-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 16px;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    border: 1px solid var(--border-color);
 }
 
-.info-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--color-primary);
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 140px;
 }
 
-.info-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
+.info-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 24px;
+    font-size: 18px;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.info-content {
-    flex: 1;
+/* Icon container variants for info items */
+.info-item-icon.icon-container-primary {
+    background: var(--color-primary);
+}
+
+.info-item-icon.icon-container-success {
+    background: var(--color-success);
+}
+
+.info-item-icon.icon-container-warning {
+    background: var(--color-warning);
+}
+
+.info-item-icon.icon-container-danger {
+    background: var(--color-danger);
+}
+
+.info-item-icon.icon-container-info {
+    background: var(--color-info);
+}
+
+.info-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     min-width: 0;
 }
 
-.info-label {
-    font-size: 13px;
+.info-item-label {
+    font-size: 12px;
     color: var(--text-secondary);
     font-weight: 500;
-    margin-bottom: 6px;
 }
 
-.info-value {
-    font-size: 18px;
-    font-weight: 700;
+.info-item-value {
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-main);
-    letter-spacing: -0.01em;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.info-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-color);
+    flex-shrink: 0;
 }
 
 /* 详细信息网格 */
@@ -3602,8 +3652,18 @@ watch(() => taskInfo.value?.nodes, () => {
         font-size: 24px;
     }
     
-    .key-info-grid {
-        grid-template-columns: 1fr;
+    .info-items-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .info-item {
+        min-width: 100%;
+    }
+    
+    .info-divider {
+        width: 100%;
+        height: 1px;
     }
     
     .detail-grid {

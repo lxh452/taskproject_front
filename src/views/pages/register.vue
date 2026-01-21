@@ -255,7 +255,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     justify-content: center;
     width: 100%;
     height: 100vh;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     background-image: 
         linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
@@ -340,7 +340,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 
 .login-title {
     font-size: 22px;
-    color: #111827;
+    color: var(--text-primary);
     font-weight: 800;
     margin-bottom: 8px;
     letter-spacing: 3px;
@@ -349,28 +349,28 @@ const submitForm = (formEl: FormInstance | undefined) => {
 
 .login-subtitle {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-muted);
     letter-spacing: 6px;
     text-transform: uppercase;
     font-weight: 500;
 }
 
 .login-form :deep(.el-input__wrapper) {
-    background-color: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     box-shadow: none;
     transition: all 0.2s;
     border-radius: 8px;
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
-    border-color: #3B82F6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background-color: #fff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    background-color: var(--bg-card);
 }
 
 .login-form :deep(.el-input__inner) {
-    color: #111827;
+    color: var(--text-primary);
     height: 44px;
 }
 
@@ -380,20 +380,20 @@ const submitForm = (formEl: FormInstance | undefined) => {
 
 .password-toggle {
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--text-muted);
     transition: color 0.2s;
 }
 
 .password-toggle:hover {
-    color: #3B82F6;
+    color: var(--color-primary);
 }
 
 .login-form :deep(.el-input-group__prepend) {
-    background-color: #f3f4f6;
-    border: 1px solid #e5e7eb;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-right: none;
     box-shadow: none;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .login-btn {
@@ -402,7 +402,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
+    background: var(--color-primary);
     color: #ffffff;
     border: none;
     transition: all 0.3s;
@@ -412,9 +412,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .login-btn:hover {
-    background: linear-gradient(135deg, #2563EB 0%, #059669 100%);
+    background: var(--color-primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 10px 20px rgba(var(--color-primary-rgb), 0.2);
 }
 
 .login-text {
@@ -423,11 +423,11 @@ const submitForm = (formEl: FormInstance | undefined) => {
     justify-content: center;
     margin-top: 24px;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .register-link {
-    color: #3B82F6;
+    color: var(--color-primary);
     cursor: pointer;
     margin-left: 5px;
     transition: color 0.3s;
@@ -435,7 +435,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .register-link:hover {
-    color: #2563EB;
+    color: var(--color-primary-hover);
     text-decoration: underline;
 }
 
@@ -455,17 +455,17 @@ const submitForm = (formEl: FormInstance | undefined) => {
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
+    background: var(--color-primary);
     border: none;
     color: #fff;
 }
 
 .send-code-btn:disabled {
-    background: #e5e7eb;
-    color: #9ca3af;
+    background: var(--bg-active);
+    color: var(--text-muted);
 }
 
 .send-code-btn:not(:disabled):hover {
-    background: linear-gradient(135deg, #2563EB 0%, #059669 100%);
+    background: var(--color-primary-hover);
 }
 </style>

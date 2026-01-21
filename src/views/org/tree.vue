@@ -38,7 +38,9 @@
                                 :class="['org-card', { active: selectedNode?.id === company.id && selectedNode?.type === 'company' }]"
                                 @click="selectNode(company)"
                             >
-                                <div class="card-icon">🏢</div>
+                                <div class="card-icon company-icon">
+                                    <el-icon><OfficeBuilding /></el-icon>
+                                </div>
                                 <div class="card-content">
                                     <div class="card-title">{{ company.name }}</div>
                                     <div class="card-subtitle">Headquarters</div>
@@ -63,7 +65,9 @@
                                 :class="['org-card', { active: selectedDepartment?.id === dept.id }]"
                                 @click="selectNode(dept)"
                             >
-                                <div class="card-icon">📁</div>
+                                <div class="card-icon dept-icon">
+                                    <el-icon><Folder /></el-icon>
+                                </div>
                                 <div class="card-content">
                                     <div class="card-title">{{ dept.name }}</div>
                                     <div class="card-subtitle">{{ dept.stats }}</div>
@@ -90,7 +94,9 @@
                                 @mouseenter="handleEmployeeHover(emp, $event)"
                                 @mouseleave="handleNodeLeave"
                             >
-                                <div class="card-icon">👤</div>
+                                <div class="card-icon emp-icon">
+                                    <el-icon><User /></el-icon>
+                                </div>
                                 <div class="card-content">
                                     <div class="card-title">{{ emp.name }}</div>
                                     <div class="card-subtitle">{{ emp.position || '员工' }}</div>
@@ -115,7 +121,9 @@
                         <div class="detail-title-section">
                             <h2 class="detail-title">{{ selectedNode.name }}</h2>
                             <div class="detail-subtitle">
-                                <span class="detail-icon">{{ getNodeIcon(selectedNode.type) }}</span>
+                                <el-icon class="detail-icon">
+                                    <component :is="getNodeIcon(selectedNode.type)" />
+                                </el-icon>
                                 <span>{{ getNodeTypeLabel(selectedNode.type) }}</span>
                             </div>
                         </div>
@@ -159,7 +167,7 @@
                                         {{ getTaskStatusText(task.status, task.deadline) }}
                                     </el-tag>
                                     <span class="task-date">
-                                        <span class="date-icon">📅</span>
+                                        <el-icon class="date-icon"><Calendar /></el-icon>
                                         {{ formatDate(task.deadline) }}
                                     </span>
                                     <span class="task-progress">{{ task.progress || 0 }}% Complete</span>
@@ -170,14 +178,14 @@
 
                     <!-- 空状态 -->
                     <div class="detail-empty" v-else>
-                        <div class="empty-icon">📋</div>
+                        <el-icon class="empty-icon"><Document /></el-icon>
                         <div class="empty-text">暂无任务信息</div>
                     </div>
                 </div>
 
                 <!-- 未选择状态 -->
                 <div v-else class="detail-placeholder">
-                    <div class="placeholder-icon">👆</div>
+                    <el-icon class="placeholder-icon"><User /></el-icon>
                     <div class="placeholder-text">请选择组织节点查看详情</div>
                 </div>
             </div>
@@ -222,7 +230,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Search, Refresh } from '@element-plus/icons-vue';
+import { Search, Refresh, OfficeBuilding, Folder, User, Calendar, Document } from '@element-plus/icons-vue';
 import { getMyEmployee, listDepartments, listEmployees, getMyTaskNodes, listTasks } from '@/api';
 import { ElMessage } from 'element-plus';
 
@@ -322,10 +330,10 @@ function getNodeInitial(node: Node): string {
     return node.name?.[0]?.toUpperCase() || '?';
 }
 
-function getNodeIcon(type?: string): string {
-    if (type === 'company') return '🏢';
-    if (type === 'dept') return '📁';
-    return '👤';
+function getNodeIcon(type?: string) {
+    if (type === 'company') return OfficeBuilding;
+    if (type === 'dept') return Folder;
+    return User;
 }
 
 function getNodeTypeLabel(type?: string): string {
@@ -635,7 +643,7 @@ onMounted(() => {
     
     padding: 28px;
     min-height: calc(100vh - 100px);
-    background: linear-gradient(135deg, var(--bg-page, #f5f7fa) 0%, #e4e8f0 100%);
+    background: var(--bg-page);
 }
 
 /* 页面头部 */
@@ -807,9 +815,9 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(var(--page-primary-rgb), 0.05) 0%, rgba(var(--page-primary-rgb), 0.08) 100%);
+    background: var(--color-primary-light);
     opacity: 0;
-    transition: opacity 0.35s ease;
+    transition: opacity 0.2s ease;
 }
 
 .org-card:hover {
@@ -823,10 +831,10 @@ onMounted(() => {
 }
 
 .org-card.active {
-    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
+    background: var(--color-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 8px 28px rgba(var(--page-primary-rgb), 0.35);
+    box-shadow: 0 4px 16px rgba(var(--page-primary-rgb), 0.25);
     transform: translateY(-2px);
 }
 
@@ -851,13 +859,28 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    background: linear-gradient(135deg, var(--page-primary-light) 0%, rgba(var(--page-primary-rgb), 0.15) 100%);
+    background: var(--color-primary-light);
     color: var(--page-primary);
     border-radius: 12px;
     flex-shrink: 0;
-    transition: all 0.35s ease;
+    transition: all 0.2s ease;
     position: relative;
     z-index: 1;
+}
+
+.card-icon.company-icon {
+    background: #7C3AED;
+    color: white;
+}
+
+.card-icon.dept-icon {
+    background: #EC4899;
+    color: white;
+}
+
+.card-icon.emp-icon {
+    background: #0284C7;
+    color: white;
 }
 
 .org-card:hover .card-icon {
@@ -903,9 +926,9 @@ onMounted(() => {
 .indicator-dot {
     width: 8px;
     height: 8px;
-    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    background: var(--color-warning);
     border-radius: 50%;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 8px rgba(217, 119, 6, 0.3);
     animation: pulse 2s ease-in-out infinite;
 }
 
@@ -940,13 +963,13 @@ onMounted(() => {
 /* 右侧详情面板 */
 .detail-panel {
     width: 400px;
-    background: linear-gradient(145deg, #1e1e2e 0%, #2d2d44 50%, #1a1a2e 100%);
+    background: var(--bg-card);
     border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
     padding: 28px;
     overflow-y: auto;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .detail-panel::-webkit-scrollbar {
@@ -994,7 +1017,7 @@ onMounted(() => {
 .detail-avatar {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
+    background: var(--color-primary);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -1003,7 +1026,7 @@ onMounted(() => {
     font-weight: 700;
     color: white;
     flex-shrink: 0;
-    box-shadow: 0 8px 24px rgba(var(--page-primary-rgb), 0.3);
+    box-shadow: 0 4px 12px rgba(var(--page-primary-rgb), 0.2);
 }
 
 .detail-title-section {
@@ -1215,7 +1238,7 @@ onMounted(() => {
     gap: 14px;
     align-items: center;
     padding: 18px;
-    background: linear-gradient(135deg, var(--page-primary) 0%, var(--color-primary-hover, #3B82C4) 100%);
+    background: var(--color-primary);
     color: white;
 }
 
