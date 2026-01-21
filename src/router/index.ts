@@ -223,7 +223,7 @@ const routes: RouteRecordRaw[] = [
         path: '/join',
         meta: {
             title: '加入公司',
-            noAuth: false,
+            noAuth: true,
         },
         component: () => import(/* webpackChunkName: "join-via-invite" */ '../views/pages/JoinViaInvite.vue'),
     },

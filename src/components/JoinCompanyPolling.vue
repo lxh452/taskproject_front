@@ -140,29 +140,49 @@ function stopPolling() {
 async function checkApprovalStatus(): Promise<{ status: string; data?: any }> {
   try {
     const res = await getMyEmployee();
-    
+
+    console.log('[JoinCompanyPolling] 检查审批状态响应:', res.data);
+
     if (res.data.code === 200 && res.data.data) {
       const employeeData = res.data.data;
-      
+
       // 检查审批状态
-      // 假设后端返回的字段：approvalStatus: 'pending' | 'approved' | 'rejected'
-      const status = employeeData.approvalStatus || employeeData.status;
-      
-      if (status === 'approved' || status === 1) {
+      // 支持多种状态字段格式：approvalStatus, status, auditStatus
+      const status = employeeData.approvalStatus || employeeData.status || employeeData.auditStatus;
+
+      console.log('[JoinCompanyPolling] 员工状态:', status, '原始数据:', employeeData);
+
+      // 审批通过的判断：status === 'approved' 或 status === 1 或 status === 'active'
+      if (status === 'approved' || status === 1 || status === 'active') {
         // 审批通过
         handleApproved(employeeData);
         return { status: 'approved', data: employeeData };
-      } else if (status === 'rejected' || status === 2) {
+      }
+      // 审批拒绝的判断：status === 'rejected' 或 status === 2
+      else if (status === 'rejected' || status === 2) {
         // 审批拒绝
-        handleRejected(employeeData.rejectReason || '未提供拒绝原因');
+        handleRejected(employeeData.rejectReason || employeeData.rejectNote || '未提供拒绝原因');
         return { status: 'rejected', data: employeeData };
       }
+      // 待审批的判断：status === 'pending' 或 status === 0
+      else if (status === 'pending' || status === 0) {
+        console.log('[JoinCompanyPolling] 仍在等待审批');
+        return { status: 'pending' };
+      }
+    } else if (res.data.code === 404 || res.data.code === 400) {
+      // 如果返回404或400，说明还没有员工记录，仍在等待审批
+      console.log('[JoinCompanyPolling] 暂无员工记录，继续等待');
+      return { status: 'pending' };
     }
-    
+
     // 仍在等待审批
     return { status: 'pending' };
-  } catch (error) {
-    console.error('检查审批状态失败:', error);
+  } catch (error: any) {
+    console.error('[JoinCompanyPolling] 检查审批状态失败:', error);
+    // 如果是404错误，说明还没有员工记录，继续等待
+    if (error.response?.status === 404) {
+      return { status: 'pending' };
+    }
     throw error;
   }
 }
