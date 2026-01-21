@@ -84,7 +84,10 @@ onMounted(async () => {
     return;
   }
 
-  // 已登录，检查是否有公司
+  // 已登录，刷新用户信息
+  await userStore.getUserInfo();
+
+  // 检查是否有公司
   if (userStore.companyId) {
     // 已有公司，跳转到控制台
     ElMessage.info('您已加入公司');
@@ -92,10 +95,19 @@ onMounted(async () => {
     return;
   }
 
-  // 从URL参数提取邀请码
+  // 从URL参数提取邀请码并自动填充
   const inviteCodeParam = route.query.inviteCode as string;
   if (inviteCodeParam) {
     inviteCode.value = inviteCodeParam;
+    ElMessage.success('已自动填充邀请码');
+    
+    // 如果有邀请码，自动提交加入申请
+    // 等待组件验证完成后自动提交
+    setTimeout(() => {
+      if (validatedCompanyInfo.value) {
+        submitJoinCompany();
+      }
+    }, 1500);
   }
 });
 
