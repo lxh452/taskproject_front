@@ -564,7 +564,7 @@ async function confirmJoinApproval() {
       approved: true,
       departmentId: joinForm.value.departmentId,
       positionId: joinForm.value.positionId,
-      remark: joinForm.value.remark,
+      note: joinForm.value.remark,
     });
 
     if (resp.data.code === 200) {
