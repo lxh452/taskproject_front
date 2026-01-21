@@ -7,6 +7,15 @@
       </div>
 
       <div class="join-content">
+        <!-- 调试信息 -->
+        <el-alert
+          v-if="debugInfo"
+          :title="`调试信息: ${debugInfo}`"
+          type="info"
+          :closable="false"
+          style="margin-bottom: 20px"
+        />
+        
         <el-alert
           v-if="errorMessage"
           :title="errorMessage"
@@ -23,6 +32,13 @@
           @validated="handleInviteCodeValidated"
           @error="handleInviteCodeError"
         />
+        
+        <!-- 显示当前邀请码值 -->
+        <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+          <div>URL参数: {{ route.query.inviteCode || '无' }}</div>
+          <div>inviteCode值: {{ inviteCode || '空' }}</div>
+          <div>已验证: {{ validatedCompanyInfo ? '是' : '否' }}</div>
+        </div>
       </div>
 
       <div class="join-actions">
@@ -68,14 +84,17 @@ const validatedCompanyInfo = ref<InviteCodeInfo | null>(null);
 const submitting = ref(false);
 const errorMessage = ref('');
 const showWaitingApproval = ref(false);
+const debugInfo = ref('');
 
 onMounted(async () => {
+  debugInfo.value = '页面加载中...';
   console.log('JoinViaInvite mounted, route.query:', route.query);
   
   // 检查登录状态
   const token = localStorage.getItem('authToken');
   
   if (!token) {
+    debugInfo.value = '未登录，跳转到登录页';
     // 未登录，跳转到登录页面，保留邀请码参数
     const inviteCodeParam = route.query.inviteCode as string;
     const redirectUrl = inviteCodeParam 
@@ -86,11 +105,13 @@ onMounted(async () => {
     return;
   }
 
+  debugInfo.value = '已登录，刷新用户信息...';
   // 已登录，刷新用户信息
   await userStore.getUserInfo();
 
   // 检查是否有公司
   if (userStore.companyId) {
+    debugInfo.value = '已有公司，跳转到控制台';
     // 已有公司，跳转到控制台
     ElMessage.info('您已加入公司');
     router.push('/dashboard');
@@ -99,12 +120,15 @@ onMounted(async () => {
 
   // 从URL参数提取邀请码并自动填充
   const inviteCodeParam = route.query.inviteCode as string;
+  debugInfo.value = `URL参数: ${inviteCodeParam || '无'}`;
   console.log('Extracted inviteCode from URL:', inviteCodeParam);
   
   if (inviteCodeParam) {
+    debugInfo.value = `正在填充邀请码: ${inviteCodeParam}`;
     // 使用 nextTick 确保组件已完全渲染
     await new Promise(resolve => setTimeout(resolve, 100));
     inviteCode.value = inviteCodeParam;
+    debugInfo.value = `已设置邀请码: ${inviteCode.value}`;
     console.log('Set inviteCode.value to:', inviteCode.value);
     ElMessage.success('已自动填充邀请码');
     
@@ -112,9 +136,14 @@ onMounted(async () => {
     // 等待组件验证完成后自动提交
     setTimeout(() => {
       if (validatedCompanyInfo.value) {
+        debugInfo.value = '验证成功，自动提交中...';
         submitJoinCompany();
+      } else {
+        debugInfo.value = '等待验证完成...';
       }
     }, 2000);
+  } else {
+    debugInfo.value = 'URL中没有邀请码参数';
   }
 });
 
