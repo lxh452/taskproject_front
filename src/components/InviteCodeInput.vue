@@ -3,22 +3,12 @@
     <div class="input-wrapper">
       <el-input
         v-model="localCode"
-        placeholder="请输入或扫描邀请码"
+        placeholder="请输入邀请码"
         :maxlength="12"
         clearable
         @input="handleInput"
         @paste="handlePaste"
-      >
-        <template #append>
-          <el-button
-            v-if="showQRScanner"
-            :icon="CameraFilled"
-            @click="openScanner"
-          >
-            扫码
-          </el-button>
-        </template>
-      </el-input>
+      />
       
       <div v-if="validationError" class="error-message">
         <el-text type="danger" size="small">
@@ -63,18 +53,13 @@
       </div>
     </transition>
     
-    <!-- 二维码扫描器 -->
-    <QRCodeScanner
-      v-model:visible="scannerVisible"
-      @scanned="handleQRScanned"
-      @error="handleScanError"
-    />
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { CameraFilled, CircleClose, Loading, SuccessFilled } from '@element-plus/icons-vue';
+import { CircleClose, Loading, SuccessFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import {
   validateInviteCode,
@@ -82,7 +67,6 @@ import {
   extractInviteCodeFromURL
 } from '@/utils/validation';
 import type { InviteCodeInfo } from '@/types/company';
-import QRCodeScanner from './QRCodeScanner.vue';
 import { parseInviteCode } from '@/api/index';
 
 interface Props {
@@ -111,7 +95,6 @@ const localCode = ref('');
 const validationError = ref('');
 const isValidating = ref(false);
 const companyInfo = ref<InviteCodeInfo | null>(null);
-const scannerVisible = ref(false);
 
 watch(() => props.modelValue, (newVal) => {
   localCode.value = newVal;
@@ -186,20 +169,6 @@ async function validateCode() {
   } finally {
     isValidating.value = false;
   }
-}
-
-function openScanner() {
-  scannerVisible.value = true;
-}
-
-function handleQRScanned(inviteCode: string) {
-  localCode.value = inviteCode;
-  emit('qr-scanned', inviteCode);
-  ElMessage.success('邀请码已自动填充');
-}
-
-function handleScanError(error: string) {
-  ElMessage.error(error);
 }
 
 function clearCode() {

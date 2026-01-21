@@ -220,6 +220,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import(/* webpackChunkName: "register" */ '../views/pages/register.vue'),
     },
     {
+        path: '/join',
+        meta: {
+            title: '加入公司',
+            noAuth: false,
+        },
+        component: () => import(/* webpackChunkName: "join-via-invite" */ '../views/pages/JoinViaInvite.vue'),
+    },
+    {
         path: '/forgot-password',
         meta: {
             title: '忘记密码',

@@ -70,6 +70,8 @@ declare module '@vue/runtime-core' {
     Header: typeof import('./src/components/header.vue')['default']
     InviteCodeInput: typeof import('./src/components/InviteCodeInput.vue')['default']
     JoinCompanyPolling: typeof import('./src/components/JoinCompanyPolling.vue')['default']
+    LoginSecurityFeedback: typeof import('./src/components/LoginSecurityFeedback.vue')['default']
+    PasswordStrengthIndicator: typeof import('./src/components/PasswordStrengthIndicator.vue')['default']
     QRCodeScanner: typeof import('./src/components/QRCodeScanner.vue')['default']
     RoleBadge: typeof import('./src/components/RoleBadge.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

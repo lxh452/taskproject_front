@@ -24,6 +24,17 @@
                 <div class="login-title">TASK MANAGEMENT</div>
                 <div class="login-subtitle">任务 · 协作 · 效率</div>
             </div>
+            
+            <!-- 登录安全提示 -->
+            <LoginSecurityFeedback
+                v-if="showSecurityFeedback"
+                :remaining-attempts="securityInfo.remainingAttempts"
+                :lock-time-minutes="securityInfo.lockTimeMinutes"
+                :lock-time-seconds="securityInfo.lockTimeSeconds"
+                :is-locked="securityInfo.isLocked"
+                @unlock="handleUnlock"
+            />
+            
             <el-form :model="param" :rules="rules" ref="login" size="large" class="login-form">
                 <el-form-item prop="username">
                     <el-input v-model="param.username" placeholder="用户名">
@@ -90,6 +101,8 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { apiLogin } from '@/api';
 import { getMyEmployee, employeeRoles } from '@/api';
 import { User, Lock, View, Hide } from '@element-plus/icons-vue';
+import LoginSecurityFeedback from '@/components/LoginSecurityFeedback.vue';
+import { handleApiError } from '@/utils/errorHandler';
 
 interface LoginInfo {
     username: string;
@@ -100,6 +113,15 @@ const lgStr = localStorage.getItem('login-param');
 const defParam = lgStr ? JSON.parse(lgStr) : null;
 const checked = ref(lgStr ? true : false);
 const showPassword = ref(false);
+
+// 安全反馈状态
+const showSecurityFeedback = ref(false);
+const securityInfo = reactive({
+    remainingAttempts: 5,
+    lockTimeMinutes: 0,
+    lockTimeSeconds: 0,
+    isLocked: false,
+});
 
 const router = useRouter();
 const param = reactive<LoginInfo>({
@@ -135,9 +157,25 @@ const submitForm = (formEl: FormInstance | undefined) => {
             
             if (res.data.code !== 200) {
                 console.error('登录失败:', res.data);
-                ElMessage.error(res.data.msg || '登录失败');
+                
+                // 处理安全反馈信息
+                const responseData = res.data?.data || res.data;
+                if (responseData.remainingAttempts !== undefined) {
+                    showSecurityFeedback.value = true;
+                    securityInfo.remainingAttempts = responseData.remainingAttempts;
+                    securityInfo.lockTimeMinutes = responseData.lockTimeMinutes || 0;
+                    securityInfo.lockTimeSeconds = responseData.lockTimeSeconds || 0;
+                    securityInfo.isLocked = responseData.isLocked || false;
+                } else {
+                    ElMessage.error(res.data.msg || '登录失败');
+                }
                 return;
             }
+            
+            // 登录成功，清除安全反馈
+            showSecurityFeedback.value = false;
+            securityInfo.remainingAttempts = 5;
+            securityInfo.isLocked = false;
             
             const loginData = res.data?.data;
             const token = loginData?.token as string | undefined;
@@ -215,10 +253,24 @@ const submitForm = (formEl: FormInstance | undefined) => {
                         permiss.handleSet(keys);
                     }
                     
-                    router.push('/dashboard').catch((err) => {
-                        console.error('路由跳转失败:', err);
-                        window.location.href = '/';
-                    });
+                    // 检查是否有重定向参数
+                    const redirect = router.currentRoute.value.query.redirect as string;
+                    const inviteCode = router.currentRoute.value.query.inviteCode as string;
+                    
+                    if (redirect) {
+                        // 有重定向，跳转到指定页面（保留邀请码参数）
+                        const redirectUrl = inviteCode ? `${redirect}?inviteCode=${inviteCode}` : redirect;
+                        router.push(redirectUrl).catch((err) => {
+                            console.error('路由跳转失败:', err);
+                            window.location.href = '/';
+                        });
+                    } else {
+                        // 无重定向，跳转到控制台
+                        router.push('/dashboard').catch((err) => {
+                            console.error('路由跳转失败:', err);
+                            window.location.href = '/';
+                        });
+                    }
                 } else {
                     router.push('/join-company');
                 }
@@ -237,10 +289,17 @@ const submitForm = (formEl: FormInstance | undefined) => {
             }
         } catch (e: any) {
             console.error('登录错误:', e);
-            ElMessage.error(e.response?.data?.msg || e.message || '账号或密码错误');
+            handleApiError(e, true);
         }
     });
 };
+
+// 处理解锁事件
+function handleUnlock() {
+    showSecurityFeedback.value = false;
+    securityInfo.isLocked = false;
+    ElMessage.success('账户已解锁，请重新登录');
+}
 
 const tabs = useTabsStore();
 tabs.clearTabs();

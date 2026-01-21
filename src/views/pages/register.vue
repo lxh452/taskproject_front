@@ -95,6 +95,8 @@
                             </el-icon>
                         </template>
                     </el-input>
+                    <!-- 密码强度指示器 -->
+                    <PasswordStrengthIndicator :password="param.password" />
                 </el-form-item>
                 <el-button class="login-btn" type="primary" size="large" @click="submitForm(register)" :loading="loading">
                     注册账号
@@ -115,8 +117,10 @@ import { Register } from '@/types/user';
 import { apiRegister, sendVerificationCode as sendCode, applyJoinCompany } from '@/api';
 import { User, Message, Lock, UserFilled, Key, View, Hide } from '@element-plus/icons-vue';
 import InviteCodeInput from '@/components/InviteCodeInput.vue';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
 import type { InviteCodeInfo } from '@/types/company';
 import { extractInviteCodeFromURL } from '@/utils/validation';
+import { handleApiError } from '@/utils/errorHandler';
 
 const router = useRouter();
 const param = reactive<Register & { verificationCode: string }>({
@@ -298,7 +302,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
                 }
             } catch (error: any) {
                 console.error('注册错误:', error);
-                ElMessage.error(error.response?.data?.msg || '注册失败，请稍后重试');
+                handleApiError(error, true);
             } finally {
                 loading.value = false;
             }

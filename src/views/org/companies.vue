@@ -272,7 +272,6 @@
                     v-model="joinInviteCode"
                     :auto-validate="true"
                     :show-preview="true"
-                    :show-qr-scanner="true"
                     @validated="handleInviteCodeValidated"
                     @error="handleInviteCodeError"
                 />
@@ -329,6 +328,7 @@ import { useUserStore } from '@/store/user';
 import type { FormInstance, FormRules } from 'element-plus';
 import InviteCodeInput from '@/components/InviteCodeInput.vue';
 import type { InviteCodeInfo } from '@/types/company';
+import { handleApiError } from '@/utils/errorHandler';
 
 const userStore = useUserStore();
 const currentCompanyId = computed(() => userStore.companyId);
@@ -493,7 +493,7 @@ async function submitEdit() {
                 ElMessage.error(resp.data.msg || '保存失败');
             }
         } catch (error: any) {
-            ElMessage.error('保存失败: ' + (error.message || '未知错误'));
+            handleApiError(error, true);
         } finally {
             submitting.value = false;
         }
@@ -517,7 +517,7 @@ async function generateInviteCode() {
             ElMessage.error(resp.data.msg || '生成邀请码失败');
         }
     } catch (error: any) {
-        ElMessage.error('生成邀请码失败');
+        handleApiError(error, true);
     } finally {
         generatingCode.value = false;
     }
@@ -553,7 +553,7 @@ async function submitJoinCompany() {
             ElMessage.error(resp.data.msg || '加入公司失败');
         }
     } catch (error: any) {
-        ElMessage.error('加入公司失败: ' + (error.message || '未知错误'));
+        handleApiError(error, true);
     } finally {
         joiningCompany.value = false;
     }
