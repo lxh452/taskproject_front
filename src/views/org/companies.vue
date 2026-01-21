@@ -7,6 +7,9 @@
                 <p class="page-desc">管理您所在的公司信息</p>
             </div>
             <div class="header-right">
+                <el-button type="success" :icon="Share" @click="showJoinDialog = true" v-if="canJoinCompany">
+                    加入公司
+                </el-button>
                 <el-button type="primary" :icon="Plus" @click="showCreateDialog = true" v-if="canCreateCompany">
                     创建公司
                 </el-button>
@@ -254,6 +257,40 @@
             </template>
         </el-dialog>
 
+        <!-- 加入公司对话框 -->
+        <el-dialog v-model="showJoinDialog" title="加入公司" width="520px" :close-on-click-modal="false">
+            <div class="join-content">
+                <el-alert
+                    title="使用邀请码加入公司"
+                    type="info"
+                    description="请输入公司邀请码或扫描二维码加入公司"
+                    :closable="false"
+                    style="margin-bottom: 20px"
+                />
+                
+                <InviteCodeInput
+                    v-model="joinInviteCode"
+                    :auto-validate="true"
+                    :show-preview="true"
+                    :show-qr-scanner="true"
+                    @validated="handleInviteCodeValidated"
+                    @error="handleInviteCodeError"
+                />
+            </div>
+            
+            <template #footer>
+                <el-button @click="showJoinDialog = false">取消</el-button>
+                <el-button 
+                    type="primary" 
+                    @click="submitJoinCompany" 
+                    :loading="joiningCompany"
+                    :disabled="!validatedCompanyInfo"
+                >
+                    加入公司
+                </el-button>
+            </template>
+        </el-dialog>
+
         <!-- 邀请码对话框 -->
         <el-dialog v-model="showInviteCodeDialog" title="邀请成员" width="420px">
             <div class="invite-content">
@@ -286,10 +323,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { Search, Refresh, Plus, View, Edit, Share, User, OfficeBuilding, Location, Calendar, CopyDocument } from '@element-plus/icons-vue';
-import { listCompanies, updateCompany, generateInviteCode as apiGenerateInviteCode } from '@/api';
+import { listCompanies, updateCompany, generateInviteCode as apiGenerateInviteCode, applyJoinCompany } from '@/api';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import type { FormInstance, FormRules } from 'element-plus';
+import InviteCodeInput from '@/components/InviteCodeInput.vue';
+import type { InviteCodeInfo } from '@/types/company';
 
 const userStore = useUserStore();
 const currentCompanyId = computed(() => userStore.companyId);
@@ -327,6 +366,12 @@ const editRules: FormRules = {
     companyBusiness: [{ required: true, message: '请选择所属行业', trigger: 'change' }]
 };
 
+// 加入公司
+const showJoinDialog = ref(false);
+const joinInviteCode = ref('');
+const validatedCompanyInfo = ref<InviteCodeInfo | null>(null);
+const joiningCompany = ref(false);
+
 // 邀请码
 const showInviteCodeDialog = ref(false);
 const inviteCode = ref('');
@@ -347,6 +392,11 @@ const filteredRows = computed(() => {
 // 权限判断
 const canCreateCompany = computed(() => {
     // 未加入公司的用户可以创建公司（没有companyId表示未加入）
+    return !userStore.companyId;
+});
+
+const canJoinCompany = computed(() => {
+    // 未加入公司的用户可以加入公司
     return !userStore.companyId;
 });
 
@@ -470,6 +520,42 @@ async function generateInviteCode() {
         ElMessage.error('生成邀请码失败');
     } finally {
         generatingCode.value = false;
+    }
+}
+
+function handleInviteCodeValidated(companyInfo: InviteCodeInfo | null) {
+    validatedCompanyInfo.value = companyInfo;
+}
+
+function handleInviteCodeError(error: string) {
+    validatedCompanyInfo.value = null;
+}
+
+async function submitJoinCompany() {
+    if (!joinInviteCode.value || !validatedCompanyInfo.value) {
+        ElMessage.warning('请输入有效的邀请码');
+        return;
+    }
+    
+    joiningCompany.value = true;
+    try {
+        const resp = await applyJoinCompany({ inviteCode: joinInviteCode.value });
+        if (resp.data.code === 200) {
+            ElMessage.success('加入公司申请已提交，等待审批');
+            showJoinDialog.value = false;
+            joinInviteCode.value = '';
+            validatedCompanyInfo.value = null;
+            // 刷新公司列表
+            loadData();
+            // 刷新用户信息
+            await userStore.getUserInfo();
+        } else {
+            ElMessage.error(resp.data.msg || '加入公司失败');
+        }
+    } catch (error: any) {
+        ElMessage.error('加入公司失败: ' + (error.message || '未知错误'));
+    } finally {
+        joiningCompany.value = false;
     }
 }
 
@@ -795,6 +881,11 @@ onMounted(() => {
 .stat-text {
     font-size: var(--font-size-xs);
     color: var(--text-muted);
+}
+
+/* 加入公司对话框 */
+.join-content {
+    padding: 10px 0;
 }
 
 /* 邀请码对话框 */

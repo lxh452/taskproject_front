@@ -59,6 +59,23 @@
                         </el-button>
                     </div>
                 </el-form-item>
+                
+                <!-- 邀请码输入（可选） -->
+                <el-form-item>
+                    <el-collapse v-model="showInviteCodeSection" class="invite-collapse">
+                        <el-collapse-item name="invite" title="有邀请码？点击输入（可选）">
+                            <InviteCodeInput
+                                v-model="inviteCode"
+                                :auto-validate="true"
+                                :show-preview="true"
+                                :show-qr-scanner="true"
+                                @validated="handleInviteCodeValidated"
+                                @error="handleInviteCodeError"
+                            />
+                        </el-collapse-item>
+                    </el-collapse>
+                </el-form-item>
+                
                 <el-form-item prop="password">
                     <el-input
                         :type="showPassword ? 'text' : 'password'"
@@ -91,12 +108,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Register } from '@/types/user';
-import { apiRegister, sendVerificationCode as sendCode } from '@/api';
+import { apiRegister, sendVerificationCode as sendCode, applyJoinCompany } from '@/api';
 import { User, Message, Lock, UserFilled, Key, View, Hide } from '@element-plus/icons-vue';
+import InviteCodeInput from '@/components/InviteCodeInput.vue';
+import type { InviteCodeInfo } from '@/types/company';
+import { extractInviteCodeFromURL } from '@/utils/validation';
 
 const router = useRouter();
 const param = reactive<Register & { verificationCode: string }>({
@@ -111,6 +131,29 @@ const codeSending = ref(false);
 const codeCountdown = ref(0);
 const showPassword = ref(false);
 let countdownTimer: number | null = null;
+
+// 邀请码相关
+const inviteCode = ref('');
+const validatedCompanyInfo = ref<InviteCodeInfo | null>(null);
+const showInviteCodeSection = ref<string[]>([]);
+
+onMounted(() => {
+    // 从URL参数提取邀请码
+    const urlCode = extractInviteCodeFromURL(window.location.href);
+    if (urlCode) {
+        inviteCode.value = urlCode;
+        showInviteCodeSection.value = ['invite']; // 自动展开邀请码区域
+        ElMessage.success('已自动填充邀请码');
+    }
+});
+
+function handleInviteCodeValidated(companyInfo: InviteCodeInfo | null) {
+    validatedCompanyInfo.value = companyInfo;
+}
+
+function handleInviteCodeError(error: string) {
+    validatedCompanyInfo.value = null;
+}
 
 // 发送验证码
 const sendVerificationCode = async () => {
@@ -232,7 +275,23 @@ const submitForm = (formEl: FormInstance | undefined) => {
             try {
                 const res = await apiRegister(param);
                 if (res.data.code === 200) {
-                    ElMessage.success('注册成功，请登录');
+                    ElMessage.success('注册成功');
+                    
+                    // 如果有邀请码，自动提交加入公司申请
+                    if (inviteCode.value && validatedCompanyInfo.value) {
+                        try {
+                            const joinRes = await applyJoinCompany({ inviteCode: inviteCode.value });
+                            if (joinRes.data.code === 200) {
+                                ElMessage.success('已自动提交加入公司申请，请登录后等待审批');
+                            }
+                        } catch (error) {
+                            console.error('自动加入公司失败:', error);
+                            // 不影响注册流程，只是提示
+                            ElMessage.warning('注册成功，但加入公司申请失败，请登录后手动加入');
+                        }
+                    }
+                    
+                    // 跳转到登录页
                     router.push('/login');
                 } else {
                     ElMessage.error(res.data.msg || '注册失败');
@@ -467,5 +526,31 @@ const submitForm = (formEl: FormInstance | undefined) => {
 
 .send-code-btn:not(:disabled):hover {
     background: var(--color-primary-hover);
+}
+
+.invite-collapse {
+    width: 100%;
+    border: none;
+    background: transparent;
+}
+
+.invite-collapse :deep(.el-collapse-item__header) {
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0;
+    height: auto;
+    line-height: 1.5;
+}
+
+.invite-collapse :deep(.el-collapse-item__wrap) {
+    background: transparent;
+    border: none;
+}
+
+.invite-collapse :deep(.el-collapse-item__content) {
+    padding: 16px 0 0 0;
 }
 </style>

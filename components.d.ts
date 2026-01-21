@@ -68,6 +68,9 @@ declare module '@vue/runtime-core' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Header: typeof import('./src/components/header.vue')['default']
+    InviteCodeInput: typeof import('./src/components/InviteCodeInput.vue')['default']
+    JoinCompanyPolling: typeof import('./src/components/JoinCompanyPolling.vue')['default']
+    QRCodeScanner: typeof import('./src/components/QRCodeScanner.vue')['default']
     RoleBadge: typeof import('./src/components/RoleBadge.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
@@ -79,6 +82,7 @@ declare module '@vue/runtime-core' {
     TableSearch: typeof import('./src/components/table-search.vue')['default']
     Tabs: typeof import('./src/components/tabs.vue')['default']
     TaskChecklist: typeof import('./src/components/TaskChecklist.vue')['default']
+    WaitingForApproval: typeof import('./src/components/WaitingForApproval.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
