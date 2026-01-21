@@ -325,7 +325,7 @@ async function loadInviteCodes() {
 
 async function showQRCode(invite: any) {
   currentInviteCode.value = invite.code;
-  currentInviteLink.value = `${window.location.origin}/#/join-company?code=${invite.code}`;
+  currentInviteLink.value = `${window.location.origin}/#/join?inviteCode=${invite.code}`;
   qrDialogVisible.value = true;
 
   await nextTick();
@@ -350,7 +350,7 @@ async function showQRCode(invite: any) {
 }
 
 function copyInviteLink(invite: any) {
-  const link = `${window.location.origin}/#/join-company?code=${invite.code}`;
+  const link = `${window.location.origin}/#/join?inviteCode=${invite.code}`;
   navigator.clipboard.writeText(link).then(() => {
     ElMessage.success('链接已复制到剪贴板');
   }).catch(() => {
