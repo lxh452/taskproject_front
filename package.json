@@ -22,6 +22,7 @@
     "echarts": "^5.5.0",
     "echarts-wordcloud": "^2.1.0",
     "element-plus": "^2.6.3",
+    "jsqr": "^1.4.0",
     "mammoth": "^1.11.0",
     "marked": "^17.0.1",
     "md-editor-v3": "^2.11.2",
