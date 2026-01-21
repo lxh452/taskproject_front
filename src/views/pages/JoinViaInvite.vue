@@ -70,6 +70,8 @@ const errorMessage = ref('');
 const showWaitingApproval = ref(false);
 
 onMounted(async () => {
+  console.log('JoinViaInvite mounted, route.query:', route.query);
+  
   // 检查登录状态
   const token = localStorage.getItem('authToken');
   
@@ -97,8 +99,13 @@ onMounted(async () => {
 
   // 从URL参数提取邀请码并自动填充
   const inviteCodeParam = route.query.inviteCode as string;
+  console.log('Extracted inviteCode from URL:', inviteCodeParam);
+  
   if (inviteCodeParam) {
+    // 使用 nextTick 确保组件已完全渲染
+    await new Promise(resolve => setTimeout(resolve, 100));
     inviteCode.value = inviteCodeParam;
+    console.log('Set inviteCode.value to:', inviteCode.value);
     ElMessage.success('已自动填充邀请码');
     
     // 如果有邀请码，自动提交加入申请
@@ -107,7 +114,7 @@ onMounted(async () => {
       if (validatedCompanyInfo.value) {
         submitJoinCompany();
       }
-    }, 1500);
+    }, 2000);
   }
 });
 

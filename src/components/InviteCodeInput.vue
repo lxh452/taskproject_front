@@ -97,16 +97,19 @@ const isValidating = ref(false);
 const companyInfo = ref<InviteCodeInfo | null>(null);
 
 watch(() => props.modelValue, (newVal) => {
+  console.log('InviteCodeInput watch modelValue:', newVal);
   if (newVal !== localCode.value) {
     localCode.value = newVal;
     // 如果有新值且开启自动验证，立即验证
     if (props.autoValidate && newVal) {
+      console.log('Auto-validating code:', newVal);
       validateCode();
     }
   }
-});
+}, { immediate: true });
 
 watch(localCode, (newVal) => {
+  console.log('InviteCodeInput watch localCode:', newVal);
   emit('update:modelValue', newVal);
   
   if (props.autoValidate && newVal) {
@@ -118,9 +121,11 @@ watch(localCode, (newVal) => {
 });
 
 onMounted(() => {
+  console.log('InviteCodeInput mounted, props.modelValue:', props.modelValue);
   // 如果已经有 modelValue，直接使用（从父组件传入）
   if (props.modelValue) {
     localCode.value = props.modelValue;
+    console.log('Using modelValue from props:', props.modelValue);
     if (props.autoValidate) {
       validateCode();
     }
@@ -129,6 +134,7 @@ onMounted(() => {
     const urlCode = extractInviteCodeFromURL(window.location.href);
     if (urlCode) {
       localCode.value = urlCode;
+      console.log('Extracted code from URL:', urlCode);
       ElMessage.success('已自动填充邀请码');
     }
   }
