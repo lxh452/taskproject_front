@@ -70,14 +70,12 @@ const errorMessage = ref('');
 const showWaitingApproval = ref(false);
 
 onMounted(async () => {
-  debugInfo.value = '页面加载中...';
-  console.log('JoinViaInvite mounted, route.query:', route.query);
+  console.log('[JoinViaInvite] 页面加载, route.query:', route.query);
 
   // 检查登录状态
   const token = localStorage.getItem('authToken');
 
   if (!token) {
-    debugInfo.value = '未登录，跳转到登录页';
     // 未登录，跳转到登录页面，保留邀请码参数
     const inviteCodeParam = route.query.inviteCode as string;
     const redirectUrl = inviteCodeParam
@@ -88,13 +86,11 @@ onMounted(async () => {
     return;
   }
 
-  debugInfo.value = '已登录，刷新用户信息...';
   // 已登录，刷新用户信息
   await userStore.getUserInfo();
 
   // 检查是否有公司
   if (userStore.companyId) {
-    debugInfo.value = '已有公司，跳转到控制台';
     // 已有公司，跳转到控制台
     ElMessage.info('您已加入公司');
     router.push('/dashboard');
@@ -103,18 +99,13 @@ onMounted(async () => {
 
   // 从URL参数提取邀请码并自动填充
   const inviteCodeParam = route.query.inviteCode as string;
-  debugInfo.value = `URL参数: ${inviteCodeParam || '无'}`;
-  console.log('Extracted inviteCode from URL:', inviteCodeParam);
+  console.log('[JoinViaInvite] 提取邀请码:', inviteCodeParam);
 
   if (inviteCodeParam) {
-    debugInfo.value = `正在填充邀请码: ${inviteCodeParam}`;
     // 直接设置邀请码，InviteCodeInput 组件会通过 watch 自动验证
     inviteCode.value = inviteCodeParam;
-    debugInfo.value = `已设置邀请码: ${inviteCode.value}`;
-    console.log('Set inviteCode.value to:', inviteCode.value);
-    ElMessage.success('已自���填充邀请码');
-  } else {
-    debugInfo.value = 'URL中没有邀请码参数';
+    console.log('[JoinViaInvite] 已设置邀请码:', inviteCode.value);
+    ElMessage.success('已自动填充邀请码');
   }
 });
 
@@ -122,7 +113,7 @@ function handleInviteCodeValidated(companyInfo: InviteCodeInfo | null) {
   validatedCompanyInfo.value = companyInfo;
   errorMessage.value = '';
 
-  // 如果是从URL参数自动填充的邀请码，验证成功后自动提交
+  // 如果是从URL参数自动填充的邀请码，验���成功后自动提交
   if (companyInfo && route.query.inviteCode) {
     console.log('[JoinViaInvite] 验证成功，准备自动提交');
     // 延迟1秒后自动提交，让用户看到验证成功的提示
@@ -146,7 +137,7 @@ async function submitJoinCompany() {
   submitting.value = true;
   try {
     const resp = await applyJoinCompany({ inviteCode: inviteCode.value });
-    
+
     if (resp.data.code === 200) {
       ElMessage.success('加入公司申请已提交');
       // 显示等待审批页面
@@ -237,11 +228,11 @@ function goBack() {
   .join-container {
     padding: 36px 28px;
   }
-  
+
   .join-actions {
     flex-direction: column-reverse;
   }
-  
+
   .join-actions .el-button {
     width: 100%;
   }
