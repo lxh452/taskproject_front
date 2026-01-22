@@ -374,10 +374,10 @@
     >
       <el-form :model="leaveForm" label-width="100px">
         <el-form-item label="离职员工">
-          <el-input v-model="currentLeaveItem?.fromEmployeeName" disabled />
+          <el-input :model-value="currentLeaveItem?.fromEmployeeName || ''" disabled />
         </el-form-item>
         <el-form-item label="离职原因">
-          <el-input v-model="currentLeaveItem?.handoverReason" type="textarea" :rows="3" disabled />
+          <el-input :model-value="currentLeaveItem?.handoverReason || ''" type="textarea" :rows="3" disabled />
         </el-form-item>
         <el-form-item label="指定交接人" required>
           <el-select v-model="leaveForm.toEmployeeId" placeholder="请选择交接人" style="width: 100%" filterable>
