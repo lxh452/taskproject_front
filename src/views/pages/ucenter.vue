@@ -316,6 +316,75 @@
                         </div>
                         </div>
                     </el-tab-pane>
+
+                    <!-- 离职申请 -->
+                    <el-tab-pane name="leave" label="离职申请" v-if="userInfo.status === 1">
+                        <template #label>
+                            <span class="tab-label">
+                                <el-icon><Remove /></el-icon>
+                                离职申请
+                            </span>
+                        </template>
+                        <div class="tab-content">
+                            <div class="section-header">
+                                <h3>提交离职申请</h3>
+                                <p class="section-desc">您可以在此提交离职申请，申请将提交给您的直属上级审批</p>
+                            </div>
+                            
+                            <el-alert
+                                title="温馨提示"
+                                type="warning"
+                                :closable="false"
+                                show-icon
+                                style="margin-bottom: 20px;"
+                            >
+                                <p>• 离职申请提交后将进入审批流程</p>
+                                <p>• 审批通过后需要指定任务交接人</p>
+                                <p>• 请确保您的工作已妥善安排</p>
+                            </el-alert>
+
+                            <el-form
+                                ref="leaveFormRef"
+                                :model="leaveForm"
+                                :rules="leaveRules"
+                                label-width="100px"
+                                class="leave-form"
+                            >
+                                <el-form-item label="离职日期" prop="leaveDate">
+                                    <el-date-picker
+                                        v-model="leaveForm.leaveDate"
+                                        type="date"
+                                        placeholder="选择离职日期"
+                                        value-format="YYYY-MM-DD"
+                                        :disabled-date="disabledDate"
+                                        style="width: 100%;"
+                                    />
+                                </el-form-item>
+
+                                <el-form-item label="离职原因" prop="leaveReason">
+                                    <el-input
+                                        v-model="leaveForm.leaveReason"
+                                        type="textarea"
+                                        :rows="5"
+                                        placeholder="请详细说明您的离职原因..."
+                                        maxlength="500"
+                                        show-word-limit
+                                    />
+                                </el-form-item>
+
+                                <el-form-item>
+                                    <el-button
+                                        type="primary"
+                                        :loading="submittingLeave"
+                                        @click="submitLeaveApplication"
+                                    >
+                                        提交离职申请
+                                    </el-button>
+                                    <el-button @click="resetLeaveForm">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </el-tab-pane>
                 </el-tabs>
             </el-card>
         </div>
@@ -327,13 +396,14 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { VueCropper } from 'vue-cropper';
 import 'vue-cropper/dist/index.css';
 import { 
-    Camera, Bell, User, Lock, UserFilled, Upload, Check, InfoFilled,
+    Camera, Bell, User, Lock, UserFilled, Upload, Check, InfoFilled, Remove,
     Briefcase, OfficeBuilding, Flag, Message, Document, CircleCheck, Loading, Clock
 } from '@element-plus/icons-vue';
-import { getMyEmployee, uploadAvatar, getMyTaskNodes } from '@/api';
-import { ElMessage } from 'element-plus';
+import { getMyEmployee, uploadAvatar, getMyTaskNodes, employeeLeave } from '@/api';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import defaultAvatarImg from '@/assets/img/img.jpg';
+import { useRouter } from 'vue-router';
 
 const defaultAvatar = defaultAvatarImg;
 const activeName = ref('notifications');
@@ -558,6 +628,85 @@ function formatDate(dateStr: string): string {
     } catch {
         return dateStr;
     }
+}
+
+// 离职申请相关
+const router = useRouter();
+const leaveFormRef = ref<FormInstance>();
+const submittingLeave = ref(false);
+const leaveForm = reactive({
+    leaveDate: '',
+    leaveReason: ''
+});
+
+const leaveRules: FormRules = {
+    leaveDate: [
+        { required: true, message: '请选择离职日期', trigger: 'change' }
+    ],
+    leaveReason: [
+        { required: true, message: '请输入离职原因', trigger: 'blur' },
+        { min: 10, message: '离职原因至少10个字符', trigger: 'blur' }
+    ]
+};
+
+// 禁用过去的日期
+function disabledDate(time: Date) {
+    return time.getTime() < Date.now() - 24 * 60 * 60 * 1000;
+}
+
+// 提交离职申请
+async function submitLeaveApplication() {
+    if (!leaveFormRef.value) return;
+    
+    await leaveFormRef.value.validate(async (valid) => {
+        if (!valid) return;
+        
+        try {
+            await ElMessageBox.confirm(
+                '提交离职申请后将进入审批流程，确定要提交吗？',
+                '确认提交',
+                {
+                    confirmButtonText: '确定提交',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }
+            );
+
+            submittingLeave.value = true;
+            const resp = await employeeLeave({
+                employeeId: userInfo.value.id || userInfo.value.employeeId,
+                leaveReason: leaveForm.leaveReason,
+                leaveDate: leaveForm.leaveDate
+            });
+
+            if (resp.data?.code === 200) {
+                ElMessage.success('离职申请已提交，请等待审批');
+                resetLeaveForm();
+                // 跳转到交接列表页面查看审批进度
+                setTimeout(() => {
+                    router.push('/handovers/list');
+                }, 1500);
+            } else {
+                ElMessage.error(resp.data?.msg || '提交失败');
+            }
+        } catch (error: any) {
+            if (error !== 'cancel') {
+                console.error('提交离职申请失败:', error);
+                ElMessage.error('提交失败，请稍后重试');
+            }
+        } finally {
+            submittingLeave.value = false;
+        }
+    });
+}
+
+// 重置离职申请表单
+function resetLeaveForm() {
+    if (leaveFormRef.value) {
+        leaveFormRef.value.resetFields();
+    }
+    leaveForm.leaveDate = '';
+    leaveForm.leaveReason = '';
 }
 
 onMounted(() => {

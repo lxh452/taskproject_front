@@ -37,6 +37,7 @@ const errorMessageMap: Record<string, string> = {
   'employee_not_found': '未找到员工信息',
   'employee_already_exists': '员工已存在',
   'employee_not_approved': '员工申请未通过审批',
+  'employee_left': '您已离职，无法登录系统',
   
   // 公司相关
   'company_not_found': '公司不存在',

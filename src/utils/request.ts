@@ -54,6 +54,44 @@ const errorNotificationState = {
     isShowing403: false,
 };
 
+// 请求去重机制
+const pendingRequests = new Map<string, AbortController>();
+
+/**
+ * 生成请求唯一标识
+ */
+function generateRequestKey(config: InternalAxiosRequestConfig): string {
+    const { method, url, params, data } = config;
+    return `${method}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`;
+}
+
+/**
+ * 添加请求到待处理队列
+ */
+function addPendingRequest(config: InternalAxiosRequestConfig): void {
+    const requestKey = generateRequestKey(config);
+    
+    // 如果已有相同请求在进行中，取消旧请求
+    if (pendingRequests.has(requestKey)) {
+        const controller = pendingRequests.get(requestKey);
+        controller?.abort();
+        console.warn('取消重复请求:', requestKey);
+    }
+    
+    // 创建新的 AbortController
+    const controller = new AbortController();
+    config.signal = controller.signal;
+    pendingRequests.set(requestKey, controller);
+}
+
+/**
+ * 从待处理队列移除请求
+ */
+function removePendingRequest(config: InternalAxiosRequestConfig): void {
+    const requestKey = generateRequestKey(config);
+    pendingRequests.delete(requestKey);
+}
+
 const service: AxiosInstance = axios.create({
     baseURL: buildApiBaseUrl(),
     timeout: 10000
@@ -61,6 +99,9 @@ const service: AxiosInstance = axios.create({
 
 service.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+        // 添加请求去重
+        addPendingRequest(config);
+        
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const url = (config.url || '').toString();
         const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
@@ -105,6 +146,9 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
     (response: AxiosResponse) => {
+        // 移除已完成的请求
+        removePendingRequest(response.config as InternalAxiosRequestConfig);
+        
         // 检查响应头中是否有CSRF Token（登录成功后返回）
         const newCsrfToken = response.headers['x-csrf-token'];
         if (newCsrfToken) {
@@ -113,6 +157,17 @@ service.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
+        // 移除失败的请求
+        if (error.config) {
+            removePendingRequest(error.config as InternalAxiosRequestConfig);
+        }
+        
+        // 如果是请求被取消，直接返回
+        if (axios.isCancel(error)) {
+            console.log('请求已取消:', error.message);
+            return Promise.reject(error);
+        }
+        
         const status = (error.response as any)?.status;
         const responseData = (error.response as any)?.data;
         

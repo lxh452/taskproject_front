@@ -290,7 +290,25 @@ const router = createRouter({
     routes,
 });
 
+// 防止快速重复导航
+let isNavigating = false;
+let navigationTimer: ReturnType<typeof setTimeout> | null = null;
+
 router.beforeEach((to, from, next) => {
+    // 防止快速重复导航
+    if (isNavigating) {
+        console.warn('导航进行中，请勿频繁点击');
+        return;
+    }
+    
+    isNavigating = true;
+    if (navigationTimer) {
+        clearTimeout(navigationTimer);
+    }
+    navigationTimer = setTimeout(() => {
+        isNavigating = false;
+    }, 500);
+    
     NProgress.start();
     const token = localStorage.getItem('authToken');
     const permiss = usePermissStore();

@@ -271,7 +271,7 @@
     >
       <el-form :model="joinForm" label-width="80px">
         <el-form-item label="部门">
-          <el-select v-model="joinForm.departmentId" placeholder="请选择部门" style="width: 100%">
+          <el-select v-model="joinForm.departmentId" placeholder="请选择部门" style="width: 100%" @change="onDepartmentChange">
             <el-option 
               v-for="dept in departments" 
               :key="dept.id" 
@@ -281,7 +281,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="职位">
-          <el-select v-model="joinForm.positionId" placeholder="请选择职位" style="width: 100%">
+          <el-select v-model="joinForm.positionId" placeholder="请选择职位" style="width: 100%" :disabled="!joinForm.departmentId">
             <el-option 
               v-for="pos in positions" 
               :key="pos.id" 
@@ -317,6 +317,7 @@ const leaveList = ref<any[]>([]);
 const completionList = ref<any[]>([]);
 const departments = ref<any[]>([]);
 const positions = ref<any[]>([]);
+const allPositions = ref<any[]>([]);
 const currentCompanyId = ref('');
 
 // Join approval dialog
@@ -502,15 +503,18 @@ async function loadPositions() {
     console.log('职位列表API响应:', resp.data);
     if (resp.data?.code === 200) {
       const data = resp.data?.data;
-      positions.value = (data?.list || []).map((pos: any) => ({
+      allPositions.value = (data?.list || []).map((pos: any) => ({
         id: pos.id,
         name: pos.positionName || pos.name,
+        departmentId: pos.departmentId || pos.DepartmentId,
       }));
+      positions.value = allPositions.value;
       console.log('职位列表:', positions.value);
     }
   } catch (error) {
     console.error('加载职位列表失败:', error);
     positions.value = [];
+    allPositions.value = [];
   }
 }
 
@@ -549,7 +553,30 @@ function showJoinApprovalDialog(item: any) {
     positionId: '',
     remark: '',
   };
+  // 重置职位列表为全部职位
+  positions.value = allPositions.value;
   joinDialogVisible.value = true;
+}
+
+function onDepartmentChange(departmentId: string) {
+  // 根据选中的部门筛选职位
+  if (departmentId) {
+    positions.value = allPositions.value.filter(pos => pos.departmentId === departmentId);
+    console.log('部门变更，筛选后的职位:', positions.value);
+    
+    // 如果当前选中的职位不属于新部门，清空职位选择
+    if (joinForm.value.positionId) {
+      const isPositionInDepartment = positions.value.some(pos => pos.id === joinForm.value.positionId);
+      if (!isPositionInDepartment) {
+        joinForm.value.positionId = '';
+        console.log('清空职位选择（不属于当前部门）');
+      }
+    }
+  } else {
+    // 如果没有选择部门，显示所有职位
+    positions.value = allPositions.value;
+    joinForm.value.positionId = '';
+  }
 }
 
 async function confirmJoinApproval() {
