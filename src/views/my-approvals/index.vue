@@ -195,7 +195,73 @@
 
       <!-- Leave Approvals -->
       <div v-if="activeTab === 'leave'" class="approval-list">
-        <el-empty description="离职审批功能即将上线" />
+        <div 
+          v-for="item in leaveList" 
+          :key="item.id" 
+          class="approval-card"
+        >
+          <div class="approval-header">
+            <div class="header-left">
+              <h3 class="approval-title">{{ item.fromEmployeeName || '员工' }} 申请离职</h3>
+              <div class="approval-meta">
+                <span class="meta-item">
+                  <el-icon><Clock /></el-icon>
+                  {{ formatDate(item.createTime) }}
+                </span>
+              </div>
+            </div>
+            <el-tag :type="getStatusType(item.status || item.handoverStatus)">
+              {{ getStatusText(item.status || item.handoverStatus) }}
+            </el-tag>
+          </div>
+          <div class="approval-body">
+            <div class="approval-info">
+              <div class="info-row">
+                <span class="info-label">
+                  <el-icon><User /></el-icon>
+                  离职员工：
+                </span>
+                <span class="info-value">{{ item.fromEmployeeName || '-' }}</span>
+              </div>
+              <div class="info-row" v-if="item.handoverReason || item.reason">
+                <span class="info-label">
+                  <el-icon><Document /></el-icon>
+                  离职原因：
+                </span>
+                <span class="info-value">{{ item.handoverReason || item.reason || '-' }}</span>
+              </div>
+              <div class="info-row" v-if="item.handoverNote">
+                <span class="info-label">
+                  <el-icon><Memo /></el-icon>
+                  备注：
+                </span>
+                <span class="info-value">{{ item.handoverNote }}</span>
+              </div>
+              <div class="info-row" v-if="item.toEmployeeName">
+                <span class="info-label">
+                  <el-icon><UserFilled /></el-icon>
+                  交接人：
+                </span>
+                <span class="info-value">{{ item.toEmployeeName }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-if="(item.status === 1 || item.handoverStatus === 1)" class="approval-actions">
+            <el-button type="success" @click="showLeaveApprovalDialog(item)" :icon="Check">
+              同意
+            </el-button>
+            <el-button type="danger" @click="approveLeave(item, false)" :icon="Close">
+              拒绝
+            </el-button>
+          </div>
+        </div>
+        <el-empty v-if="leaveList.length === 0" description="暂无待审批的离职申请">
+          <template #description>
+            <p style="color: var(--text-secondary);">
+              当前没有需要您审批的离职申请
+            </p>
+          </template>
+        </el-empty>
       </div>
 
       <!-- Completion Approvals -->
@@ -299,13 +365,46 @@
         <el-button type="primary" @click="confirmJoinApproval">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- Leave Approval Dialog -->
+    <el-dialog
+      v-model="leaveDialogVisible"
+      title="审批离职申请"
+      width="500px"
+    >
+      <el-form :model="leaveForm" label-width="100px">
+        <el-form-item label="离职员工">
+          <el-input v-model="currentLeaveItem?.fromEmployeeName" disabled />
+        </el-form-item>
+        <el-form-item label="离职原因">
+          <el-input v-model="currentLeaveItem?.handoverReason" type="textarea" :rows="3" disabled />
+        </el-form-item>
+        <el-form-item label="指定交接人" required>
+          <el-select v-model="leaveForm.toEmployeeId" placeholder="请选择交接人" style="width: 100%" filterable>
+            <el-option 
+              v-for="emp in employees" 
+              :key="emp.id" 
+              :label="emp.realName" 
+              :value="emp.id" 
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审批意见">
+          <el-input v-model="leaveForm.comment" type="textarea" :rows="3" placeholder="请输入审批意见（选填）" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="leaveDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmLeaveApproval">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Switch, UserFilled, Remove, CircleCheck, Clock, User, Document, Memo, Check, Close, Key } from '@element-plus/icons-vue';
-import { getMyHandoverApprovals, approveHandover as approveHandoverAPI, getPendingJoinApplications, approveJoinApplication, getDepartmentList, getPositionList, getMyEmployee, getMyTaskNodeApprovals, approveTaskNodeCompletion } from '@/api';
+import { getMyHandoverApprovals, approveHandover as approveHandoverAPI, getPendingJoinApplications, approveJoinApplication, getDepartmentList, getPositionList, getMyEmployee, getMyTaskNodeApprovals, approveTaskNodeCompletion, listEmployees } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 // State
@@ -318,6 +417,7 @@ const completionList = ref<any[]>([]);
 const departments = ref<any[]>([]);
 const positions = ref<any[]>([]);
 const allPositions = ref<any[]>([]);
+const employees = ref<any[]>([]);
 const currentCompanyId = ref('');
 
 // Join approval dialog
@@ -329,10 +429,18 @@ const joinForm = ref({
   remark: '',
 });
 
+// Leave approval dialog
+const leaveDialogVisible = ref(false);
+const currentLeaveItem = ref<any>(null);
+const leaveForm = ref({
+  toEmployeeId: '',
+  comment: '',
+});
+
 // Computed
 const handoverCount = computed(() => handoverList.value.length); // Backend already filters
 const joinCount = computed(() => joinList.value.filter(item => item.status === 0).length);
-const leaveCount = computed(() => leaveList.value.filter(item => item.status === 0).length);
+const leaveCount = computed(() => leaveList.value.length); // Backend already filters
 const completionCount = computed(() => completionList.value.length); // Backend already filters
 
 // Methods
@@ -368,12 +476,19 @@ async function loadHandovers() {
     
     if (resp.data?.code === 200) {
       const data = resp.data?.data;
-      // Backend already filters, no need for frontend filtering
-      handoverList.value = data?.list || [];
+      const allHandovers = data?.list || [];
       
-      console.log('========== 交接审批数据 ==========');
-      console.log('待审批数量:', handoverList.value.length);
-      console.log('待审批详情:', JSON.stringify(handoverList.value, null, 2));
+      // 分离普通交接和离职审批
+      // 离职审批：task_id 为空或 null
+      // 普通交接：task_id 不为空
+      handoverList.value = allHandovers.filter((item: any) => item.taskId && item.taskId !== '');
+      leaveList.value = allHandovers.filter((item: any) => !item.taskId || item.taskId === '');
+      
+      console.log('========== 交接审批数据分离 ==========');
+      console.log('普通交接数量:', handoverList.value.length);
+      console.log('离职审批数量:', leaveList.value.length);
+      console.log('普通交接详情:', JSON.stringify(handoverList.value, null, 2));
+      console.log('离职审批详情:', JSON.stringify(leaveList.value, null, 2));
     } else {
       console.error('API返回错误:', resp.data?.msg || '未知错误');
     }
@@ -385,6 +500,7 @@ async function loadHandovers() {
     console.error('响应状态:', error?.response?.status);
     console.error('响应数据:', error?.response?.data);
     handoverList.value = [];
+    leaveList.value = [];
   }
 }
 
@@ -515,6 +631,29 @@ async function loadPositions() {
     console.error('加载职位列表失败:', error);
     positions.value = [];
     allPositions.value = [];
+  }
+}
+
+async function loadEmployees() {
+  if (!currentCompanyId.value) {
+    console.warn('没有公司ID，无法加载员工列表');
+    return;
+  }
+  try {
+    const resp = await listEmployees({ page: 1, pageSize: 100, companyId: currentCompanyId.value });
+    console.log('员工列表API响应:', resp.data);
+    if (resp.data?.code === 200) {
+      const data = resp.data?.data;
+      // 只显示在职员工（status = 1）
+      employees.value = (data?.list || []).filter((emp: any) => emp.status === 1).map((emp: any) => ({
+        id: emp.id,
+        realName: emp.realName || emp.RealName,
+      }));
+      console.log('员工列表:', employees.value);
+    }
+  } catch (error) {
+    console.error('加载员工列表失败:', error);
+    employees.value = [];
   }
 }
 
@@ -662,6 +801,69 @@ async function approveCompletion(item: any, approved: boolean) {
   }
 }
 
+function showLeaveApprovalDialog(item: any) {
+  currentLeaveItem.value = item;
+  leaveForm.value = {
+    toEmployeeId: '',
+    comment: '',
+  };
+  leaveDialogVisible.value = true;
+}
+
+async function confirmLeaveApproval() {
+  if (!leaveForm.value.toEmployeeId) {
+    ElMessage.warning('请选择交接人');
+    return;
+  }
+
+  try {
+    const resp = await approveHandoverAPI({
+      handoverId: currentLeaveItem.value.id || currentLeaveItem.value.handoverId,
+      approved: 1,
+      toEmployeeID: leaveForm.value.toEmployeeId,
+      comment: leaveForm.value.comment,
+    });
+
+    if (resp.data.code === 200) {
+      ElMessage.success('审批成功');
+      leaveDialogVisible.value = false;
+      loadHandovers(); // 重新加载会同时更新 handoverList 和 leaveList
+    } else {
+      ElMessage.error(resp.data.msg || '审批失败');
+    }
+  } catch (error) {
+    console.error('审批离职申请失败:', error);
+    ElMessage.error('网络错误，请稍后重试');
+  }
+}
+
+async function approveLeave(item: any, approved: boolean) {
+  try {
+    await ElMessageBox.confirm('确定拒绝此离职申请吗？', '确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    });
+
+    const resp = await approveHandoverAPI({
+      handoverId: item.id || item.handoverId,
+      approved: 2, // 拒绝
+    });
+
+    if (resp.data.code === 200) {
+      ElMessage.success('已拒绝');
+      loadHandovers(); // 重新加载会同时更新 handoverList 和 leaveList
+    } else {
+      ElMessage.error(resp.data.msg || '操作失败');
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('审批离职申请失败:', error);
+      ElMessage.error('网络错误，请稍后重试');
+    }
+  }
+}
+
 async function loadData() {
   loading.value = true;
   try {
@@ -690,11 +892,12 @@ async function loadData() {
     console.log('\n========== 开始并行加载所有审批数据 ==========\n');
     
     await Promise.all([
-      loadHandovers(),
+      loadHandovers(), // 会同时加载 handoverList 和 leaveList
       loadJoinApplications(),
       loadCompletionApprovals(),
       loadDepartments(),
       loadPositions(),
+      loadEmployees(),
     ]);
     
     console.log('\n========================================');
