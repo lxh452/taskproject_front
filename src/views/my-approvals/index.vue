@@ -820,7 +820,7 @@ async function confirmLeaveApproval() {
     const resp = await approveHandoverAPI({
       handoverId: currentLeaveItem.value.id || currentLeaveItem.value.handoverId,
       approved: 1,
-      toEmployeeID: leaveForm.value.toEmployeeId,
+      toEmployeeId: leaveForm.value.toEmployeeId,
       comment: leaveForm.value.comment,
     });
 
