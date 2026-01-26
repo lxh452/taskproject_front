@@ -162,7 +162,8 @@
             </template>
           </el-alert>
         </div>
-      </div>
+        </div>
+      </transition>
 
       <!-- 画布区域（全屏） -->
       <div class="canvas-area" ref="canvasTopEl">
