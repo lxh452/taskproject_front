@@ -1579,17 +1579,19 @@ function toggleRightDrawer() {
 }
 
 // ========== 右键菜单功能 ==========
-function onNodeContextMenu(event: { event: MouseEvent; node: Node }) {
-  event.event.preventDefault()
+function onNodeContextMenu(nodeMouseEvent: any) {
+  const event = nodeMouseEvent.event as MouseEvent
+  event.preventDefault()
+
   contextMenu.value = {
     visible: true,
-    x: event.event.clientX,
-    y: event.event.clientY,
+    x: event.clientX,
+    y: event.clientY,
     type: 'node',
-    nodeId: event.node.id
+    nodeId: nodeMouseEvent.node.id
   }
   // 选中右键点击的节点
-  store.setSelection(event.node.id)
+  store.setSelection(nodeMouseEvent.node.id)
 }
 
 function onCanvasContextMenu(event: MouseEvent) {
