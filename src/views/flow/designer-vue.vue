@@ -478,6 +478,7 @@
           <p class="empty-text">选择一个节点查看详情</p>
           <p class="empty-hint">点击画布上的节点或左侧节点库中的节点</p>
         </div>
+        </div>
       </transition>
     </div>
 
