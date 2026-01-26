@@ -3812,7 +3812,6 @@ const nodeTypes = {
   stroke: #e5e7eb !important;
   stroke-width: 1px !important;
 }
-}
 
 :deep(.vue-flow__handle.connecting) {
   opacity: 1 !important;
@@ -4070,9 +4069,10 @@ html.dark-mode :deep(.vue-flow__minimap) {
     height: 80px !important;
   }
 }
-  }
 
-  .nodes-list {
+/* Extra small (< 480px) */
+@media (max-width: 480px) {
+  .toolbar-title {
     padding: var(--space-3);
     gap: var(--space-2);
   }
@@ -4355,9 +4355,9 @@ html.dark-mode :deep(.vue-flow__minimap) {
     display: none !important;
   }
 }
-</style>
-  }
 
+/* Extra small (< 480px) */
+@media (max-width: 480px) {
   .toolbar-title {
     font-size: var(--font-size-sm);
     gap: var(--space-1);
