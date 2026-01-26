@@ -1,46 +1,62 @@
 <template>
-  <div class="flow-designer-page">
+  <div class="flow-designer-page" @contextmenu.prevent="onCanvasContextMenu">
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
+        <el-button
+          :icon="Menu"
+          @click="toggleLeftDrawer"
+          circle
+          class="drawer-toggle"
+          :class="{ active: leftDrawerVisible }"
+        />
         <div class="toolbar-title">
           <el-icon class="title-icon"><Connection /></el-icon>
-          <span>流程设计</span>
+          <span>流程设计器</span>
         </div>
-        <el-select 
-          v-model="selectedTaskId" 
-          placeholder="请选择任务" 
-          @change="loadTaskNodes" 
+        <el-select
+          v-model="selectedTaskId"
+          placeholder="选择任务"
+          @change="loadTaskNodes"
           class="task-selector"
           filterable
           clearable
         >
-        <el-option
-          v-for="task in taskList"
-          :key="task.id || task.taskId"
-          :label="task.taskTitle || task.title"
-          :value="task.id || task.taskId"
-        />
-      </el-select>
+          <el-option
+            v-for="task in taskList"
+            :key="task.id || task.taskId"
+            :label="task.taskTitle || task.title"
+            :value="task.id || task.taskId"
+          />
+        </el-select>
       </div>
       <div class="toolbar-right">
-        <el-button :icon="Refresh" @click="refreshFlow" circle />
-        <el-button :icon="FullScreen" @click="fitViewFlow" circle />
-        <el-button 
-          type="primary" 
-          :icon="DocumentChecked" 
-          @click="saveFlow" 
+        <el-button :icon="Refresh" @click="refreshFlow" circle title="刷新" />
+        <el-button :icon="FullScreen" @click="fitViewFlow" circle title="适应画布" />
+        <el-button :icon="MagicStick" @click="autoLayout" circle title="自动布局" />
+        <el-button
+          type="primary"
+          :icon="DocumentChecked"
+          @click="saveFlow"
           :loading="saving"
           :disabled="!selectedTaskId"
         >
           保存流程
         </el-button>
+        <el-button
+          :icon="InfoFilled"
+          @click="toggleRightDrawer"
+          circle
+          class="drawer-toggle"
+          :class="{ active: rightDrawerVisible }"
+        />
       </div>
     </div>
 
     <div class="flow-container">
-      <!-- 左侧：节点库 -->
-      <div class="sidebar-left">
+      <!-- 左侧抽屉：节点库 -->
+      <transition name="drawer-slide-left">
+        <div v-show="leftDrawerVisible" class="sidebar-left drawer">
         <div class="sidebar-header">
           <el-icon class="header-icon"><Box /></el-icon>
           <span class="header-title">节点库</span>
@@ -148,52 +164,53 @@
         </div>
       </div>
 
-      <!-- 中间：画布区域 -->
-      <div class="canvas-area">
-        <div class="canvas-wrapper" ref="canvasTopEl">
+      <!-- 画布区域（全屏） -->
+      <div class="canvas-area" ref="canvasTopEl">
         <VueFlow
-        v-model:nodes="nodes"
-        v-model:edges="edges"
-        :node-types="nodeTypes"
-        :default-edge-options="edgeOptions"
-        :connection-radius="50"
-        :snap-to-grid="true"
-            :snap-grid="[20, 20]"
-            connection-line-type="smoothstep"
-            :min-zoom="0.1"
-            :max-zoom="3"
-        :default-viewport="{ x: 0, y: 0, zoom: 1 }"
-        :nodes-draggable="true"
-        :nodes-connectable="true"
-        :edges-updatable="false"
-        :edges-focusable="true"
-            :edges-clickable="true"
-        :pan-on-scroll="panEnabled"
-        :pan-on-scroll-mode="'free'"
-        :pan-on-scroll-speed="1"
-        @connect="onConnect"
-        @node-click="onNodeClick"
-        @edge-click="onEdgeClick"
-        @nodes-change="onNodesChange"
-        @edges-change="onEdgesChange"
-        @init="onInit"
-        @pane-click="onPaneClick"
-        @drop="onDrop"
-        @dragover="onDragOver"
+          v-model:nodes="nodes"
+          v-model:edges="edges"
+          :node-types="nodeTypes"
+          :default-edge-options="edgeOptions"
+          :connection-radius="50"
+          :snap-to-grid="true"
+          :snap-grid="[20, 20]"
+          connection-line-type="smoothstep"
+          :min-zoom="0.1"
+          :max-zoom="4"
+          :default-viewport="{ x: 0, y: 0, zoom: 1 }"
+          :nodes-draggable="true"
+          :nodes-connectable="true"
+          :edges-updatable="false"
+          :edges-focusable="true"
+          :edges-clickable="true"
+          :pan-on-scroll="panEnabled"
+          :pan-on-scroll-mode="'free'"
+          :pan-on-scroll-speed="1.2"
+          @connect="onConnect"
+          @node-click="onNodeClick"
+          @edge-click="onEdgeClick"
+          @nodes-change="onNodesChange"
+          @edges-change="onEdgesChange"
+          @init="onInit"
+          @pane-click="onPaneClick"
+          @drop="onDrop"
+          @dragover="onDragOver"
+          @node-context-menu="onNodeContextMenu"
         >
-            <Background :gap="20" :size="1" pattern-color="#e5e7eb" />
+          <Background :gap="20" :size="1" pattern-color="#e5e7eb" />
           <Controls position="bottom-right" />
-            <MiniMap zoomable pannable position="bottom-left" />
+          <MiniMap zoomable pannable position="bottom-left" />
         </VueFlow>
       </div>
-      </div>
 
-      <!-- 右侧：详情面板 -->
-      <div
-        class="sidebar-right"
-        @mouseenter="panEnabled=false"
-        @mouseleave="panEnabled=true"
-      >
+      <!-- 右侧抽屉：详情面板 -->
+      <transition name="drawer-slide-right">
+        <div
+          v-show="rightDrawerVisible"
+          class="sidebar-right drawer"
+          @mouseenter="panEnabled=false"
+          @mouseleave="panEnabled=true"
+        >
         <div class="sidebar-header">
           <el-icon class="header-icon"><InfoFilled /></el-icon>
           <span class="header-title">节点详情</span>
@@ -461,17 +478,64 @@
           <p class="empty-text">选择一个节点查看详情</p>
           <p class="empty-hint">点击画布上的节点或左侧节点库中的节点</p>
         </div>
-      </div>
+      </transition>
     </div>
+
+    <!-- 右键菜单 -->
+    <teleport to="body">
+      <div
+        v-if="contextMenu.visible"
+        class="context-menu"
+        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+        @click="closeContextMenu"
+      >
+        <div v-if="contextMenu.type === 'node'" class="context-menu-content">
+          <div class="context-menu-item" @click="handleDeleteNode">
+            <el-icon><Delete /></el-icon>
+            <span>删除节点</span>
+            <span class="shortcut">Del</span>
+          </div>
+          <div class="context-menu-item" @click="duplicateNode">
+            <el-icon><DocumentCopy /></el-icon>
+            <span>复制节点</span>
+            <span class="shortcut">Ctrl+D</span>
+          </div>
+          <div class="context-menu-divider"></div>
+          <div class="context-menu-item" @click="centerNode">
+            <el-icon><Aim /></el-icon>
+            <span>居中显示</span>
+          </div>
+        </div>
+        <div v-else-if="contextMenu.type === 'canvas'" class="context-menu-content">
+          <div class="context-menu-item" @click="autoLayout">
+            <el-icon><MagicStick /></el-icon>
+            <span>自动布局</span>
+            <span class="shortcut">Ctrl+L</span>
+          </div>
+          <div class="context-menu-item" @click="fitViewFlow">
+            <el-icon><FullScreen /></el-icon>
+            <span>适应画布</span>
+            <span class="shortcut">Ctrl+F</span>
+          </div>
+          <div class="context-menu-divider"></div>
+          <div class="context-menu-item" @click="selectAllNodes">
+            <el-icon><Select /></el-icon>
+            <span>全选节点</span>
+            <span class="shortcut">Ctrl+A</span>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, h, defineComponent, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { 
+import {
   Connection, Refresh, FullScreen, DocumentChecked, Box, DocumentRemove,
   InfoFilled, Document, User, UserFilled, Calendar, DataLine, CircleCheck, CircleCheckFilled, Clock, Check,
-  OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight
+  OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, Menu, MagicStick,
+  DocumentCopy, Aim, Select
 } from '@element-plus/icons-vue'
 import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
@@ -482,6 +546,23 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { markRaw } from 'vue'
 
 const store = useFlowStore()
+
+// 抽屉状态
+const leftDrawerVisible = ref(true)
+const rightDrawerVisible = ref(true)
+
+// 右键菜单状态
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  type: '' as 'node' | 'canvas' | '',
+  nodeId: ''
+})
+
+// 批量选择状态
+const selectedNodes = ref<Set<string>>(new Set())
+const isMultiSelecting = ref(false)
 
 // 任务和节点数据
 const taskList = ref<any[]>([])
@@ -744,6 +825,16 @@ function getProgressStatus(progress: number): string {
 // 容器尺寸监听
 let resizeObserver: ResizeObserver | null = null
 
+// 点击外部关闭右键菜单
+function handleClickOutside(event: MouseEvent) {
+  if (contextMenu.value.visible) {
+    const target = event.target as HTMLElement
+    if (!target.closest('.context-menu')) {
+      closeContextMenu()
+    }
+  }
+}
+
 // 初始化
 onMounted(async () => {
   try {
@@ -756,7 +847,7 @@ onMounted(async () => {
       await loadEmployees(companyId)
     }
     await loadTasks()
-    
+
     // 从URL参数获取taskId
     const urlParams = new URLSearchParams(window.location.search)
     const taskId = urlParams.get('taskId')
@@ -764,7 +855,7 @@ onMounted(async () => {
       selectedTaskId.value = taskId
       await loadTaskNodes()
     }
-    
+
     // 等待DOM更新后设置容器尺寸监听
     await nextTick()
     if (canvasTopEl.value) {
@@ -777,6 +868,12 @@ onMounted(async () => {
       })
       resizeObserver.observe(canvasTopEl.value)
     }
+
+    // 添加快捷键监听
+    window.addEventListener('keydown', handleKeyDown)
+
+    // 添加点击外部关闭菜单监听
+    document.addEventListener('click', handleClickOutside)
   } catch (error: any) {
     console.error('初始化失败:', error)
   }
@@ -786,6 +883,10 @@ onUnmounted(() => {
   if (resizeObserver) {
     resizeObserver.disconnect()
   }
+
+  // 移除事件监听
+  window.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('click', handleClickOutside)
 })
 
 async function loadTasks() {
@@ -1465,6 +1566,186 @@ function selectNodeFromLibrary(node: any) {
   const foundNode = nodes.value.find(n => n.id === nodeId)
   if (foundNode) {
     store.setSelection(nodeId)
+  }
+}
+
+// ========== 抽屉切换功能 ==========
+function toggleLeftDrawer() {
+  leftDrawerVisible.value = !leftDrawerVisible.value
+}
+
+function toggleRightDrawer() {
+  rightDrawerVisible.value = !rightDrawerVisible.value
+}
+
+// ========== 右键菜单功能 ==========
+function onNodeContextMenu(event: { event: MouseEvent; node: Node }) {
+  event.event.preventDefault()
+  contextMenu.value = {
+    visible: true,
+    x: event.event.clientX,
+    y: event.event.clientY,
+    type: 'node',
+    nodeId: event.node.id
+  }
+  // 选中右键点击的节点
+  store.setSelection(event.node.id)
+}
+
+function onCanvasContextMenu(event: MouseEvent) {
+  // 只有在点击画布空白区域时才显示画布菜单
+  const target = event.target as HTMLElement
+  if (target.classList.contains('vue-flow__pane') || target.classList.contains('canvas-area')) {
+    contextMenu.value = {
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      type: 'canvas',
+      nodeId: ''
+    }
+  }
+}
+
+function closeContextMenu() {
+  contextMenu.value.visible = false
+}
+
+// ========== 自动布局功能 ==========
+function autoLayout() {
+  closeContextMenu()
+
+  if (nodes.value.length <= 2) {
+    ElMessage.info('节点数量太少，无需自动布局')
+    return
+  }
+
+  // 重新构建流程图，会自动计算布局
+  buildFlowGraph()
+
+  // 适应视图
+  setTimeout(() => {
+    fitViewFlow()
+  }, 100)
+
+  ElMessage.success('自动布局完成')
+}
+
+// ========== 节点操作功能 ==========
+function duplicateNode() {
+  closeContextMenu()
+
+  if (!contextMenu.value.nodeId) return
+
+  const sourceNode = nodes.value.find(n => n.id === contextMenu.value.nodeId)
+  if (!sourceNode || sourceNode.type === 'start' || sourceNode.type === 'end') {
+    ElMessage.warning('无法复制该节点')
+    return
+  }
+
+  // 创建新节点ID
+  const newId = `${sourceNode.id}_copy_${Date.now()}`
+
+  // 复制节点数据
+  const newNode: Node = {
+    ...sourceNode,
+    id: newId,
+    position: {
+      x: sourceNode.position.x + 50,
+      y: sourceNode.position.y + 50
+    },
+    data: {
+      ...sourceNode.data,
+      label: `${sourceNode.data.label} (副本)`
+    }
+  }
+
+  nodes.value.push(newNode)
+  store.setSelection(newId)
+  ElMessage.success('节点已复制')
+}
+
+function centerNode() {
+  closeContextMenu()
+
+  if (!contextMenu.value.nodeId) return
+
+  const node = nodes.value.find(n => n.id === contextMenu.value.nodeId)
+  if (!node) return
+
+  // 将节点居中显示
+  const { x, y } = node.position
+  const zoom = viewport.value.zoom
+
+  setViewport({
+    x: -x * zoom + window.innerWidth / 2,
+    y: -y * zoom + window.innerHeight / 2,
+    zoom
+  }, { duration: 400 })
+}
+
+function selectAllNodes() {
+  closeContextMenu()
+
+  const taskNodes = nodes.value.filter(n => n.type === 'task')
+  if (taskNodes.length === 0) {
+    ElMessage.info('没有可选择的节点')
+    return
+  }
+
+  selectedNodes.value = new Set(taskNodes.map(n => n.id))
+  ElMessage.success(`已选择 ${taskNodes.length} 个节点`)
+}
+
+// ========== 快捷键支持 ==========
+function handleKeyDown(event: KeyboardEvent) {
+  // Ctrl/Cmd + A: 全选
+  if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+    event.preventDefault()
+    selectAllNodes()
+    return
+  }
+
+  // Ctrl/Cmd + D: 复制节点
+  if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+    event.preventDefault()
+    if (selected.value && selected.value.type === 'task') {
+      contextMenu.value.nodeId = selected.value.id
+      duplicateNode()
+    }
+    return
+  }
+
+  // Ctrl/Cmd + L: 自动布局
+  if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+    event.preventDefault()
+    autoLayout()
+    return
+  }
+
+  // Ctrl/Cmd + F: 适应画布
+  if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+    event.preventDefault()
+    fitViewFlow()
+    return
+  }
+
+  // Delete/Backspace: 删除选中节点
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    if (selected.value && selected.value.type === 'task') {
+      event.preventDefault()
+      handleDeleteNode()
+    }
+    return
+  }
+
+  // Escape: 取消选择/关闭菜单
+  if (event.key === 'Escape') {
+    if (contextMenu.value.visible) {
+      closeContextMenu()
+    } else if (selected.value) {
+      store.setSelection(null)
+    }
+    return
   }
 }
 
@@ -2317,19 +2598,84 @@ const nodeTypes = {
   overflow: hidden;
 }
 
+/* Flow Container - Full Screen Canvas with Drawers */
+.flow-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: var(--bg-canvas);
+}
+
+/* Drawer Styles */
+.drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-left.drawer {
+  left: 0;
+  width: 320px;
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-right.drawer {
+  right: 0;
+  width: 360px;
+  border-left: 1px solid var(--border-color);
+}
+
+/* Drawer Animations */
+.drawer-slide-left-enter-active,
+.drawer-slide-left-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-left-enter-from {
+  transform: translateX(-100%);
+}
+
+.drawer-slide-left-leave-to {
+  transform: translateX(-100%);
+}
+
+.drawer-slide-right-enter-active,
+.drawer-slide-right-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-right-enter-from {
+  transform: translateX(100%);
+}
+
+.drawer-slide-right-leave-to {
+  transform: translateX(100%);
+}
+
+/* Drawer Toggle Button */
+.drawer-toggle {
+  transition: all 0.3s ease;
+}
+
+.drawer-toggle.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.drawer-toggle:hover {
+  transform: scale(1.05);
+}
+
 .sidebar-left,
 .sidebar-right {
-  width: 300px;
-  background: var(--bg-primary);
-  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.sidebar-right {
-  border-right: none;
-  border-left: 1px solid var(--border-color);
 }
 
 .sidebar-header {
@@ -2535,24 +2881,80 @@ const nodeTypes = {
   line-height: 1.5;
 }
 
-/* Canvas Area */
+/* Canvas Area - Full Screen */
 .canvas-area {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-secondary);
-}
-
-.canvas-wrapper {
-  width: 100%;
-  height: 100%;
-  min-width: 400px;
-  min-height: 400px;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background: #fafafa;
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  z-index: 9999;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: var(--space-2);
+  min-width: 200px;
+  animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.context-menu-item:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.context-menu-item .el-icon {
+  font-size: 16px;
+}
+
+.context-menu-item .shortcut {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--space-1) 0;
 }
 
 .canvas-wrapper :deep(.vue-flow) {
@@ -3267,23 +3669,23 @@ const nodeTypes = {
   color: #94a3b8;
 }
 
-/* Vue Flow Handle Styles - Swiss Minimalism */
+/* Vue Flow Handle Styles - Modern Flat Design */
 :deep(.vue-flow__handle) {
-  width: 14px !important;
-  height: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
   border-radius: 50% !important;
   background: var(--color-primary) !important;
-  border: 2px solid var(--bg-primary) !important;
+  border: 3px solid white !important;
   opacity: 0 !important;
-  transition: all var(--transition-base) !important;
-  box-shadow: var(--shadow-sm) !important;
-  cursor: grab !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+  cursor: crosshair !important;
   z-index: 100 !important;
-  position: absolute !important;
 }
 
 :deep(.vue-flow__node:hover .vue-flow__handle) {
   opacity: 1 !important;
+  transform: scale(1.2) !important;
 }
 
 :deep(.vue-flow__node.selected .vue-flow__handle) {
@@ -3291,10 +3693,121 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__handle:hover) {
+  transform: scale(1.4) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Vue Flow Edge Styles - Modern Flat Design */
+:deep(.vue-flow__edge-path) {
+  stroke: var(--color-primary) !important;
+  stroke-width: 2.5px !important;
+  transition: all 0.2s ease !important;
+}
+
+:deep(.vue-flow__edge:hover .vue-flow__edge-path) {
+  stroke: var(--color-primary) !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3)) !important;
+}
+
+:deep(.vue-flow__edge.selected .vue-flow__edge-path) {
+  stroke: var(--color-primary) !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4)) !important;
+}
+
+:deep(.vue-flow__edge-textwrapper) {
+  pointer-events: all !important;
+}
+
+:deep(.vue-flow__edge-text) {
+  fill: var(--text-primary) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Vue Flow Node Styles - Modern Flat Design */
+:deep(.vue-flow__node) {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: move !important;
+}
+
+:deep(.vue-flow__node:hover) {
+  transform: translateY(-2px) !important;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1)) !important;
+}
+
+:deep(.vue-flow__node.selected) {
+  filter: drop-shadow(0 8px 20px rgba(59, 130, 246, 0.3)) !important;
+}
+
+:deep(.vue-flow__node.dragging) {
+  opacity: 0.8 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Vue Flow Controls - Modern Flat Design */
+:deep(.vue-flow__controls) {
+  background: white !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: var(--space-2) !important;
+  gap: var(--space-1) !important;
+}
+
+:deep(.vue-flow__controls-button) {
+  width: 36px !important;
+  height: 36px !important;
+  background: white !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all 0.2s ease !important;
+  color: var(--text-primary) !important;
+}
+
+:deep(.vue-flow__controls-button:hover) {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+  transform: scale(1.05) !important;
+}
+
+:deep(.vue-flow__controls-button svg) {
   width: 18px !important;
   height: 18px !important;
-  box-shadow: var(--shadow-md) !important;
-  cursor: grabbing !important;
+}
+
+/* Vue Flow MiniMap - Modern Flat Design */
+:deep(.vue-flow__minimap) {
+  background: white !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--border-color) !important;
+  overflow: hidden !important;
+}
+
+:deep(.vue-flow__minimap-mask) {
+  fill: rgba(59, 130, 246, 0.1) !important;
+  stroke: var(--color-primary) !important;
+  stroke-width: 2px !important;
+}
+
+:deep(.vue-flow__minimap-node) {
+  fill: var(--color-primary-light) !important;
+  stroke: var(--color-primary) !important;
+  stroke-width: 1px !important;
+}
+
+/* Vue Flow Background - Modern Flat Design */
+:deep(.vue-flow__background) {
+  background-color: #fafafa !important;
+}
+
+:deep(.vue-flow__background-pattern) {
+  stroke: #e5e7eb !important;
+  stroke-width: 1px !important;
+}
 }
 
 :deep(.vue-flow__handle.connecting) {
@@ -3426,154 +3939,133 @@ html.dark-mode :deep(.vue-flow__minimap) {
   border-color: var(--border-color);
 }
 
-/* ==================== Responsive - Swiss Minimalism ==================== */
+/* ==================== Responsive - Modern Flat Design ==================== */
 
 /* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
-  .flow-designer-page {
-    height: auto;
-    min-height: calc(100vh - 60px);
-  }
-
   .toolbar {
-    flex-direction: column;
-    gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
   }
 
-  .toolbar-left {
-    width: 100%;
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .toolbar-title {
-    justify-content: center;
+  .toolbar-title span {
+    font-size: var(--font-size-sm);
   }
 
   .task-selector {
-    width: 100%;
+    max-width: 200px;
   }
 
-  .toolbar-right {
-    width: 100%;
-    justify-content: center;
+  .sidebar-left.drawer {
+    width: 280px;
   }
 
-  .flow-container {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .sidebar-left,
-  .sidebar-right {
-    width: 100%;
-    max-height: 280px;
-    border-right: none;
-    border-left: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .sidebar-right {
-    border-bottom: none;
-    border-top: 1px solid var(--border-color);
-    max-height: 360px;
-  }
-
-  .canvas-area {
-    min-height: 400px;
-    height: 50vh;
-  }
-
-  .canvas-wrapper {
-    position: relative;
-    min-height: 400px;
-  }
-
-  .nodes-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-    overflow-x: auto;
-    padding: var(--space-3);
-    gap: var(--space-2);
+  .sidebar-right.drawer {
+    width: 320px;
   }
 
   .node-card {
-    min-width: 200px;
-    flex: 0 0 auto;
+    padding: var(--space-3);
+  }
+
+  .detail-content {
+    padding: var(--space-4);
   }
 }
 
 /* Mobile (< 768px) */
 @media (max-width: 768px) {
-  .flow-designer-page {
-    height: auto;
-    min-height: 100vh;
-  }
-
   .toolbar {
-    padding: var(--space-3);
-    gap: var(--space-2);
-  }
-
-  .toolbar-title {
-    font-size: var(--font-size-base);
-  }
-
-  .title-icon {
-    font-size: 18px;
-  }
-
-  .task-selector {
-    width: 100%;
-  }
-
-  .toolbar-right {
+    padding: var(--space-2) var(--space-3);
     flex-wrap: wrap;
     gap: var(--space-2);
   }
 
-  .toolbar-right :deep(.el-button) {
+  .toolbar-left,
+  .toolbar-right {
     flex: 1;
-    min-width: 80px;
+    min-width: 0;
   }
 
-  .flow-container {
-    flex-direction: column;
+  .toolbar-title span {
+    display: none;
   }
 
-  .sidebar-left {
-    min-height: 280px;
-    max-height: 320px;
-    order: 1;
+  .task-selector {
+    max-width: 150px;
   }
 
-  .nodes-list {
-    min-height: 160px;
-    max-height: 200px;
+  .sidebar-left.drawer {
+    width: 85vw;
+    max-width: 320px;
   }
 
-  .canvas-area {
-    min-height: 320px;
-    height: 45vh;
-    order: 2;
+  .sidebar-right.drawer {
+    width: 85vw;
+    max-width: 360px;
   }
 
-  .sidebar-right {
-    max-height: none;
-    order: 3;
+  /* 移动端隐藏按钮文字，只显示图标 */
+  .toolbar-right :deep(.el-button span) {
+    display: none;
   }
 
-  .sidebar-header {
-    padding: var(--space-3) var(--space-4);
+  .toolbar-right :deep(.el-button) {
+    min-width: 40px;
+    padding: var(--space-2);
   }
 
-  .header-title {
-    font-size: var(--font-size-sm);
+  /* 右键菜单适配移动端 */
+  .context-menu {
+    min-width: 180px;
+    max-width: 90vw;
   }
 
-  .filter-section {
-    padding: var(--space-3) var(--space-4);
+  .context-menu-item {
+    padding: var(--space-3);
+  }
+
+  /* 节点卡片适配移动端 */
+  .node-card {
+    padding: var(--space-3);
+  }
+
+  .node-type-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  /* 详情面板适配移动端 */
+  .detail-content {
+    padding: var(--space-4);
+  }
+
+  .detail-item {
+    padding: var(--space-3);
+  }
+
+  /* Vue Flow 控制按钮适配移动端 */
+  :deep(.vue-flow__controls) {
+    bottom: var(--space-3) !important;
+    right: var(--space-3) !important;
+  }
+
+  :deep(.vue-flow__controls-button) {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  :deep(.vue-flow__controls-button svg) {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* 小地图在移动端缩小 */
+  :deep(.vue-flow__minimap) {
+    width: 120px !important;
+    height: 80px !important;
+  }
+}
   }
 
   .nodes-list {
@@ -3684,7 +4176,182 @@ html.dark-mode :deep(.vue-flow__minimap) {
 /* Extra small (< 480px) */
 @media (max-width: 480px) {
   .toolbar {
+    padding: var(--space-2);
+  }
+
+  .toolbar-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .title-icon {
+    font-size: 16px;
+  }
+
+  .drawer-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .sidebar-left.drawer,
+  .sidebar-right.drawer {
+    width: 90vw;
+  }
+
+  .task-selector {
+    max-width: 120px;
+    font-size: var(--font-size-xs);
+  }
+
+  /* 节点卡片进一步缩小 */
+  .node-card {
+    padding: var(--space-2);
+  }
+
+  .node-card-header {
+    gap: var(--space-2);
+  }
+
+  .node-type-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .node-name {
+    font-size: var(--font-size-xs);
+  }
+
+  /* 右键菜单适配小屏 */
+  .context-menu {
+    min-width: 160px;
+  }
+
+  .context-menu-item {
+    padding: var(--space-2);
+    font-size: var(--font-size-xs);
+  }
+
+  .context-menu-item .shortcut {
+    display: none;
+  }
+
+  /* 隐藏小地图在小屏设备 */
+  :deep(.vue-flow__minimap) {
+    display: none !important;
+  }
+
+  /* 控制按钮进一步优化 */
+  :deep(.vue-flow__controls) {
+    bottom: var(--space-2) !important;
+    right: var(--space-2) !important;
+  }
+
+  :deep(.vue-flow__controls-button) {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  :deep(.vue-flow__controls-button svg) {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .sidebar-left.drawer,
+  .sidebar-right.drawer {
+    width: 40vw;
+    max-width: 360px;
+  }
+
+  .toolbar {
     padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* 增大触摸目标 */
+  .node-card {
+    padding: var(--space-4);
+    min-height: 80px;
+  }
+
+  .context-menu-item {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  :deep(.vue-flow__controls-button) {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  :deep(.vue-flow__handle) {
+    width: 16px !important;
+    height: 16px !important;
+    opacity: 1 !important;
+  }
+
+  /* 触摸设备上始终显示连接点 */
+  :deep(.vue-flow__node .vue-flow__handle) {
+    opacity: 0.6 !important;
+  }
+
+  :deep(.vue-flow__node:active .vue-flow__handle) {
+    opacity: 1 !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .drawer-slide-left-enter-active,
+  .drawer-slide-left-leave-active,
+  .drawer-slide-right-enter-active,
+  .drawer-slide-right-leave-active {
+    transition: none !important;
+  }
+
+  .node-card:hover {
+    transform: none !important;
+  }
+
+  :deep(.vue-flow__node:hover) {
+    transform: none !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .toolbar,
+  .sidebar-left,
+  .sidebar-right,
+  .context-menu,
+  :deep(.vue-flow__controls),
+  :deep(.vue-flow__minimap) {
+    display: none !important;
+  }
+
+  .canvas-area {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  :deep(.vue-flow__background) {
+    display: none !important;
+  }
+}
+</style>
   }
 
   .toolbar-title {
