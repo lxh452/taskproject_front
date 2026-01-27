@@ -2872,7 +2872,7 @@ const nodeTypes = {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  transition: all var(--transition-base);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   position: relative;
 }
@@ -3322,7 +3322,7 @@ const nodeTypes = {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   position: relative;

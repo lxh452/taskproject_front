@@ -36,39 +36,71 @@
                 v-for="column in columns"
                 :key="column.status"
                 class="kanban-column"
+                :class="{ 'drag-over': dragOverColumn === column.status }"
+                @dragover.prevent="onDragOver(column.status)"
+                @dragleave="onDragLeave"
+                @drop="onDrop(column.status)"
             >
                 <div class="column-header">
-                    <h3 class="column-title">{{ column.title }}</h3>
+                    <div class="column-header-left">
+                        <span class="column-dot" :class="getColumnColor(column.status)"></span>
+                        <h3 class="column-title">{{ column.title }}</h3>
+                    </div>
                     <span class="column-count">{{ getTasksByStatus(column.status).length }}</span>
                 </div>
-                <div class="column-content" :ref="el => setColumnRef(el, column.status)">
-                    <div
-                        v-for="task in getTasksByStatus(column.status)"
-                        :key="task.id"
-                        class="task-card"
-                        :class="{ 'task-node-card': task.type === 'taskNode', 'task-card-main': task.type === 'task' }"
-                        @click="viewTaskDetail(task)"
+                <div class="column-content">
+                    <draggable
+                        :list="getTaskListByStatus(column.status)"
+                        group="tasks"
+                        item-key="id"
+                        :animation="200"
+                        ghost-class="task-ghost"
+                        drag-class="task-drag"
+                        chosen-class="task-chosen"
+                        @start="onDragStart"
+                        @end="onDragEnd"
+                        @change="(evt: any) => onTaskChange(evt, column.status)"
+                        class="draggable-area"
                     >
-                        <div class="task-badges">
-                            <span class="type-indicator" :class="task.type"></span>
-                            <span class="priority-dot" :class="getPriorityValue(task.priority)"></span>
-                        </div>
-                        <h4 class="task-title">{{ task.title }}</h4>
-                        <p class="task-description">{{ task.description }}</p>
-                        <div class="task-meta">
-                            <div class="task-date" v-if="task.dueDate">
-                                <el-icon><Clock /></el-icon>
-                                <span>{{ formatDate(task.dueDate) }}</span>
-                            </div>
-                            <el-avatar
-                                v-if="task.assignee"
-                                :size="24"
-                                :src="task.assigneeAvatar"
-                                class="task-assignee"
+                        <template #item="{ element: task }">
+                            <div
+                                class="task-card"
+                                :class="{ 'task-node-card': task.type === 'taskNode', 'task-card-main': task.type === 'task' }"
+                                @click="viewTaskDetail(task)"
                             >
-                                {{ task.assigneeName?.charAt(0) }}
-                            </el-avatar>
-                        </div>
+                                <div class="task-badges">
+                                    <span class="type-badge" :class="task.type">
+                                        {{ task.type === 'taskNode' ? '节点' : '任务' }}
+                                    </span>
+                                    <span class="priority-badge" :class="getPriorityValue(task.priority)">
+                                        {{ getPriorityLabel(task.priority) }}
+                                    </span>
+                                </div>
+                                <h4 class="task-title">{{ task.title }}</h4>
+                                <p class="task-description" v-if="task.description">{{ task.description }}</p>
+                                <div class="task-meta">
+                                    <div class="task-date" v-if="task.dueDate">
+                                        <el-icon><Clock /></el-icon>
+                                        <span>{{ formatDate(task.dueDate) }}</span>
+                                    </div>
+                                    <el-avatar
+                                        v-if="task.assigneeName"
+                                        :size="26"
+                                        :src="task.assigneeAvatar"
+                                        class="task-assignee"
+                                    >
+                                        {{ task.assigneeName?.charAt(0) }}
+                                    </el-avatar>
+                                </div>
+                                <div class="drag-handle">
+                                    <el-icon><Rank /></el-icon>
+                                </div>
+                            </div>
+                        </template>
+                    </draggable>
+                    <div v-if="getTasksByStatus(column.status).length === 0" class="empty-column">
+                        <el-icon><Folder /></el-icon>
+                        <span>暂无任务</span>
                     </div>
                 </div>
             </div>
@@ -154,12 +186,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { Search, Plus, Clock } from '@element-plus/icons-vue';
-import { listTasks, listEmployees, listTaskNodesByTask, getMyTaskNodes } from '@/api';
+import { Search, Plus, Clock, Rank, Folder } from '@element-plus/icons-vue';
+import { listTasks, listEmployees, listTaskNodesByTask, getMyTaskNodes, updateTask, updateTaskNode } from '@/api';
 import { useUserStore } from '@/store/user';
 import { ElMessage } from 'element-plus';
+import draggable from 'vuedraggable';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -169,6 +202,8 @@ const searchKeyword = ref('');
 const selectedPriority = ref('');
 const selectedAssignee = ref('');
 const employeeOptions = ref<any[]>([]);
+const isDragging = ref(false);
+const dragOverColumn = ref<number | null>(null);
 
 const columns = [
     { status: 0, title: '待处理' },
@@ -178,37 +213,97 @@ const columns = [
 ];
 
 const tasks = ref<any[]>([]);
-const columnRefs = ref<Record<string, HTMLElement>>({});
 
-const setColumnRef = (el: HTMLElement | null, status: number) => {
-    if (el) {
-        columnRefs.value[status] = el;
-    }
+const tasksByStatus = reactive<Record<number, any[]>>({
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+});
+
+const getColumnColor = (status: number) => {
+    const colors: Record<number, string> = {
+        0: 'pending',
+        1: 'progress',
+        3: 'review',
+        2: 'done',
+    };
+    return colors[status] || 'pending';
+};
+
+const getTaskListByStatus = (status: number) => {
+    return tasksByStatus[status] || [];
 };
 
 const getTasksByStatus = (status: number) => {
-    return computed(() => {
-        let filtered = tasks.value.filter(t => t.status === status);
-        
-        if (searchKeyword.value) {
-            const keyword = searchKeyword.value.toLowerCase();
-            filtered = filtered.filter(t =>
-                t.title?.toLowerCase().includes(keyword) ||
-                t.description?.toLowerCase().includes(keyword) ||
-                t.tags?.some((tag: string) => tag.toLowerCase().includes(keyword))
-            );
+    let filtered = tasksByStatus[status] || [];
+
+    if (searchKeyword.value) {
+        const keyword = searchKeyword.value.toLowerCase();
+        filtered = filtered.filter(t =>
+            t.title?.toLowerCase().includes(keyword) ||
+            t.description?.toLowerCase().includes(keyword) ||
+            t.tags?.some((tag: string) => tag.toLowerCase().includes(keyword))
+        );
+    }
+
+    if (selectedPriority.value) {
+        filtered = filtered.filter(t => getPriorityValue(t.priority) === selectedPriority.value);
+    }
+
+    if (selectedAssignee.value) {
+        filtered = filtered.filter(t => t.assigneeId === selectedAssignee.value);
+    }
+
+    return filtered;
+};
+
+const onDragStart = () => {
+    isDragging.value = true;
+};
+
+const onDragEnd = () => {
+    isDragging.value = false;
+    dragOverColumn.value = null;
+};
+
+const onDragOver = (status: number) => {
+    dragOverColumn.value = status;
+};
+
+const onDragLeave = () => {
+    dragOverColumn.value = null;
+};
+
+const onDrop = (status: number) => {
+    dragOverColumn.value = null;
+};
+
+const onTaskChange = async (evt: any, newStatus: number) => {
+    if (evt.added) {
+        const task = evt.added.element;
+        const oldStatus = task.status;
+        task.status = newStatus;
+
+        try {
+            if (task.type === 'taskNode') {
+                await updateTaskNode({ id: task.id, nodeStatus: newStatus });
+            } else {
+                await updateTask({ id: task.id, status: newStatus });
+            }
+            ElMessage.success('状态更新成功');
+        } catch (error) {
+            task.status = oldStatus;
+            ElMessage.error('状态更新失败');
+            redistributeTasks();
         }
-        
-        if (selectedPriority.value) {
-            filtered = filtered.filter(t => getPriorityValue(t.priority) === selectedPriority.value);
-        }
-        
-        if (selectedAssignee.value) {
-            filtered = filtered.filter(t => t.assigneeId === selectedAssignee.value);
-        }
-        
-        return filtered;
-    }).value;
+    }
+};
+
+const redistributeTasks = () => {
+    columns.forEach(col => {
+        tasksByStatus[col.status] = tasks.value.filter(t => t.status === col.status);
+    });
 };
 
 const getPriorityValue = (priority: number) => {
@@ -219,6 +314,16 @@ const getPriorityValue = (priority: number) => {
         4: 'low',
     };
     return map[priority] || 'medium';
+};
+
+const getPriorityLabel = (priority: number) => {
+    const map: Record<number, string> = {
+        1: '紧急',
+        2: '高',
+        3: '中',
+        4: '低',
+    };
+    return map[priority] || '中';
 };
 
 const formatDate = (date: string) => {
@@ -322,11 +427,11 @@ async function loadData() {
         employeeOptions.value.forEach((emp: any) => {
             employeesMap[String(emp.id)] = emp;
         });
-        
+
         const allItems: any[] = [];
         await loadMyTaskNodes(employeesMap, allItems);
         const resp = await listTasks({ page: 1, pageSize: 100 });
-        
+
         if (resp.data?.code === 200) {
             const taskList = resp.data?.data?.list || resp.data?.data || [];
             const validTasks = taskList.filter((t: any) => {
@@ -334,7 +439,7 @@ async function loadData() {
                 const taskTitle = t.taskTitle || t.title || t.TaskTitle;
                 return taskId && taskTitle && taskTitle.trim() !== '';
             });
-            
+
             const loadPromises: Promise<void>[] = [];
             validTasks.forEach((t: any) => {
                 const assigneeId = t.assigneeId || t.executorId || t.responsibleEmployeeIds?.split(',')[0];
@@ -361,6 +466,7 @@ async function loadData() {
             await Promise.all(loadPromises);
         }
         tasks.value = allItems;
+        redistributeTasks();
     } catch (error: any) {
         console.error('加载任务失败:', error);
         ElMessage.error('加载任务失败，请稍后重试');
@@ -517,33 +623,56 @@ onMounted(async () => {
     min-width: 300px;
     max-width: 350px;
     background: var(--bg-base);
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 16px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.kanban-column.drag-over {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
 }
 
 .column-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 4px 12px 4px;
+    padding: 0 4px 16px 4px;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
+.column-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.column-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.column-dot.pending { background: #94a3b8; }
+.column-dot.progress { background: #3b82f6; }
+.column-dot.review { background: #f59e0b; }
+.column-dot.done { background: #22c55e; }
+
 .column-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--text-main);
     margin: 0;
 }
 
 .column-count {
     background: var(--bg-hover);
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
 }
@@ -554,16 +683,35 @@ onMounted(async () => {
     padding-right: 4px;
 }
 
+.draggable-area {
+    min-height: 100px;
+}
+
+.empty-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    gap: 8px;
+}
+.empty-column .el-icon {
+    font-size: 32px;
+    opacity: 0.5;
+}
+
 /* Task Card */
 .task-card {
     background: var(--bg-card);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
-    cursor: pointer;
+    cursor: grab;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s ease;
     border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .task-card:hover {
@@ -571,30 +719,65 @@ onMounted(async () => {
     box-shadow: var(--shadow-md);
 }
 
-.task-card-main { border-left: 3px solid var(--color-primary); }
-.task-node-card { border-left: 3px solid var(--color-success); }
+.task-card:active {
+    cursor: grabbing;
+}
+
+.task-card-main { border-left: 4px solid var(--color-primary); }
+.task-node-card { border-left: 4px solid var(--color-success); }
+
+.task-ghost {
+    opacity: 0.5;
+    background: var(--color-primary-light);
+    border: 2px dashed var(--color-primary);
+}
+
+.task-drag {
+    transform: rotate(3deg);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.task-chosen {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
 
 .task-badges {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
-.priority-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+.type-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
 }
-.priority-dot.critical { background: var(--color-danger); }
-.priority-dot.high { background: var(--color-warning); }
-.priority-dot.medium { background: var(--color-primary); }
-.priority-dot.low { background: var(--color-success); }
+.type-badge.task {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+.type-badge.taskNode {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.priority-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.priority-badge.critical { background: #fef2f2; color: #dc2626; }
+.priority-badge.high { background: #fff7ed; color: #ea580c; }
+.priority-badge.medium { background: #eff6ff; color: #2563eb; }
+.priority-badge.low { background: #f0fdf4; color: #16a34a; }
 
 .task-title {
     font-size: 14px;
     font-weight: 600;
     color: var(--text-main);
-    margin: 0 0 6px 0;
+    margin: 0 0 8px 0;
     line-height: 1.4;
 }
 
@@ -606,6 +789,7 @@ onMounted(async () => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-height: 1.5;
 }
 
 .task-meta {
@@ -620,6 +804,30 @@ onMounted(async () => {
     gap: 4px;
     font-size: 12px;
     color: var(--text-muted);
+}
+
+.task-assignee {
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.drag-handle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: grab;
+}
+
+.task-card:hover .drag-handle {
+    opacity: 1;
 }
 
 /* Drawer Styles */
@@ -646,5 +854,35 @@ onMounted(async () => {
     display: flex;
     justify-content: flex-end;
     background: var(--bg-card);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .kanban-column {
+        min-width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .kanban-page {
+        padding: 16px;
+    }
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .action-left {
+        flex-direction: column;
+    }
+    .search-input, .filter-select {
+        width: 100%;
+    }
+    .kanban-board {
+        height: auto;
+        min-height: calc(100vh - 280px);
+    }
+    .kanban-column {
+        min-width: 260px;
+    }
 }
 </style>

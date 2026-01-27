@@ -1,116 +1,195 @@
 <template>
-    <div class="roles-page">
-        <div class="page-header">
-            <div class="header-left">
-                <h1 class="page-title">角色管理</h1>
-                <p class="page-desc">配置系统角色和权限</p>
+    <div class="page-container">
+        <!-- 页面头部 -->
+        <header class="page-header">
+            <div class="header-content">
+                <div class="header-info">
+                    <h1 class="page-title">角色管理</h1>
+                    <p class="page-subtitle">管理系统角色与权限配置</p>
+                </div>
+                <el-button type="primary" @click="openEdit()" class="btn-create">
+                    <el-icon><Plus /></el-icon>
+                    <span>新建角色</span>
+                </el-button>
             </div>
-            <el-button type="primary" :icon="Plus" @click="openEdit()" class="create-btn">新建角色</el-button>
-        </div>
+        </header>
 
-        <div class="filter-bar">
-            <div class="filter-left">
-                <el-input v-model="query.keyword" placeholder="搜索角色名称/编码" clearable class="search-input" :prefix-icon="Search" />
-                <el-button type="primary" @click="load" :icon="Search">搜索</el-button>
+        <!-- 搜索栏 -->
+        <section class="search-section">
+            <div class="search-box">
+                <el-icon class="search-icon"><Search /></el-icon>
+                <el-input
+                    v-model="query.keyword"
+                    placeholder="搜索角色名称或编码..."
+                    clearable
+                    class="search-input"
+                    @keyup.enter="load"
+                />
             </div>
-            <el-button @click="resetQuery" :icon="Refresh" circle />
-        </div>
-        
-        <div class="content-area">
-            <el-skeleton :rows="3" animated v-if="loading" />
+            <div class="search-actions">
+                <el-button @click="load" type="primary">搜索</el-button>
+                <el-button @click="resetQuery">重置</el-button>
+            </div>
+        </section>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <el-skeleton :rows="4" animated v-if="loading" />
+
             <template v-else>
-                <div v-if="rows.length > 0" class="roles-grid">
-                    <div v-for="row in rows" :key="row.id" class="role-card">
-                        <div class="card-header">
-                            <div class="role-icon"><el-icon><Key /></el-icon></div>
-                            <div class="status-tag" :class="row.status === 1 ? 'active' : 'inactive'">{{ row.statusText }}</div>
-                        </div>
-
-                        <div class="card-body">
-                            <h3 class="role-name">{{ row.roleName }}</h3>
-                            <el-tag size="small" type="info" effect="plain" class="role-code">{{ row.roleCode }}</el-tag>
-                        </div>
-
-                        <div class="perms-section">
-                            <div class="perms-label">权限</div>
-                            <div class="perms-tags">
-                                <template v-if="formatPerms(row.permissions).length > 0">
-                                    <el-tag 
-                                        v-for="(tag, idx) in formatPerms(row.permissions).slice(0, 4)" 
-                                        :key="`${row.id}-perm-${idx}`" 
-                                        size="small" 
-                                        effect="plain"
-                                    >
-                                        {{ tag }}
-                                    </el-tag>
-                                    <el-tag v-if="formatPerms(row.permissions).length > 4" size="small" type="info">
-                                        +{{ formatPerms(row.permissions).length - 4 }}
-                                    </el-tag>
-                                </template>
-                                <template v-else>
-                                    <span class="no-perms">暂无权限</span>
-                                    <el-tooltip v-if="row.permissions" content="原始数据已加载，但解析失败" placement="top">
-                                        <el-icon class="debug-icon"><Warning /></el-icon>
-                                    </el-tooltip>
-                                </template>
+                <!-- 角色列表 -->
+                <div v-if="rows.length > 0" class="role-list">
+                    <article v-for="row in rows" :key="row.id" class="role-item">
+                        <div class="role-main">
+                            <div class="role-avatar">
+                                <el-icon><Key /></el-icon>
+                            </div>
+                            <div class="role-info">
+                                <h3 class="role-name">{{ row.roleName }}</h3>
+                                <code class="role-code">{{ row.roleCode }}</code>
+                            </div>
+                            <div class="role-status">
+                                <span class="status-badge" :class="row.status === 1 ? 'active' : 'inactive'">
+                                    {{ row.status === 1 ? '启用' : '停用' }}
+                                </span>
                             </div>
                         </div>
 
-                        <div class="card-footer">
-                            <el-button plain size="default" @click="openEdit(row)" class="action-btn">
-                                <el-icon><Edit /></el-icon>
-                                <span>编辑</span>
-                            </el-button>
-                            <el-button plain size="default" @click="openAssign(row)" class="action-btn">
-                                <el-icon><Share /></el-icon>
-                                <span>分配</span>
-                            </el-button>
-                            <el-button plain size="default" @click="onDelete(row)" class="action-btn action-btn-danger">
-                                <el-icon><Delete /></el-icon>
-                                <span>删除</span>
-                            </el-button>
+                        <div class="role-perms">
+                            <span class="perms-label">权限：</span>
+                            <div class="perms-list">
+                                <template v-if="formatPerms(row.permissions).length > 0">
+                                    <span
+                                        v-for="(perm, idx) in formatPerms(row.permissions).slice(0, 5)"
+                                        :key="`${row.id}-${idx}`"
+                                        class="perm-tag"
+                                    >
+                                        {{ perm }}
+                                    </span>
+                                    <span v-if="formatPerms(row.permissions).length > 5" class="perm-more">
+                                        +{{ formatPerms(row.permissions).length - 5 }}
+                                    </span>
+                                </template>
+                                <span v-else class="no-perms">暂无权限</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div v-else class="empty-state"><el-empty description="暂无角色数据" /></div>
-            </template>
-        </div>
 
-        <!-- 角色编辑抽屉 -->
-        <el-drawer v-model="visible" :title="form.id ? '编辑角色' : '新建角色'" size="500px" class="vben-drawer" destroy-on-close>
-            <el-form :model="form" label-position="top">
-                <el-form-item label="角色名称"><el-input v-model="form.roleName" placeholder="请输入角色名称" /></el-form-item>
-                <el-form-item label="角色编码"><el-input v-model="form.roleCode" placeholder="请输入角色编码" /></el-form-item>
+                        <div class="role-actions">
+                            <button class="action-btn" @click="openEdit(row)" title="编辑">
+                                <el-icon><Edit /></el-icon>
+                            </button>
+                            <button class="action-btn" @click="openAssign(row)" title="分配">
+                                <el-icon><Share /></el-icon>
+                            </button>
+                            <button class="action-btn danger" @click="onDelete(row)" title="删除">
+                                <el-icon><Delete /></el-icon>
+                            </button>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 空状态 -->
+                <div v-else class="empty-state">
+                    <el-icon class="empty-icon"><Box /></el-icon>
+                    <p class="empty-text">暂无角色数据</p>
+                    <el-button type="primary" @click="openEdit()">创建第一个角色</el-button>
+                </div>
+            </template>
+        </main>
+
+        <!-- 编辑抽屉 -->
+        <el-drawer
+            v-model="visible"
+            :title="form.id ? '编辑角色' : '新建角色'"
+            size="480px"
+            destroy-on-close
+            class="role-drawer"
+        >
+            <el-form :model="form" label-position="top" class="role-form">
+                <el-form-item label="角色名称" required>
+                    <el-input v-model="form.roleName" placeholder="请输入角色名称" />
+                </el-form-item>
+                <el-form-item label="角色编码" required>
+                    <el-input v-model="form.roleCode" placeholder="请输入角色编码，如 ADMIN" />
+                </el-form-item>
                 <el-form-item label="权限配置">
-                    <div class="perm-tree-wrapper">
-                        <el-tree ref="permTreeRef" :data="permTree" node-key="key" show-checkbox :default-expanded-keys="expandedPermKeys" :props="{ label: 'label', children: 'children' }" />
+                    <div class="perm-tree-box">
+                        <el-tree
+                            ref="permTreeRef"
+                            :data="permTree"
+                            node-key="key"
+                            show-checkbox
+                            :default-expanded-keys="expandedPermKeys"
+                            :props="{ label: 'label', children: 'children' }"
+                        />
                     </div>
                 </el-form-item>
-                <el-form-item label="状态"><el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="禁用" /></el-form-item>
+                <el-form-item label="状态">
+                    <el-switch
+                        v-model="form.status"
+                        :active-value="1"
+                        :inactive-value="0"
+                        active-text="启用"
+                        inactive-text="停用"
+                    />
+                </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="visible=false">取消</el-button>
-                <el-button type="primary" @click="onSubmit" :loading="saving">保存</el-button>
+                <div class="drawer-footer">
+                    <el-button @click="visible = false">取消</el-button>
+                    <el-button type="primary" @click="onSubmit" :loading="saving">保存</el-button>
+                </div>
             </template>
         </el-drawer>
 
         <!-- 分配弹窗 -->
-        <el-dialog v-model="assignVisible" title="分配角色给职位" width="500px" class="vben-dialog">
+        <el-dialog v-model="assignVisible" title="分配角色" width="480px" class="assign-dialog">
             <el-form label-position="top">
-                <el-form-item label="职位">
-                    <el-select v-model="selectedPositionId" placeholder="搜索职位" filterable remote :remote-method="onPositionRemote" :loading="positionLoading" style="width: 100%">
-                        <el-option v-for="p in positions" :key="p.id" :label="`${p.positionName}（${p.positionCode}）`" :value="p.id" />
+                <el-form-item label="选择职位">
+                    <el-select
+                        v-model="selectedPositionId"
+                        placeholder="搜索并选择职位"
+                        filterable
+                        remote
+                        :remote-method="onPositionRemote"
+                        :loading="positionLoading"
+                        style="width: 100%"
+                    >
+                        <el-option
+                            v-for="p in positions"
+                            :key="p.id"
+                            :label="`${p.positionName}（${p.positionCode}）`"
+                            :value="p.id"
+                        />
                     </el-select>
                 </el-form-item>
                 <el-form-item label="选择角色">
-                    <el-select v-model="selectedRoleIds" multiple collapse-tags placeholder="选择角色" style="width: 100%">
-                        <el-option v-for="r in rows" :key="r.id" :label="`${r.roleName}（${r.roleCode}）`" :value="r.id" />
+                    <el-select
+                        v-model="selectedRoleIds"
+                        multiple
+                        collapse-tags
+                        placeholder="选择要分配的角色"
+                        style="width: 100%"
+                    >
+                        <el-option
+                            v-for="r in rows"
+                            :key="r.id"
+                            :label="r.roleName"
+                            :value="r.id"
+                        />
                     </el-select>
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="assignVisible=false">取消</el-button>
-                <el-button type="primary" @click="onAssignSubmit" :disabled="!selectedPositionId || selectedRoleIds.length===0" :loading="assigning">确定</el-button>
+                <el-button @click="assignVisible = false">取消</el-button>
+                <el-button
+                    type="primary"
+                    @click="onAssignSubmit"
+                    :disabled="!selectedPositionId || selectedRoleIds.length === 0"
+                    :loading="assigning"
+                >
+                    确定分配
+                </el-button>
             </template>
         </el-dialog>
     </div>
@@ -118,7 +197,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Plus, Search, Refresh, Edit, Delete, Share, Key, Warning } from '@element-plus/icons-vue';
+import { Plus, Search, Edit, Delete, Share, Key, Box } from '@element-plus/icons-vue';
 import { roleList, createRole, updateRole, deleteRole, listPositions, assignRole } from '@/api';
 import { useUserStore } from '@/store/user';
 import { ElMessageBox, ElMessage } from 'element-plus';
@@ -132,7 +211,15 @@ const query = ref<any>({ keyword: '' });
 const visible = ref(false);
 const form = ref<any>({ id: '', roleName: '', roleCode: '', permissions: '', status: 1 });
 const permTreeRef = ref();
-const permTree = ref<any[]>(PERM_TREE.map((group) => ({ key: group.value, label: group.label, children: group.children.map((perm) => ({ key: String(perm.value), label: `${PERM_NAMES[perm.value]} (${perm.value})`, value: perm.value })) })));
+const permTree = ref<any[]>(PERM_TREE.map((group) => ({
+    key: group.value,
+    label: group.label,
+    children: group.children.map((perm) => ({
+        key: String(perm.value),
+        label: `${PERM_NAMES[perm.value]} (${perm.value})`,
+        value: perm.value
+    }))
+})));
 const expandedPermKeys = ref<string[]>(PERM_TREE.map((g) => g.value));
 const assignVisible = ref(false);
 const positions = ref<any[]>([]);
@@ -145,10 +232,12 @@ async function load() {
     loading.value = true;
     try {
         const resp = await roleList({ page: 1, pageSize: 100, keyword: query.value.keyword });
-        if (resp.data.code !== 200) { ElMessage.error(resp.data.msg || '加载失败'); return; }
+        if (resp.data.code !== 200) {
+            ElMessage.error(resp.data.msg || '加载失败');
+            return;
+        }
         const list = resp.data?.data?.list || resp.data?.data || [];
         rows.value = (Array.isArray(list) ? list : []).map((r: any) => {
-            // 处理权限字段，支持多种格式
             let permissions = '';
             if (r.permissions !== undefined && r.permissions !== null) {
                 if (typeof r.permissions === 'string') {
@@ -167,39 +256,40 @@ async function load() {
                     permissions = JSON.stringify(r.Permissions);
                 }
             }
-            
-            // 调试日志
-            if (r.roleName && !permissions) {
-                console.log('角色权限数据:', {
-                    roleName: r.roleName,
-                    permissions: r.permissions,
-                    Permissions: r.Permissions,
-                    raw: r
-                });
-            }
-            
+
             return {
-                id: r.id || r.Id, 
-                roleName: r.roleName || r.RoleName, 
+                id: r.id || r.Id,
+                roleName: r.roleName || r.RoleName,
                 roleCode: r.roleCode || r.RoleCode,
-                permissions: permissions, 
+                permissions: permissions,
                 status: r.status ?? r.Status ?? 1,
-                statusText: (r.status ?? r.Status ?? 1) === 1 ? '启用' : '禁用',
             };
         });
-    } catch (error: any) { 
+    } catch (error: any) {
         console.error('加载角色列表失败:', error);
-        ElMessage.error('加载失败'); 
-    } finally { 
-        loading.value = false; 
+        ElMessage.error('加载失败');
+    } finally {
+        loading.value = false;
     }
 }
 
-function resetQuery() { query.value.keyword = ''; load(); }
+function resetQuery() {
+    query.value.keyword = '';
+    load();
+}
 
 function openEdit(row?: any) {
-    if (row) { form.value = { ...row }; setTimeout(() => { permTreeRef.value?.setCheckedKeys(formatPermsToKeys(row.permissions)); }, 0); } 
-    else { form.value = { id: '', roleName: '', roleCode: '', permissions: '', status: 1 }; setTimeout(() => { permTreeRef.value?.setCheckedKeys([]); }, 0); }
+    if (row) {
+        form.value = { ...row };
+        setTimeout(() => {
+            permTreeRef.value?.setCheckedKeys(formatPermsToKeys(row.permissions));
+        }, 0);
+    } else {
+        form.value = { id: '', roleName: '', roleCode: '', permissions: '', status: 1 };
+        setTimeout(() => {
+            permTreeRef.value?.setCheckedKeys([]);
+        }, 0);
+    }
     visible.value = true;
 }
 
@@ -211,22 +301,39 @@ async function onSubmit() {
         const validPerms = nums.filter(n => PERM_NAMES[n] != null);
         const payload = { ...form.value, permissions: JSON.stringify(validPerms) };
         if (payload.id) {
-            const resp = await updateRole({ id: payload.id, roleName: payload.roleName, roleCode: payload.roleCode, description: '', permissions: payload.permissions, status: payload.status });
+            const resp = await updateRole({
+                id: payload.id,
+                roleName: payload.roleName,
+                roleCode: payload.roleCode,
+                description: '',
+                permissions: payload.permissions,
+                status: payload.status
+            });
             if (resp.data.code !== 200) throw new Error(resp.data.msg);
             ElMessage.success('更新成功');
         } else {
-            const resp = await createRole({ companyId: userStore.companyId || '', roleName: payload.roleName, roleCode: payload.roleCode, description: '', permissions: payload.permissions });
+            const resp = await createRole({
+                companyId: userStore.companyId || '',
+                roleName: payload.roleName,
+                roleCode: payload.roleCode,
+                description: '',
+                permissions: payload.permissions
+            });
             if (resp.data.code !== 200) throw new Error(resp.data.msg);
             ElMessage.success('创建成功');
         }
         visible.value = false;
         load();
-    } catch (e: any) { ElMessage.error(e.message || '保存失败'); } finally { saving.value = false; }
+    } catch (e: any) {
+        ElMessage.error(e.message || '保存失败');
+    } finally {
+        saving.value = false;
+    }
 }
 
 async function onDelete(row: any) {
     try {
-        await ElMessageBox.confirm(`确定删除角色「${row.roleName}」吗？`, '提示', { type: 'warning' });
+        await ElMessageBox.confirm(`确定删除角色「${row.roleName}」吗？`, '删除确认', { type: 'warning' });
         const resp = await deleteRole({ id: row.id });
         if (resp.data.code !== 200) throw new Error(resp.data.msg);
         ElMessage.success('删除成功');
@@ -236,11 +343,10 @@ async function onDelete(row: any) {
 
 function formatPerms(p: string): string[] {
     if (!p || p.trim() === '') return [];
-    
+
     let items: (string | number)[] = [];
-    
-    try { 
-        // 尝试解析JSON
+
+    try {
         const parsed = JSON.parse(p);
         if (Array.isArray(parsed)) {
             items = parsed;
@@ -249,8 +355,7 @@ function formatPerms(p: string): string[] {
         } else if (typeof parsed === 'number') {
             items = [parsed];
         }
-    } catch (e) { 
-        // 如果不是JSON，尝试按逗号分割
+    } catch (e) {
         if (typeof p === 'string') {
             const parts = p.split(',').map(s => s.trim()).filter(Boolean);
             items = parts.map(part => {
@@ -259,56 +364,56 @@ function formatPerms(p: string): string[] {
             });
         }
     }
-    
-    if (items.length === 0) {
-        console.warn('权限解析失败，原始数据:', p);
-        return [];
-    }
-    
-    const result = items.map((item) => {
-        // 如果是数字，直接查找权限名称
+
+    if (items.length === 0) return [];
+
+    return items.map((item) => {
         if (typeof item === 'number') {
-            const permName = PERM_NAMES[item];
-            if (permName) {
-                return permName;
-            }
-            console.warn(`未找到权限ID ${item} 对应的名称`);
-            return `权限${item}`;
+            return PERM_NAMES[item] || `权限${item}`;
         }
-        
-        // 如果是字符串，先尝试转换为数字
         const num = parseInt(String(item));
         if (!isNaN(num) && PERM_NAMES[num]) {
             return PERM_NAMES[num];
         }
-        
-        // 尝试通过文本查找
         if (typeof item === 'string') {
             const code = TEXT_TO_CODE[item.toLowerCase()];
             if (code && PERM_NAMES[code]) {
                 return PERM_NAMES[code];
             }
         }
-        
         return String(item);
     }).filter(Boolean);
-    
-    return result;
 }
 
 function formatPermsToKeys(p: string): string[] {
     if (!p) return [];
     let items: (string | number)[] = [];
-    try { const arr = JSON.parse(p); if (Array.isArray(arr)) items = arr; } catch { items = p.split(',').map(s => s.trim()).filter(Boolean); }
-    return items.map((item) => typeof item === 'number' ? String(item) : (typeof item === 'string' && TEXT_TO_CODE[item.toLowerCase()] ? String(TEXT_TO_CODE[item.toLowerCase()]) : '')).filter(Boolean);
+    try {
+        const arr = JSON.parse(p);
+        if (Array.isArray(arr)) items = arr;
+    } catch {
+        items = p.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return items.map((item) =>
+        typeof item === 'number' ? String(item) :
+        (typeof item === 'string' && TEXT_TO_CODE[item.toLowerCase()] ? String(TEXT_TO_CODE[item.toLowerCase()]) : '')
+    ).filter(Boolean);
 }
 
 async function onPositionRemote(keyword: string) {
     positionLoading.value = true;
     try {
         const resp = await listPositions({ page: 1, pageSize: 100, departmentId: '', name: keyword });
-        if (resp.data.code === 200) positions.value = (resp.data.data?.list || []).map((p: any) => ({ id: p.id, positionName: p.positionName || '未命名', positionCode: p.positionCode?.String || p.positionCode || '-' }));
-    } finally { positionLoading.value = false; }
+        if (resp.data.code === 200) {
+            positions.value = (resp.data.data?.list || []).map((p: any) => ({
+                id: p.id,
+                positionName: p.positionName || '未命名',
+                positionCode: p.positionCode?.String || p.positionCode || '-'
+            }));
+        }
+    } finally {
+        positionLoading.value = false;
+    }
 }
 
 function openAssign(row?: any) {
@@ -327,172 +432,378 @@ async function onAssignSubmit() {
         }
         ElMessage.success('分配成功');
         assignVisible.value = false;
-    } catch (e: any) { ElMessage.error(e.message || '分配失败'); } finally { assigning.value = false; }
+    } catch (e: any) {
+        ElMessage.error(e.message || '分配失败');
+    } finally {
+        assigning.value = false;
+    }
 }
 
 onMounted(load);
 </script>
 
 <style scoped>
-.roles-page { 
-    padding: clamp(16px, 1.5vw, 24px); 
-    background: var(--bg-page); 
-    min-height: calc(100vh - clamp(56px, 8vh, 64px));
-    width: 100%;
-    box-sizing: border-box;
-}
-.page-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: clamp(16px, 1.5vw, 24px); 
-}
-.page-title { 
-    font-size: clamp(20px, 1.5vw, 24px);
-    font-weight: 700; 
-    color: var(--text-main); 
-    margin: 0 0 clamp(4px, 0.3vw, 8px); 
-}
-.page-desc { 
-    font-size: clamp(13px, 0.95vw, 15px);
-    color: var(--text-secondary); 
-    margin: 0; 
-}
-.create-btn { height: clamp(36px, 2.5vw, 40px); padding: 0 clamp(16px, 1.3vw, 20px); border-radius: clamp(8px, 0.7vw, 10px); font-weight: 500; background: var(--color-primary); border: none; }
-
-.filter-bar { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: clamp(12px, 1vw, 16px) clamp(16px, 1.3vw, 24px); 
-    background: var(--bg-card); 
-    border-radius: clamp(10px, 0.8vw, 12px); 
-    border: 1px solid var(--border-color); 
-    margin-bottom: clamp(16px, 1.5vw, 24px); 
-}
-.filter-left { display: flex; gap: clamp(10px, 0.8vw, 12px); align-items: center; }
-.search-input { width: clamp(240px, 18vw, 300px); }
-
-.roles-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 18vw, 320px), 1fr)); 
-    gap: clamp(12px, 1.3vw, 20px);
-    width: 100%;
+/* 页面容器 */
+.page-container {
+    min-height: 100vh;
+    background: #f8fafc;
+    padding: 24px;
 }
 
-.role-card { 
-    background: var(--bg-card); 
-    border-radius: clamp(12px, 0.9vw, 14px); 
-    border: 1px solid var(--border-color); 
-    padding: clamp(16px, 1.3vw, 24px); 
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
-    cursor: pointer;
+/* 页面头部 */
+.page-header {
+    margin-bottom: 24px;
 }
-.role-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); }
 
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-.role-icon { 
-    width: 3vw; 
-    height: 3vw; 
-    min-width: 40px; 
-    min-height: 40px; 
-    max-width: 48px; 
-    max-height: 48px; 
-    border-radius: 0.8vw; 
-    background: #eef2ff; 
-    color: var(--color-primary); 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-size: clamp(18px, 1.4vw, 22px);
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-.status-tag { font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
-.status-tag.active { background: #d1fae5; color: #059669; }
-.status-tag.inactive { background: var(--bg-base); color: var(--text-secondary); }
 
-.card-body { margin-bottom: 16px; }
-.role-name { font-size: 16px; font-weight: 600; color: var(--text-main); margin: 0 0 8px; }
-.role-code { font-family: monospace; }
-
-.perms-section { background: var(--bg-base); border-radius: 10px; padding: 12px; margin-bottom: 16px; }
-.perms-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
-.perms-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.no-perms { font-size: 12px; color: var(--text-muted); font-style: italic; }
-.debug-icon { margin-left: 6px; color: var(--color-warning); font-size: 14px; cursor: help; }
-
-.card-footer { 
-    display: flex; 
-    justify-content: space-between; 
-    gap: 8px; 
-    padding-top: 16px; 
-    border-top: 1px solid var(--border-color); 
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 4px;
+    letter-spacing: -0.025em;
 }
-.card-footer .action-btn {
-    flex: 1;
-    height: 34px;
-    font-size: 12px;
-    font-weight: 500;
+
+.page-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+.btn-create {
+    height: 40px;
+    padding: 0 20px;
     border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 搜索区域 */
+.search-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+}
+
+.search-icon {
+    color: #94a3b8;
+    font-size: 18px;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.search-input :deep(.el-input__wrapper) {
+    box-shadow: none;
+    border: none;
+    background: transparent;
+}
+
+.search-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* 主内容区 */
+.main-content {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* 角色列表 */
+.role-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.role-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.15s ease;
+}
+
+.role-item:last-child {
+    border-bottom: none;
+}
+
+.role-item:hover {
+    background: #f8fafc;
+}
+
+.role-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 280px;
+}
+
+.role-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.role-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.role-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 4px;
+}
+
+.role-code {
+    font-size: 12px;
+    font-family: 'SF Mono', Monaco, monospace;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.role-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-badge.inactive {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* 权限区域 */
+.role-perms {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.perms-label {
+    font-size: 13px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.perms-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.perm-tag {
+    font-size: 12px;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.perm-more {
+    font-size: 12px;
+    color: #6366f1;
+    background: #eef2ff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.no-perms {
+    font-size: 12px;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* 操作按钮 */
+.role-actions {
+    display: flex;
     gap: 4px;
-    border-color: var(--border-color);
-    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.15s ease;
 }
-.card-footer .action-btn:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-}
-.card-footer .action-btn-danger:hover {
-    border-color: var(--color-danger);
-    color: var(--color-danger);
-    background: var(--color-danger-light);
-}
-.empty-state { padding: 60px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
 
-.perm-tree-wrapper { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; background: var(--bg-base); max-height: 360px; overflow-y: auto; }
+.action-btn:hover {
+    background: #f1f5f9;
+    color: #3b82f6;
+}
 
-/* 响应式布局 - 保持比例 */
+.action-btn.danger:hover {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+/* 空状态 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.empty-text {
+    font-size: 15px;
+    color: #64748b;
+    margin: 0 0 20px;
+}
+
+/* 抽屉样式 */
+.role-drawer :deep(.el-drawer__header) {
+    padding: 20px 24px;
+    margin-bottom: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.role-drawer :deep(.el-drawer__body) {
+    padding: 24px;
+}
+
+.role-form :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: #374151;
+}
+
+.perm-tree-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+.drawer-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* 响应式 */
 @media (max-width: 1024px) {
-    .roles-grid {
-        grid-template-columns: repeat(auto-fill, minmax(22vw, 1fr));
+    .role-item {
+        flex-wrap: wrap;
+    }
+
+    .role-main {
+        min-width: 100%;
+    }
+
+    .role-perms {
+        width: 100%;
+        padding-left: 60px;
+    }
+
+    .role-actions {
+        margin-left: auto;
     }
 }
 
 @media (max-width: 768px) {
-    .roles-page {
-        padding: 4vw;
+    .page-container {
+        padding: 16px;
     }
-    
-    .page-header {
+
+    .header-content {
         flex-direction: column;
         align-items: flex-start;
-        gap: 2vw;
+        gap: 16px;
     }
-    
-    .filter-bar {
+
+    .btn-create {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-section {
         flex-direction: column;
         align-items: stretch;
-        gap: 1.5vw;
     }
-    
-    .filter-left {
-        flex-direction: column;
-        width: 100%;
+
+    .search-box {
+        max-width: none;
     }
-    
-    .search-input {
-        width: 100%;
+
+    .search-actions {
+        justify-content: flex-end;
     }
-    
-    .roles-grid {
-        grid-template-columns: 1fr;
-        gap: 3vw;
+
+    .role-item {
+        padding: 16px;
+    }
+
+    .role-perms {
+        padding-left: 0;
     }
 }
 </style>

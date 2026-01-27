@@ -162,7 +162,7 @@ const routes: RouteRecordRaw[] = [
                 path: '/organization/positions',
                 name: 'organization-positions',
                 meta: { title: '职位管理' },
-                component: () => import('../views/org/positions.vue'),
+                component: () => import('../views/org/positions/index.vue'),
             },
             {
                 path: '/organization/roles',
