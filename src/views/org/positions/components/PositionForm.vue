@@ -82,45 +82,6 @@
         </el-row>
       </div>
 
-      <!-- Compensation Section -->
-      <div class="form-section">
-        <div class="section-title">薪酬编制</div>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="薪资范围 (K)">
-              <div class="salary-range-input">
-                <el-input-number
-                  v-model="form.salaryMin"
-                  :min="0"
-                  :max="form.salaryMax || 999"
-                  placeholder="最低"
-                  controls-position="right"
-                />
-                <span class="range-sep">-</span>
-                <el-input-number
-                  v-model="form.salaryMax"
-                  :min="form.salaryMin || 0"
-                  :max="999"
-                  placeholder="最高"
-                  controls-position="right"
-                />
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="最大编制人数">
-              <el-input-number
-                v-model="form.headcountMax"
-                :min="0"
-                :max="999"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </div>
-
       <!-- Description Section (Collapsible) -->
       <el-collapse v-model="activeCollapse" class="form-collapse">
         <el-collapse-item title="职位描述" name="description">
@@ -413,20 +374,6 @@ defineExpose({
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 4px;
-}
-
-.salary-range-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.salary-range-input .el-input-number {
-  flex: 1;
-}
-
-.range-sep {
-  color: var(--text-muted);
 }
 
 /* Collapse styles */

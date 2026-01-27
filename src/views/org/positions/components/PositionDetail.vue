@@ -60,40 +60,6 @@
         </el-descriptions>
       </div>
 
-      <!-- Compensation -->
-      <div class="detail-section">
-        <div class="section-title">薪酬编制</div>
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="info-label">薪资范围</div>
-            <div class="info-value">
-              <template v-if="position.salaryMin || position.salaryMax">
-                {{ position.salaryMin || 0 }}K - {{ position.salaryMax || '不限' }}K
-              </template>
-              <span v-else class="text-muted">未设置</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="info-label">编制人数</div>
-            <div class="info-value">
-              <span :class="{ 'text-warning': hasVacancy }">
-                {{ position.headcountCurrent || 0 }}
-              </span>
-              <span class="text-muted"> / {{ position.headcountMax || '-' }}</span>
-              <el-tag
-                v-if="hasVacancy"
-                size="small"
-                type="warning"
-                effect="light"
-                class="vacancy-tag"
-              >
-                空缺 {{ vacancyCount }}
-              </el-tag>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Description -->
       <div class="detail-section" v-if="hasDescription">
         <div class="section-title">职位描述</div>
@@ -158,20 +124,6 @@ const emit = defineEmits<{
 const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
-});
-
-const hasVacancy = computed(() => {
-  if (!props.position) return false;
-  const current = props.position.headcountCurrent || 0;
-  const max = props.position.headcountMax || 0;
-  return max > current;
-});
-
-const vacancyCount = computed(() => {
-  if (!props.position) return 0;
-  const current = props.position.headcountCurrent || 0;
-  const max = props.position.headcountMax || 0;
-  return Math.max(0, max - current);
 });
 
 const hasDescription = computed(() => {
@@ -307,49 +259,6 @@ function handleEdit() {
 
 .dept-cell .el-icon {
   color: var(--text-muted);
-}
-
-/* Info grid */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.info-card {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  border: 1px solid var(--border-light);
-}
-
-.info-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.info-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.text-muted {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.text-warning {
-  color: var(--color-warning);
-}
-
-.vacancy-tag {
-  font-size: 11px;
 }
 
 /* Description items */

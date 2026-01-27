@@ -233,27 +233,14 @@ async function loadData() {
       const statsRes = await getDashboardStats({ scope: 'personal' });
       console.log('仪表盘统计API响应:', statsRes);
       console.log('响应数据:', statsRes?.data);
-      
+
       const stats = statsRes?.data?.data || {};
       console.log('解析后的stats:', stats);
-      
+
       metrics.value.totalTasks = stats.totalTasks || 0;
       metrics.value.pendingApprovals = stats.pendingApprovals || 0;
       metrics.value.completed = stats.completedTasks || 0;
       metrics.value.critical = stats.criticalTasks || 0;
-      
-      // 构建趋势图
-      console.log('任务趋势数据:', stats.taskTrend);
-      console.log('趋势数据长度:', stats.taskTrend?.length);
-      
-      if (stats.taskTrend && stats.taskTrend.length > 0) {
-        console.log('开始构建趋势图，数据:', stats.taskTrend);
-        buildTrendChart(stats.taskTrend);
-        console.log('趋势图构建完成');
-      } else {
-        console.warn('没有趋势数据，显示空状态');
-        trendChartEmpty.value = true;
-      }
     } catch (e) {
       console.error('加载仪表盘统计失败:', e);
     }
@@ -296,6 +283,9 @@ function buildCharts(list: any[]) {
 
   statusChartEmpty.value = total1 === 0;
   priorityChartEmpty.value = total2 === 0;
+
+  // 构建趋势图 - 从任务列表数据计算
+  buildTrendChartFromList(list);
 
   // Swiss Minimalism 风格图表配色
   if (total1 > 0) {
@@ -373,108 +363,123 @@ function buildCharts(list: any[]) {
   }
 }
 
-function buildTrendChart(trendData: any[]) {
-  console.log('========== buildTrendChart 被调用 ==========');
-  console.log('输入数据:', trendData);
-  
-  trendChartEmpty.value = false;
-  
-  const dates = trendData.map(item => {
-    const d = new Date(item.date);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
-  });
-  const created = trendData.map(item => item.created || 0);
-  const completed = trendData.map(item => item.completed || 0);
-  
-  console.log('日期数组:', dates);
-  console.log('创建数组:', created);
-  console.log('完成数组:', completed);
-  
-  trendChartOption.value = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'cross' },
-      backgroundColor: '#fff',
-      borderColor: 'var(--border-color)',
-      borderWidth: 1,
-      textStyle: { color: 'var(--text-primary)', fontSize: 13 },
-      extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
-    },
-    legend: {
-      data: ['创建', '完成'],
-      bottom: 16,
-      left: 'center',
-      itemGap: 24,
-      itemWidth: 12,
-      itemHeight: 12,
-      textStyle: { color: 'var(--text-secondary)', fontSize: 13 }
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '15%',
-      top: '8%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      data: dates,
-      axisLabel: { color: 'var(--text-secondary)', fontSize: 12 },
-      axisLine: { lineStyle: { color: 'var(--border-color)' } },
-      axisTick: { show: false }
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
-      splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
-      axisLine: { show: false }
-    },
-    series: [
-      {
-        name: '创建',
-        type: 'line',
-        data: created,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 2, color: '#1E3A5F' },
-        itemStyle: { color: '#1E3A5F' },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(30, 58, 95, 0.2)' },
-              { offset: 1, color: 'rgba(30, 58, 95, 0.05)' }
-            ]
-          }
-        }
+function buildTrendChartFromList(list: any[]) {
+  // Get last 7 days
+  const now = new Date();
+  const days: string[] = [];
+  const createdCounts: number[] = [];
+  const completedCounts: number[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+    days.push(dateStr);
+
+    const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
+    const dayEnd = new Date(date.setHours(23, 59, 59, 999)).getTime();
+
+    // Count created tasks
+    const created = list.filter((task: any) => {
+      const createdTime = task.createdAt ? new Date(task.createdAt).getTime() : 0;
+      return createdTime >= dayStart && createdTime <= dayEnd;
+    }).length;
+    createdCounts.push(created);
+
+    // Count completed tasks
+    const completed = list.filter((task: any) => {
+      const updatedTime = task.updatedAt ? new Date(task.updatedAt).getTime() : 0;
+      return updatedTime >= dayStart && updatedTime <= dayEnd && (task.progress ?? 0) >= 100;
+    }).length;
+    completedCounts.push(completed);
+  }
+
+  trendChartEmpty.value = list.length === 0;
+
+  if (list.length > 0) {
+    trendChartOption.value = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' },
+        backgroundColor: '#fff',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        textStyle: { color: 'var(--text-primary)', fontSize: 13 },
+        extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
       },
-      {
-        name: '完成',
-        type: 'line',
-        data: completed,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 2, color: '#059669' },
-        itemStyle: { color: '#059669' },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(5, 150, 105, 0.2)' },
-              { offset: 1, color: 'rgba(5, 150, 105, 0.05)' }
-            ]
+      legend: {
+        data: ['创建', '完成'],
+        bottom: 16,
+        left: 'center',
+        itemGap: 24,
+        itemWidth: 12,
+        itemHeight: 12,
+        textStyle: { color: 'var(--text-secondary)', fontSize: 13 }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '15%',
+        top: '8%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: days,
+        axisLabel: { color: 'var(--text-secondary)', fontSize: 12 },
+        axisLine: { lineStyle: { color: 'var(--border-color)' } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
+        splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
+        axisLine: { show: false }
+      },
+      series: [
+        {
+          name: '创建',
+          type: 'line',
+          data: createdCounts,
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          lineStyle: { width: 2, color: '#1E3A5F' },
+          itemStyle: { color: '#1E3A5F' },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(30, 58, 95, 0.2)' },
+                { offset: 1, color: 'rgba(30, 58, 95, 0.05)' }
+              ]
+            }
+          }
+        },
+        {
+          name: '完成',
+          type: 'line',
+          data: completedCounts,
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          lineStyle: { width: 2, color: '#059669' },
+          itemStyle: { color: '#059669' },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(5, 150, 105, 0.2)' },
+                { offset: 1, color: 'rgba(5, 150, 105, 0.05)' }
+              ]
+            }
           }
         }
-      }
-    ]
-  };
-  
-  console.log('趋势图配置:', trendChartOption.value);
-  console.log('========== buildTrendChart 完成 ==========');
+      ]
+    };
+  }
 }
 
 onMounted(loadData);

@@ -122,40 +122,6 @@
         </template>
       </el-table-column>
 
-      <!-- Salary range -->
-      <el-table-column
-        prop="salaryMin"
-        label="薪资范围"
-        width="140"
-        sortable="custom"
-        align="center"
-        class-name="hide-mobile-col"
-      >
-        <template #default="{ row }">
-          <span v-if="row.salaryMin || row.salaryMax" class="salary-text">
-            {{ row.salaryMin || 0 }}K - {{ row.salaryMax || '不限' }}K
-          </span>
-          <span v-else class="text-muted">-</span>
-        </template>
-      </el-table-column>
-
-      <!-- Headcount -->
-      <el-table-column
-        label="编制人数"
-        width="100"
-        align="center"
-        class-name="hide-mobile-col"
-      >
-        <template #default="{ row }">
-          <span class="headcount-text">
-            <span :class="{ 'text-warning': (row.headcountCurrent || 0) < (row.headcountMax || 0) }">
-              {{ row.headcountCurrent || 0 }}
-            </span>
-            <span class="text-muted">/{{ row.headcountMax || '-' }}</span>
-          </span>
-        </template>
-      </el-table-column>
-
       <!-- Status -->
       <el-table-column
         prop="status"
@@ -433,26 +399,6 @@ defineExpose({ clearSelection });
 .level-tag {
   font-weight: 600;
   min-width: 36px;
-}
-
-/* Salary text */
-.salary-text {
-  font-size: 13px;
-  color: var(--text-primary);
-}
-
-/* Headcount */
-.headcount-text {
-  font-size: 13px;
-}
-
-.text-muted {
-  color: var(--text-muted);
-}
-
-.text-warning {
-  color: var(--color-warning);
-  font-weight: 500;
 }
 
 /* Action buttons */

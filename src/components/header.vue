@@ -11,11 +11,36 @@
         </svg>
       </button>
       
-      <!-- 面包屑 - 简洁样式 -->
+      <!-- 面包屑 - 增强版多级导航 -->
       <nav class="breadcrumb" aria-label="面包屑导航">
-        <router-link to="/" class="breadcrumb-item">首页</router-link>
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item current" v-if="currentRoute">{{ currentRoute }}</span>
+        <template v-for="(item, index) in breadcrumbs" :key="index">
+          <router-link 
+            v-if="index < breadcrumbs.length - 1" 
+            :to="item.path" 
+            class="breadcrumb-item"
+          >
+            <svg v-if="item.icon === 'home'" class="breadcrumb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>{{ item.name }}</span>
+          </router-link>
+          <span v-else class="breadcrumb-item current">
+            {{ item.name }}
+          </span>
+          <svg 
+            v-if="index < breadcrumbs.length - 1" 
+            class="breadcrumb-separator" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </template>
       </nav>
     </div>
 
@@ -245,6 +270,71 @@ const userAvatar = ref('');
 // 主题切换
 const isDarkMode = computed(() => themeStore.isDark);
 const toggleTheme = () => themeStore.toggleDarkMode();
+
+// 面包屑路径计算
+const breadcrumbs = computed(() => {
+  const paths: Array<{ name: string; path: string; icon?: string }> = [];
+  
+  // 始终添加首页
+  paths.push({ name: '首页', path: '/', icon: 'home' });
+  
+  // 获取当前路由的标题
+  const currentTitle = route.meta?.title as string;
+  if (!currentTitle) return paths;
+  
+  // 根据路径构建面包屑
+  const pathSegments = route.path.split('/').filter(Boolean);
+  
+  // 处理特殊的多级路径
+  if (pathSegments.length > 1) {
+    const firstSegment = pathSegments[0];
+    
+    // 任务相关
+    if (firstSegment === 'tasks') {
+      paths.push({ name: '任务管理', path: '/tasks' });
+      if (pathSegments[1] === 'detail') {
+        paths.push({ name: '任务详情', path: route.path });
+      } else if (pathSegments[1] === 'create') {
+        paths.push({ name: '创建任务', path: route.path });
+      }
+    }
+    // 审批相关
+    else if (firstSegment === 'handovers') {
+      paths.push({ name: '审批管理', path: '/handovers' });
+      if (pathSegments[1] === 'detail') {
+        paths.push({ name: '审批详情', path: route.path });
+      } else if (pathSegments[1] === 'create') {
+        paths.push({ name: '发起审批', path: route.path });
+      }
+    }
+    // 组织架构相关
+    else if (firstSegment === 'organization') {
+      paths.push({ name: '组织架构', path: '/organization/departments' });
+      if (currentTitle !== '组织架构') {
+        paths.push({ name: currentTitle, path: route.path });
+      }
+    }
+    // 任务节点相关
+    else if (firstSegment === 'task-nodes') {
+      if (pathSegments[1] === 'detail') {
+        paths.push({ name: '任务节点详情', path: route.path });
+      } else if (pathSegments[1] === 'create') {
+        paths.push({ name: '创建任务节点', path: route.path });
+      }
+    }
+    // 文件预览
+    else if (firstSegment === 'file' && pathSegments[1] === 'preview') {
+      paths.push({ name: '文件预览', path: route.path });
+    }
+  } else {
+    // 单级路径，直接添加当前页面
+    if (currentTitle !== '首页') {
+      paths.push({ name: currentTitle, path: route.path });
+    }
+  }
+  
+  return paths;
+});
 
 const currentRoute = computed(() => route.meta?.title as string || '');
 
@@ -564,31 +654,135 @@ onUnmounted(() => stopPolling());
   color: var(--text-primary);
 }
 
-/* 面包屑 - 简洁样式 */
+/* 面包屑 - 增强版设计 */
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border: 1px solid transparent;
+}
+
+.breadcrumb:hover {
+  border-color: var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .breadcrumb-item {
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+  position: relative;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.breadcrumb-item:hover {
+/* 面包屑项悬停效果 */
+.breadcrumb-item:not(.current) {
+  cursor: pointer;
+}
+
+.breadcrumb-item:not(.current):hover {
   color: var(--color-primary);
+  background: var(--bg-hover);
+  transform: translateX(2px);
 }
 
+.breadcrumb-item:not(.current):active {
+  transform: translateX(1px) scale(0.98);
+}
+
+/* 图标动画 */
+.breadcrumb-item:not(.current):hover .breadcrumb-icon {
+  transform: translateY(-1px) scale(1.05);
+}
+
+/* 当前页面样式 */
 .breadcrumb-item.current {
   color: var(--text-primary);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
+  cursor: default;
+  background: var(--bg-hover);
+  position: relative;
 }
 
+/* 当前页面下划线效果 */
+.breadcrumb-item.current::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: var(--space-2);
+  right: var(--space-2);
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  opacity: 0.6;
+}
+
+/* 面包屑图标 */
+.breadcrumb-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+/* 分隔符 */
 .breadcrumb-separator {
   color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity var(--transition-fast);
+}
+
+.breadcrumb:hover .breadcrumb-separator {
+  opacity: 0.6;
+}
+
+/* 面包屑加载动画 */
+@keyframes breadcrumbFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.breadcrumb-item {
+  animation: breadcrumbFadeIn 0.3s ease-out;
+}
+
+/* 为每个面包屑项添加延迟动画 */
+.breadcrumb-item:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.breadcrumb-item:nth-child(3) {
+  animation-delay: 0.05s;
+}
+
+.breadcrumb-item:nth-child(5) {
+  animation-delay: 0.1s;
+}
+
+.breadcrumb-item:nth-child(7) {
+  animation-delay: 0.15s;
 }
 
 .header-right {
@@ -974,6 +1168,111 @@ onUnmounted(() => stopPolling());
 
   .theme-btn {
     display: none;
+  }
+}
+
+/* 平板设备 - 显示简化版面包屑 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .breadcrumb {
+    padding: var(--space-1) var(--space-3);
+    max-width: 400px;
+  }
+  
+  .breadcrumb-item {
+    max-width: 120px;
+  }
+  
+  .breadcrumb-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1440px) {
+  .breadcrumb {
+    padding: var(--space-2) var(--space-5);
+  }
+  
+  .breadcrumb-item {
+    max-width: 300px;
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* 深色模式面包屑优化 */
+html.dark-mode .breadcrumb {
+  background: var(--bg-tertiary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html.dark-mode .breadcrumb:hover {
+  border-color: var(--border-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .breadcrumb-item:not(.current):hover {
+  background: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+html.dark-mode .breadcrumb-item.current {
+  background: var(--bg-hover);
+}
+
+html.dark-mode .breadcrumb-item.current::after {
+  background: var(--color-primary);
+  opacity: 0.8;
+}
+
+/* 打印样式 */
+@media print {
+  .breadcrumb {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .breadcrumb-item:not(.current):hover {
+    background: transparent;
+    transform: none;
+  }
+  
+  .breadcrumb-separator {
+    opacity: 1;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .breadcrumb {
+    border: 2px solid var(--border-dark);
+  }
+  
+  .breadcrumb-item.current::after {
+    height: 3px;
+    opacity: 1;
+  }
+  
+  .breadcrumb-separator {
+    opacity: 1;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb-item {
+    animation: none;
+  }
+  
+  .breadcrumb-item:not(.current):hover {
+    transform: none;
+  }
+  
+  .breadcrumb-item:not(.current):hover .breadcrumb-icon {
+    transform: none;
   }
 }
 </style>
