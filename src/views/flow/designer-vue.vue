@@ -3,13 +3,6 @@
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <el-button
-          :icon="Menu"
-          @click="toggleLeftDrawer"
-          circle
-          class="drawer-toggle"
-          :class="{ active: leftDrawerVisible }"
-        />
         <div class="toolbar-title">
           <el-icon class="title-icon"><Connection /></el-icon>
           <span>流程设计器</span>
@@ -40,131 +33,28 @@
           @click="saveFlow"
           :loading="saving"
           :disabled="!selectedTaskId"
+          title="保存流程"
         >
           保存流程
         </el-button>
+        <el-button
+          :icon="QuestionFilled"
+          @click="startOnboarding"
+          circle
+          title="帮助引导"
+        />
         <el-button
           :icon="InfoFilled"
           @click="toggleRightDrawer"
           circle
           class="drawer-toggle"
           :class="{ active: rightDrawerVisible }"
+          title="面板"
         />
       </div>
     </div>
 
     <div class="flow-container">
-      <!-- 左侧抽屉：节点库 -->
-      <transition name="drawer-slide-left">
-        <div v-show="leftDrawerVisible" class="sidebar-left drawer">
-        <div class="sidebar-header">
-          <el-icon class="header-icon"><Box /></el-icon>
-          <span class="header-title">节点库</span>
-        </div>
-        <!-- 部门筛选器 -->
-        <div class="filter-section">
-          <el-select 
-            v-model="selectedDepartmentId" 
-            placeholder="按部门筛选" 
-            clearable
-            filterable
-            class="department-filter"
-            @change="filterNodesByDepartment"
-          >
-            <el-option
-              v-for="dept in departmentList"
-              :key="dept.id"
-              :label="dept.name"
-              :value="dept.id"
-            />
-          </el-select>
-        </div>
-        <div class="nodes-list" v-loading="loadingNodes">
-          <div v-if="filteredAvailableNodes.length === 0" class="empty-nodes">
-            <el-icon class="empty-icon"><DocumentRemove /></el-icon>
-            <p class="empty-text">{{ selectedDepartmentId ? '该部门暂无节点' : '请先选择任务' }}</p>
-            <p class="empty-hint">{{ selectedDepartmentId ? '尝试选择其他部门' : '选择任务后将显示可用的任务节点' }}</p>
-          </div>
-          <div
-            v-for="node in filteredAvailableNodes"
-        :key="node.taskNodeId"
-            class="node-card"
-        :class="{ 
-          'draggable': true,
-              'readonly': !node.canDrag
-        }"
-        :draggable="true"
-        @dragstart="onDragStart(node)"
-        @dragend="onDragEnd"
-        @touchstart="onTouchStart($event, node)"
-        @touchmove="onTouchMove"
-        @touchend="onTouchEnd"
-            @click="selectNodeFromLibrary(node)"
-          >
-            <div class="node-card-header">
-              <div class="node-type-badge" :class="getNodeTypeClass(node.nodeType)">
-                <el-icon><component :is="getNodeTypeIcon(node.nodeType)" /></el-icon>
-        </div>
-              <div class="node-info">
-                <div class="node-name">{{ node.nodeName || '未命名节点' }}</div>
-                <div class="node-meta">
-                  <el-icon><OfficeBuilding /></el-icon>
-                  <span>{{ getDepartmentName(node.departmentId) || '-' }}</span>
-      </div>
-    </div>
-            </div>
-            <div class="node-card-footer">
-              <el-tag 
-                v-if="isNodeArranged(node.taskNodeId)" 
-                size="small" 
-                type="primary" 
-                class="prereq-tag"
-              >
-                <el-icon><DocumentChecked /></el-icon>
-                已安排
-              </el-tag>
-              <el-tag 
-                v-else-if="node.prerequisiteNodes && node.prerequisiteNodes.length > 0" 
-                size="small" 
-                type="warning" 
-                class="prereq-tag"
-              >
-                <el-icon><Connection /></el-icon>
-                有前置
-              </el-tag>
-              <el-tag 
-                v-else 
-                size="small" 
-                type="info" 
-                class="prereq-tag"
-              >
-                <el-icon><Clock /></el-icon>
-                未安排
-              </el-tag>
-              <div class="node-status" v-if="node.status !== undefined">
-                <el-tag :type="getStatusType(node.status)" size="small">
-                  {{ getStatusText(node.status) }}
-                </el-tag>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="sidebar-footer">
-          <el-alert
-            title="提示"
-            type="info"
-            :closable="false"
-            show-icon
-          >
-            <template #default>
-              <p class="tip-text">所有任务节点都会自动显示在画布上</p>
-              <p class="tip-text">只有您负责的节点可以移动和编辑</p>
-            </template>
-          </el-alert>
-        </div>
-        </div>
-      </transition>
-
       <!-- 画布区域（全屏） -->
       <div class="canvas-area" ref="canvasTopEl">
         <VueFlow
@@ -179,7 +69,7 @@
           :min-zoom="0.1"
           :max-zoom="4"
           :default-viewport="{ x: 0, y: 0, zoom: 1 }"
-          :nodes-draggable="true"
+          :nodes-draggable="false"
           :nodes-connectable="true"
           :edges-updatable="false"
           :edges-focusable="true"
@@ -204,7 +94,7 @@
         </VueFlow>
       </div>
 
-      <!-- 右侧抽屉：详情面板 -->
+      <!-- 右侧智能面板：节点库 / 节点详情 -->
       <transition name="drawer-slide-right">
         <div
           v-show="rightDrawerVisible"
@@ -212,11 +102,123 @@
           @mouseenter="panEnabled=false"
           @mouseleave="panEnabled=true"
         >
+        <!-- 智能面板头部 -->
         <div class="sidebar-header">
-          <el-icon class="header-icon"><InfoFilled /></el-icon>
-          <span class="header-title">节点详情</span>
+          <el-icon class="header-icon">
+            <component :is="selected || selectedEdge ? 'InfoFilled' : 'Box'" />
+          </el-icon>
+          <span class="header-title">{{ selected || selectedEdge ? '节点详情' : '节点库' }}</span>
         </div>
-        <div class="detail-content" v-if="selected || selectedEdge">
+
+        <!-- 节点库内容（未选中节点时显示） -->
+        <transition name="panel-fade" mode="out-in">
+          <div v-if="!selected && !selectedEdge" key="node-library" class="panel-content">
+            <!-- 部门筛选器 -->
+            <div class="filter-section">
+              <el-select
+                v-model="selectedDepartmentId"
+                placeholder="按部门筛选"
+                clearable
+                filterable
+                class="department-filter"
+                @change="filterNodesByDepartment"
+              >
+                <el-option
+                  v-for="dept in departmentList"
+                  :key="dept.id"
+                  :label="dept.name"
+                  :value="dept.id"
+                />
+              </el-select>
+            </div>
+            <div class="nodes-list" v-loading="loadingNodes">
+              <div v-if="filteredAvailableNodes.length === 0" class="empty-nodes">
+                <el-icon class="empty-icon"><DocumentRemove /></el-icon>
+                <p class="empty-text">{{ selectedDepartmentId ? '该部门暂无节点' : '请先选择任务' }}</p>
+                <p class="empty-hint">{{ selectedDepartmentId ? '尝试选择其他部门' : '选择任务后将显示可用的任务节点' }}</p>
+              </div>
+              <div
+                v-for="node in filteredAvailableNodes"
+                :key="node.taskNodeId"
+                class="node-card"
+                :class="{
+                  'draggable': true,
+                  'readonly': !node.canDrag
+                }"
+                :draggable="true"
+                @dragstart="onDragStart(node)"
+                @dragend="onDragEnd"
+                @touchstart="onTouchStart($event, node)"
+                @touchmove="onTouchMove"
+                @touchend="onTouchEnd"
+                @click="selectNodeFromLibrary(node)"
+              >
+                <div class="node-card-header">
+                  <div class="node-type-badge" :class="getNodeTypeClass(node.nodeType)">
+                    <el-icon><component :is="getNodeTypeIcon(node.nodeType)" /></el-icon>
+                  </div>
+                  <div class="node-info">
+                    <div class="node-name">{{ node.nodeName || '未命名节点' }}</div>
+                    <div class="node-meta">
+                      <el-icon><OfficeBuilding /></el-icon>
+                      <span>{{ getDepartmentName(node.departmentId) || '-' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="node-card-footer">
+                  <el-tag
+                    v-if="isNodeArranged(node.taskNodeId)"
+                    size="small"
+                    type="primary"
+                    class="prereq-tag"
+                  >
+                    <el-icon><DocumentChecked /></el-icon>
+                    已安排
+                  </el-tag>
+                  <el-tag
+                    v-else-if="node.prerequisiteNodes && node.prerequisiteNodes.length > 0"
+                    size="small"
+                    type="warning"
+                    class="prereq-tag"
+                  >
+                    <el-icon><Connection /></el-icon>
+                    有前置
+                  </el-tag>
+                  <el-tag
+                    v-else
+                    size="small"
+                    type="info"
+                    class="prereq-tag"
+                  >
+                    <el-icon><Clock /></el-icon>
+                    未安排
+                  </el-tag>
+                  <div class="node-status" v-if="node.status !== undefined">
+                    <el-tag :type="getStatusType(node.status)" size="small">
+                      {{ getStatusText(node.status) }}
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="sidebar-footer">
+              <el-alert
+                title="提示"
+                type="info"
+                :closable="false"
+                show-icon
+              >
+                <template #default>
+                  <p class="tip-text">拖拽节点到画布上进行流程设计</p>
+                  <p class="tip-text">点击画布上的节点查看详情</p>
+                </template>
+              </el-alert>
+            </div>
+          </div>
+
+          <!-- 节点详情内容（选中节点时显示） -->
+          <div v-else key="node-detail" class="panel-content">
+            <div class="detail-content">
           <!-- 节点详情 -->
           <div v-if="selected" class="detail-section">
             <div class="section-title">基本信息</div>
@@ -473,12 +475,9 @@
       </el-button>
             </div>
           </div>
-        </div>
-        <div v-if="!selected && !selectedEdge" class="detail-empty">
-          <el-icon class="empty-icon"><InfoFilled /></el-icon>
-          <p class="empty-text">选择一个节点查看详情</p>
-          <p class="empty-hint">点击画布上的节点或左侧节点库中的节点</p>
-        </div>
+            </div>
+          </div>
+        </transition>
         </div>
       </transition>
     </div>
@@ -536,8 +535,8 @@ import { ref, computed, h, defineComponent, onMounted, watch, nextTick, onUnmoun
 import {
   Connection, Refresh, FullScreen, DocumentChecked, Box, DocumentRemove,
   InfoFilled, Document, User, UserFilled, Calendar, DataLine, CircleCheck, CircleCheckFilled, Clock, Check,
-  OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, Menu, MagicStick,
-  DocumentCopy, Aim, Select
+  OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, MagicStick,
+  DocumentCopy, Aim, Select, QuestionFilled
 } from '@element-plus/icons-vue'
 import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
@@ -546,11 +545,14 @@ import { useFlowStore } from '@/stores/flowStore'
 import { listTasks, listTaskNodesByTask, getMyEmployee, listEmployees, updatePrerequisiteNodes, updateTaskNode, listDepartments } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { markRaw } from 'vue'
+import { useFlowOnboarding } from '@/composables/useFlowOnboarding'
 
 const store = useFlowStore()
 
+// 新手引导
+const { startOnboarding, initOnboarding } = useFlowOnboarding()
+
 // 抽屉状态
-const leftDrawerVisible = ref(true)
 const rightDrawerVisible = ref(true)
 
 // 右键菜单状态
@@ -876,6 +878,9 @@ onMounted(async () => {
 
     // 添加点击外部关闭菜单监听
     document.addEventListener('click', handleClickOutside)
+
+    // 初始化新手引导（首次进入自动触发）
+    initOnboarding()
   } catch (error: any) {
     console.error('初始化失败:', error)
   }
@@ -1156,6 +1161,7 @@ function buildFlowGraph() {
     type: 'start',
     position: { x: 100, y: 200 },
     data: { label: '开始' },
+    draggable: false, // Start node should not be draggable
     style: {
       background: '#1E3A5F',
       color: '#fff',
@@ -1230,6 +1236,7 @@ function buildFlowGraph() {
             bgTo: deptColor.bgTo,
           },
         },
+        draggable: node.canDrag, // Enable drag only for nodes where user is leader
         style: {
           background: deptColor.bgFrom || '#FFFFFF',
           border: `2px solid ${deptColor.color || '#E2E8F0'}`,
@@ -1250,6 +1257,7 @@ function buildFlowGraph() {
     type: 'end',
     position: { x: endX, y: 200 },
     data: { label: '结束' },
+    draggable: false, // End node should not be draggable
     style: {
       background: '#DC2626',
       color: '#fff',
@@ -1410,12 +1418,21 @@ const touchDragElement = ref<HTMLElement | null>(null)
 const touchStartPos = ref<{ x: number; y: number } | null>(null)
 const isTouchDragging = ref(false)
 
+// 设备类型检测：只有触摸设备才启用触摸拖拽
+const isTouchDevice = computed(() => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
+})
+
 function onTouchStart(event: TouchEvent, node: any) {
+  // PC端跳过触摸事件，避免卡片随意移动
+  if (!isTouchDevice.value) return
+
   const touch = event.touches[0]
   touchStartPos.value = { x: touch.clientX, y: touch.clientY }
   draggedNode.value = node
   isTouchDragging.value = false
-  
+
   // 创建拖拽预览元素
   const target = event.currentTarget as HTMLElement
   touchDragElement.value = target.cloneNode(true) as HTMLElement
@@ -1435,10 +1452,12 @@ function onTouchStart(event: TouchEvent, node: any) {
 }
 
 function onTouchMove(event: TouchEvent) {
+  // PC端跳过触摸事件
+  if (!isTouchDevice.value) return
   if (!draggedNode.value || !touchDragElement.value) return
-  
+
   const touch = event.touches[0]
-  
+
   // 检测是否开始拖拽（移动超过10px）
   if (touchStartPos.value) {
     const dx = Math.abs(touch.clientX - touchStartPos.value.x)
@@ -1448,7 +1467,7 @@ function onTouchMove(event: TouchEvent) {
       event.preventDefault() // 阻止滚动
     }
   }
-  
+
   if (isTouchDragging.value) {
     // 更新预览元素位置
     touchDragElement.value.style.left = `${touch.clientX - 60}px`
@@ -1457,20 +1476,22 @@ function onTouchMove(event: TouchEvent) {
 }
 
 function onTouchEnd(event: TouchEvent) {
+  // PC端跳过触摸事件
+  if (!isTouchDevice.value) return
   if (!draggedNode.value) return
-  
+
   // 清理预览元素
   if (touchDragElement.value && touchDragElement.value.parentNode) {
     touchDragElement.value.parentNode.removeChild(touchDragElement.value)
     touchDragElement.value = null
   }
-  
+
   // 如果是拖拽操作，执行放置逻辑
   if (isTouchDragging.value) {
     const touch = event.changedTouches[0]
     handleTouchDrop(touch.clientX, touch.clientY)
   }
-  
+
   // 重置状态
   touchStartPos.value = null
   isTouchDragging.value = false
@@ -1572,10 +1593,6 @@ function selectNodeFromLibrary(node: any) {
 }
 
 // ========== 抽屉切换功能 ==========
-function toggleLeftDrawer() {
-  leftDrawerVisible.value = !leftDrawerVisible.value
-}
-
 function toggleRightDrawer() {
   rightDrawerVisible.value = !rightDrawerVisible.value
 }
@@ -1832,6 +1849,7 @@ function onDrop(event: DragEvent) {
         bgTo: deptColor.bgTo,
       },
     },
+    draggable: node.canDrag, // Enable drag based on permission
     style: {
       background: deptColor.bgFrom || '#FFFFFF',
       border: `2px solid ${deptColor.color || '#E2E8F0'}`,
@@ -2069,9 +2087,44 @@ function onPaneClick() {
   selectedEdge.value = null
 }
 
+// Drag control state
+const dragState = ref({
+  isDragging: false,
+  draggedNodeId: null as string | null,
+  startPosition: { x: 0, y: 0 },
+  currentPosition: { x: 0, y: 0 },
+  dragThreshold: 5, // pixels before drag starts
+  hasMoved: false
+})
+
 // 节点变化
 function onNodesChange(changes: any[]) {
-  // 同步节点位置变化
+  changes.forEach((change: any) => {
+    if (change.type === 'position') {
+      const node = nodes.value.find(n => n.id === change.id)
+      if (!node) return
+      
+      // Check if node can be dragged
+      const canDrag = node.data?.canDrag !== false
+      
+      if (!canDrag) {
+        // Prevent movement for readonly nodes
+        console.log('Node is readonly, preventing drag')
+        return
+      }
+      
+      // Allow position update for draggable nodes
+      if (change.position) {
+        node.position = change.position
+      }
+    } else if (change.type === 'select') {
+      // Handle selection changes
+      const node = nodes.value.find(n => n.id === change.id)
+      if (node) {
+        (node as any).selected = change.selected
+      }
+    }
+  })
 }
 
 // 边变化
@@ -2661,6 +2714,30 @@ const nodeTypes = {
   transform: translateX(100%);
 }
 
+/* Panel Content Fade Transition */
+.panel-fade-enter-active,
+.panel-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.panel-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.panel-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Panel Content Styles */
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Drawer Toggle Button */
 .drawer-toggle {
   transition: all 0.3s ease;
@@ -2675,7 +2752,6 @@ const nodeTypes = {
   transform: scale(1.05);
 }
 
-.sidebar-left,
 .sidebar-right {
   display: flex;
   flex-direction: column;
@@ -4490,11 +4566,86 @@ html.dark-mode :deep(.vue-flow__minimap) {
   :deep(.vue-flow__edge) {
     transition: none !important;
   }
-  
+
   .node-card:hover {
     transform: none;
   }
 }
 </style>
 
+<!-- Global styles for driver.js onboarding -->
+<style>
+/* Driver.js Onboarding Popover Styles */
+.flow-onboarding-popover {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #1f2937;
+  --driver-popover-title: #111827;
+  --driver-popover-description: #4b5563;
+  --driver-popover-progress: #3b82f6;
+}
 
+.flow-onboarding-popover .driver-popover {
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.flow-onboarding-popover .driver-popover-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--driver-popover-title);
+  margin-bottom: 8px;
+}
+
+.flow-onboarding-popover .driver-popover-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--driver-popover-description);
+}
+
+.flow-onboarding-popover .driver-popover-progress-text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.flow-onboarding-popover .driver-popover-navigation-btns {
+  gap: 8px;
+}
+
+.flow-onboarding-popover .driver-popover-prev-btn,
+.flow-onboarding-popover .driver-popover-next-btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.flow-onboarding-popover .driver-popover-prev-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.flow-onboarding-popover .driver-popover-prev-btn:hover {
+  background: #e5e7eb;
+}
+
+.flow-onboarding-popover .driver-popover-next-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.flow-onboarding-popover .driver-popover-next-btn:hover {
+  background: #2563eb;
+}
+
+.flow-onboarding-popover .driver-popover-close-btn {
+  color: #9ca3af;
+}
+
+.flow-onboarding-popover .driver-popover-close-btn:hover {
+  color: #374151;
+}
+</style>
