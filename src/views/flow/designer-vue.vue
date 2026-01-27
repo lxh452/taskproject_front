@@ -3,6 +3,14 @@
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
+        <el-button
+          :icon="leftDrawerVisible ? 'Fold' : 'Expand'"
+          @click="toggleLeftDrawer"
+          circle
+          class="drawer-toggle"
+          :class="{ active: leftDrawerVisible }"
+          title="节点库"
+        />
         <div class="toolbar-title">
           <el-icon class="title-icon"><Connection /></el-icon>
           <span>流程设计器</span>
@@ -43,62 +51,15 @@
           circle
           title="帮助引导"
         />
-        <el-button
-          :icon="InfoFilled"
-          @click="toggleRightDrawer"
-          circle
-          class="drawer-toggle"
-          :class="{ active: rightDrawerVisible }"
-          title="面板"
-        />
       </div>
     </div>
 
     <div class="flow-container">
-      <!-- 画布区域（全屏） -->
-      <div class="canvas-area" ref="canvasTopEl">
-        <VueFlow
-          v-model:nodes="nodes"
-          v-model:edges="edges"
-          :node-types="nodeTypes"
-          :default-edge-options="edgeOptions"
-          :connection-radius="50"
-          :snap-to-grid="true"
-          :snap-grid="[20, 20]"
-          connection-line-type="smoothstep"
-          :min-zoom="0.1"
-          :max-zoom="4"
-          :default-viewport="{ x: 0, y: 0, zoom: 1 }"
-          :nodes-draggable="false"
-          :nodes-connectable="true"
-          :edges-updatable="false"
-          :edges-focusable="true"
-          :edges-clickable="true"
-          :pan-on-scroll="panEnabled"
-          :pan-on-scroll-mode="'free'"
-          :pan-on-scroll-speed="1.2"
-          @connect="onConnect"
-          @node-click="onNodeClick"
-          @edge-click="onEdgeClick"
-          @nodes-change="onNodesChange"
-          @edges-change="onEdgesChange"
-          @init="onInit"
-          @pane-click="onPaneClick"
-          @drop="onDrop"
-          @dragover="onDragOver"
-          @node-context-menu="onNodeContextMenu"
-        >
-          <Background :gap="20" :size="1" pattern-color="#e5e7eb" />
-          <Controls position="bottom-right" />
-          <MiniMap zoomable pannable position="bottom-left" />
-        </VueFlow>
-      </div>
-
-      <!-- 右侧智能面板：节点库 / 节点详情 -->
-      <transition name="drawer-slide-right">
+      <!-- 左侧智能面板：节点库 / 节点详情 -->
+      <transition name="drawer-slide-left">
         <div
-          v-show="rightDrawerVisible"
-          class="sidebar-right drawer"
+          v-show="leftDrawerVisible"
+          class="sidebar-left drawer"
           @mouseenter="panEnabled=false"
           @mouseleave="panEnabled=true"
         >
@@ -108,6 +69,14 @@
             <component :is="selected || selectedEdge ? 'InfoFilled' : 'Box'" />
           </el-icon>
           <span class="header-title">{{ selected || selectedEdge ? '节点详情' : '节点库' }}</span>
+          <el-button
+            :icon="Fold"
+            @click="toggleLeftDrawer"
+            circle
+            size="small"
+            class="collapse-btn"
+            title="收起面板"
+          />
         </div>
 
         <!-- 节点库内容（未选中节点时显示） -->
@@ -480,6 +449,45 @@
         </transition>
         </div>
       </transition>
+
+      <!-- 画布区域 -->
+      <div class="canvas-area" ref="canvasTopEl">
+        <VueFlow
+          v-model:nodes="nodes"
+          v-model:edges="edges"
+          :node-types="nodeTypes"
+          :default-edge-options="edgeOptions"
+          :connection-radius="50"
+          :snap-to-grid="true"
+          :snap-grid="[20, 20]"
+          connection-line-type="smoothstep"
+          :min-zoom="0.1"
+          :max-zoom="4"
+          :default-viewport="{ x: 0, y: 0, zoom: 1 }"
+          :nodes-draggable="false"
+          :nodes-connectable="true"
+          :edges-updatable="false"
+          :edges-focusable="true"
+          :edges-clickable="true"
+          :pan-on-scroll="panEnabled"
+          :pan-on-scroll-mode="'free'"
+          :pan-on-scroll-speed="1.2"
+          @connect="onConnect"
+          @node-click="onNodeClick"
+          @edge-click="onEdgeClick"
+          @nodes-change="onNodesChange"
+          @edges-change="onEdgesChange"
+          @init="onInit"
+          @pane-click="onPaneClick"
+          @drop="onDrop"
+          @dragover="onDragOver"
+          @node-context-menu="onNodeContextMenu"
+        >
+          <Background :gap="20" :size="1" pattern-color="#e5e7eb" />
+          <Controls position="bottom-right" />
+          <MiniMap zoomable pannable position="bottom-left" />
+        </VueFlow>
+      </div>
     </div>
 
     <!-- 右键菜单 -->
@@ -536,7 +544,7 @@ import {
   Connection, Refresh, FullScreen, DocumentChecked, Box, DocumentRemove,
   InfoFilled, Document, User, UserFilled, Calendar, DataLine, CircleCheck, CircleCheckFilled, Clock, Check,
   OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, MagicStick,
-  DocumentCopy, Aim, Select, QuestionFilled
+  DocumentCopy, Aim, Select, QuestionFilled, Fold, Expand
 } from '@element-plus/icons-vue'
 import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
@@ -553,7 +561,7 @@ const store = useFlowStore()
 const { startOnboarding, initOnboarding } = useFlowOnboarding()
 
 // 抽屉状态
-const rightDrawerVisible = ref(true)
+const leftDrawerVisible = ref(true)
 
 // 右键菜单状态
 const contextMenu = ref({
@@ -1593,8 +1601,8 @@ function selectNodeFromLibrary(node: any) {
 }
 
 // ========== 抽屉切换功能 ==========
-function toggleRightDrawer() {
-  rightDrawerVisible.value = !rightDrawerVisible.value
+function toggleLeftDrawer() {
+  leftDrawerVisible.value = !leftDrawerVisible.value
 }
 
 // ========== 右键菜单功能 ==========
@@ -2672,12 +2680,11 @@ const nodeTypes = {
   z-index: 10;
   background: var(--bg-primary);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(10px);
 }
 
 .sidebar-left.drawer {
   left: 0;
-  width: 320px;
+  width: 340px;
   border-right: 1px solid var(--border-color);
 }
 
@@ -2752,7 +2759,7 @@ const nodeTypes = {
   transform: scale(1.05);
 }
 
-.sidebar-right {
+.sidebar-left {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2765,6 +2772,20 @@ const nodeTypes = {
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-secondary);
+}
+
+.sidebar-header .header-title {
+  flex: 1;
+}
+
+.collapse-btn {
+  margin-left: auto;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.collapse-btn:hover {
+  opacity: 1;
 }
 
 .filter-section {
@@ -2857,7 +2878,6 @@ const nodeTypes = {
 }
 
 .node-card:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--color-primary);
 }
@@ -3310,7 +3330,6 @@ const nodeTypes = {
 }
 
 .node-card:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--color-primary);
 }
@@ -3382,7 +3401,7 @@ const nodeTypes = {
 }
 
 .node-card:hover .node-type-badge {
-  transform: scale(1.08) rotate(3deg);
+  /* No transform on hover to prevent layout shift */
 }
 
 .node-type-badge.type-task {

@@ -23,6 +23,7 @@ declare module 'driver.js' {
     nextBtnText?: string
     prevBtnText?: string
     doneBtnText?: string
+    onCloseClick?: () => void
     onDestroyStarted?: () => void
     onDestroyed?: () => void
     onHighlightStarted?: (element: HTMLElement | undefined, step: DriveStep, options: { config: DriverConfig; state: any }) => void
