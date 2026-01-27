@@ -424,7 +424,6 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
 }
 .create-btn:hover {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
 }
 
@@ -608,10 +607,9 @@ onMounted(() => { loadDepartments().then(() => getData()); loadAllRoles(); });
     gap: 12px;
     cursor: pointer;
 }
-.pos-card:hover { 
-    transform: translateY(-3px); 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
-    border-color: #a5b4fc; 
+.pos-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border-color: var(--color-primary);
 }
 
 .card-top {

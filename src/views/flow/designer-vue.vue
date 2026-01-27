@@ -2654,7 +2654,7 @@ const nodeTypes = {
 }
 
 .toolbar-right :deep(.el-button:hover) {
-  transform: translateY(-1px);
+  /* 移除 transform 保持按钮稳定 */
 }
 
 .flow-container {
@@ -2756,7 +2756,7 @@ const nodeTypes = {
 }
 
 .drawer-toggle:hover {
-  transform: scale(1.05);
+  /* 移除 transform 保持按钮稳定 */
 }
 
 .sidebar-left {
@@ -2889,7 +2889,7 @@ const nodeTypes = {
 
 .node-card.draggable:active {
   cursor: grabbing;
-  transform: scale(0.98);
+  /* 移除 transform 避免拖拽时卡片缩放 */
 }
 
 .node-card.readonly {
@@ -3342,7 +3342,7 @@ const nodeTypes = {
 
 .node-card.draggable:active {
   cursor: grabbing;
-  transform: scale(0.98);
+  /* 移除 transform 避免拖拽时卡片缩放 */
 }
 
 /* 触摸拖拽预览样式 */
@@ -3605,7 +3605,7 @@ const nodeTypes = {
 }
 
 .action-buttons :deep(.el-button:hover) {
-  transform: translateY(-2px);
+  /* 移除 transform 保持按钮稳定 */
 }
 
 .employee-info {
@@ -3832,8 +3832,8 @@ const nodeTypes = {
 }
 
 :deep(.vue-flow__node:hover) {
-  transform: translateY(-2px) !important;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1)) !important;
+  /* 移除 transform 避免节点悬停时移动 */
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08)) !important;
 }
 
 :deep(.vue-flow__node.selected) {
@@ -3842,7 +3842,7 @@ const nodeTypes = {
 
 :deep(.vue-flow__node.dragging) {
   opacity: 0.8 !important;
-  transform: scale(1.05) !important;
+  /* 移除 transform 避免拖拽时节点缩放 */
 }
 
 /* Vue Flow Controls - Modern Flat Design */
@@ -3869,7 +3869,7 @@ const nodeTypes = {
   background: var(--color-primary) !important;
   color: white !important;
   border-color: var(--color-primary) !important;
-  transform: scale(1.05) !important;
+  /* 移除 transform 保持按钮稳定 */
 }
 
 :deep(.vue-flow__controls-button svg) {

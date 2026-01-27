@@ -390,7 +390,7 @@ onMounted(load);
     box-sizing: border-box;
     cursor: pointer;
 }
-.role-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.role-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); }
 
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 .role-icon { 
