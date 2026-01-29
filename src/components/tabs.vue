@@ -174,7 +174,7 @@ watch(
         transition: all 0.3s ease;
         border: 1px solid var(--border-color) !important;
         background: var(--bg-card) !important;
-        color: var(--text-secondary) !important;
+        color: var(--text-regular) !important;
         height: 24px !important;
         line-height: 22px !important;
         margin-top: 6px !important;
@@ -185,15 +185,15 @@ watch(
 
     :deep(.el-tabs__item:hover) {
         color: var(--el-color-primary) !important;
-        border-color: var(--el-color-primary-light-5) !important;
-        background-color: var(--el-color-primary-light-9) !important;
+        border-color: var(--el-color-primary) !important;
+        background-color: var(--bg-card) !important;
     }
 
     :deep(.el-tabs__item.is-active) {
-        background-color: var(--el-color-primary-light-9) !important;
-        border-color: var(--el-color-primary-light-5) !important;
-        color: var(--el-color-primary) !important;
-        font-weight: 600 !important;
+        background-color: var(--el-color-primary) !important;
+        border-color: var(--el-color-primary) !important;
+        color: #fff !important;
+        font-weight: normal !important;
     }
 }
 

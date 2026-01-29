@@ -546,7 +546,7 @@ import {
   OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, MagicStick,
   DocumentCopy, Aim, Select, QuestionFilled, Fold, Expand
 } from '@element-plus/icons-vue'
-import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
+import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType, applyNodeChanges } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
 import '@vue-flow/core/dist/style.css'
 import { useFlowStore } from '@/stores/flowStore'
@@ -1582,7 +1582,7 @@ function handleTouchDrop(clientX: number, clientY: number) {
       prerequisiteNodes: node.prerequisiteNodes || [],
       canDrag: String(node.leaderId) === String(currentEmployeeId.value),
     },
-    draggable: String(node.leaderId) === String(currentEmployeeId.value),
+    draggable: true,
   }
   
   nodes.value.push(newNode)
@@ -1857,7 +1857,7 @@ function onDrop(event: DragEvent) {
         bgTo: deptColor.bgTo,
       },
     },
-    draggable: node.canDrag, // Enable drag based on permission
+    draggable: true, // Allow all users to drag nodes for layout
     style: {
       background: deptColor.bgFrom || '#FFFFFF',
       border: `2px solid ${deptColor.color || '#E2E8F0'}`,
@@ -2107,32 +2107,33 @@ const dragState = ref({
 
 // 节点变化
 function onNodesChange(changes: any[]) {
-  changes.forEach((change: any) => {
+  // 过滤掉不可拖动节点的位置变更
+  const filteredChanges = changes.filter((change: any) => {
     if (change.type === 'position') {
       const node = nodes.value.find(n => n.id === change.id)
-      if (!node) return
-      
-      // Check if node can be dragged
+      if (!node) return false
+
+      // 检查节点是否可拖动（开始节点和结束节点不可拖动）
+      if (node.id === 'start' || node.id === 'end') {
+        return false
+      }
+
+      // Allow dragging for all task nodes for layout purposes
+      /* 
       const canDrag = node.data?.canDrag !== false
-      
       if (!canDrag) {
-        // Prevent movement for readonly nodes
-        console.log('Node is readonly, preventing drag')
-        return
+        console.log('Node is readonly, preventing drag:', node.id)
+        return false
       }
-      
-      // Allow position update for draggable nodes
-      if (change.position) {
-        node.position = change.position
-      }
-    } else if (change.type === 'select') {
-      // Handle selection changes
-      const node = nodes.value.find(n => n.id === change.id)
-      if (node) {
-        (node as any).selected = change.selected
-      }
+      */
     }
+    return true
   })
+
+  // 使用 applyNodeChanges 应用过滤后的变更
+  if (filteredChanges.length > 0) {
+    nodes.value = applyNodeChanges(filteredChanges, nodes.value)
+  }
 }
 
 // 边变化
