@@ -546,7 +546,7 @@ import {
   OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, MagicStick,
   DocumentCopy, Aim, Select, QuestionFilled, Fold, Expand
 } from '@element-plus/icons-vue'
-import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType, applyNodeChanges } from '@vue-flow/core'
+import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
 import '@vue-flow/core/dist/style.css'
 import { useFlowStore } from '@/stores/flowStore'
@@ -790,7 +790,7 @@ const edgeOptions = {
 } as any
 
 const vueFlowInstance = useVueFlow()
-const { screenToFlowCoordinate, getNodes, getEdges, fitView, removeEdges, removeNodes, setViewport, viewport } = vueFlowInstance
+const { screenToFlowCoordinate, getNodes, getEdges, fitView, removeEdges, removeNodes, setViewport, viewport, applyNodeChanges } = vueFlowInstance
 
 // 节点类型图标
 function getNodeTypeIcon(type: number) {
@@ -2132,7 +2132,7 @@ function onNodesChange(changes: any[]) {
 
   // 使用 applyNodeChanges 应用过滤后的变更
   if (filteredChanges.length > 0) {
-    nodes.value = applyNodeChanges(filteredChanges, nodes.value)
+    applyNodeChanges(filteredChanges)
   }
 }
 
