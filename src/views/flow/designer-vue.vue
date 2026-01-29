@@ -1169,7 +1169,7 @@ function buildFlowGraph() {
     type: 'start',
     position: { x: 100, y: 200 },
     data: { label: '开始' },
-    draggable: false, // Start node should not be draggable
+    draggable: true, // Allow start node to be dragged
     style: {
       background: '#1E3A5F',
       color: '#fff',
@@ -1265,7 +1265,7 @@ function buildFlowGraph() {
     type: 'end',
     position: { x: endX, y: 200 },
     data: { label: '结束' },
-    draggable: false, // End node should not be draggable
+    draggable: true, // Allow end node to be dragged
     style: {
       background: '#DC2626',
       color: '#fff',
@@ -2107,33 +2107,8 @@ const dragState = ref({
 
 // 节点变化
 function onNodesChange(changes: any[]) {
-  // 过滤掉不可拖动节点的位置变更
-  const filteredChanges = changes.filter((change: any) => {
-    if (change.type === 'position') {
-      const node = nodes.value.find(n => n.id === change.id)
-      if (!node) return false
-
-      // 检查节点是否可拖动（开始节点和结束节点不可拖动）
-      if (node.id === 'start' || node.id === 'end') {
-        return false
-      }
-
-      // Allow dragging for all task nodes for layout purposes
-      /* 
-      const canDrag = node.data?.canDrag !== false
-      if (!canDrag) {
-        console.log('Node is readonly, preventing drag:', node.id)
-        return false
-      }
-      */
-    }
-    return true
-  })
-
-  // 使用 applyNodeChanges 应用过滤后的变更
-  if (filteredChanges.length > 0) {
-    applyNodeChanges(filteredChanges)
-  }
+  // 直接应用所有变更，允许所有节点拖动
+  applyNodeChanges(changes)
 }
 
 // 边变化
