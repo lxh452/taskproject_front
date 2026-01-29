@@ -464,7 +464,7 @@
           :min-zoom="0.1"
           :max-zoom="4"
           :default-viewport="{ x: 0, y: 0, zoom: 1 }"
-          :nodes-draggable="false"
+          :nodes-draggable="true"
           :nodes-connectable="true"
           :edges-updatable="false"
           :edges-focusable="true"
