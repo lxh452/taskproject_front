@@ -1244,7 +1244,7 @@ function buildFlowGraph() {
             bgTo: deptColor.bgTo,
           },
         },
-        draggable: node.canDrag, // Enable drag only for nodes where user is leader
+        draggable: true, // Allow all task nodes to be dragged for layout purposes
         style: {
           background: deptColor.bgFrom || '#FFFFFF',
           border: `2px solid ${deptColor.color || '#E2E8F0'}`,
