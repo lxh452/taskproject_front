@@ -53,7 +53,7 @@
           :visible="checklistPopoverVisible"
           @update:visible="checklistPopoverVisible = $event"
           :show-arrow="false"
-          :offset="8"
+          :offset="24"
           popper-class="header-popover"
       >
         <template #reference>
@@ -115,7 +115,7 @@
           :visible="notificationPopoverVisible"
           @update:visible="notificationPopoverVisible = $event"
           :show-arrow="false"
-          :offset="8"
+          :offset="24"
           popper-class="header-popover"
       >
         <template #reference>
@@ -271,27 +271,36 @@ const userAvatar = ref('');
 const isDarkMode = computed(() => themeStore.isDark);
 const toggleTheme = () => themeStore.toggleDarkMode();
 
+// 页面标签配置 - 有标签页的页面只显示首页
+const PAGES_WITH_TABS = ['/tasks', '/handovers', '/flow-designer'];
+
 // 面包屑路径计算
 const breadcrumbs = computed(() => {
   const paths: Array<{ name: string; path: string; icon?: string }> = [];
-  
+
   // 始终添加首页
   paths.push({ name: '首页', path: '/', icon: 'home' });
-  
+
   // 获取当前路由的标题
   const currentTitle = route.meta?.title as string;
   if (!currentTitle) return paths;
-  
+
   // 根据路径构建面包屑
   const pathSegments = route.path.split('/').filter(Boolean);
-  
+
+  // 检查当前页面是否有标签页导航
+  const hasTabs = PAGES_WITH_TABS.some(tabPath => route.path === tabPath || route.path.startsWith(tabPath + '/'));
+  if (hasTabs && pathSegments.length === 1) {
+    // 有标签页的页面只显示首页
+    return paths;
+  }
+
   // 处理特殊的多级路径
   if (pathSegments.length > 1) {
     const firstSegment = pathSegments[0];
-    
+
     // 任务相关
     if (firstSegment === 'tasks') {
-      paths.push({ name: '任务管理', path: '/tasks' });
       if (pathSegments[1] === 'detail') {
         paths.push({ name: '任务详情', path: route.path });
       } else if (pathSegments[1] === 'create') {
@@ -300,7 +309,6 @@ const breadcrumbs = computed(() => {
     }
     // 审批相关
     else if (firstSegment === 'handovers') {
-      paths.push({ name: '审批管理', path: '/handovers' });
       if (pathSegments[1] === 'detail') {
         paths.push({ name: '审批详情', path: route.path });
       } else if (pathSegments[1] === 'create') {
@@ -332,7 +340,7 @@ const breadcrumbs = computed(() => {
       paths.push({ name: currentTitle, path: route.path });
     }
   }
-  
+
   return paths;
 });
 
@@ -646,12 +654,19 @@ onUnmounted(() => stopPolling());
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .collapse-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.collapse-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* 面包屑 - 增强版设计 */
@@ -681,7 +696,7 @@ onUnmounted(() => stopPolling());
   text-decoration: none;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
   font-weight: var(--font-weight-medium);
   position: relative;
   white-space: nowrap;
@@ -804,12 +819,19 @@ onUnmounted(() => stopPolling());
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .header-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.header-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* 红点指示器 - 替代数字徽章 */
@@ -854,11 +876,18 @@ onUnmounted(() => stopPolling());
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .user-btn:hover {
   background: var(--bg-hover);
+}
+
+.user-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .user-avatar {
@@ -892,7 +921,7 @@ onUnmounted(() => stopPolling());
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-6) var(--space-6);
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-card);
 }
@@ -906,6 +935,7 @@ onUnmounted(() => stopPolling());
 .popover-body {
   max-height: 400px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-card);
 }
 
@@ -927,7 +957,7 @@ onUnmounted(() => stopPolling());
 }
 
 .popover-footer {
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--border-color);
   text-align: center;
   background: var(--bg-card);
@@ -938,20 +968,26 @@ onUnmounted(() => stopPolling());
   border: none !important;
   color: #FFFFFF !important;
   font-size: var(--font-size-sm) !important;
-  font-weight: var(--font-weight-bold) !important;
+  font-weight: var(--font-weight-semibold) !important;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   padding: var(--space-3) var(--space-6) !important;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .link-btn:hover {
   background: var(--color-primary-hover) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.link-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .link-btn.small {
@@ -971,7 +1007,7 @@ onUnmounted(() => stopPolling());
 .empty-state svg {
   color: var(--text-muted);
   margin-bottom: var(--space-3);
-  opacity: 0.3;
+  opacity: 0.5;
 }
 
 .empty-state p {
@@ -982,16 +1018,22 @@ onUnmounted(() => stopPolling());
 
 /* 清单列表 - 简洁版 */
 .checklist-list {
-  padding: var(--space-2) 0;
+  padding: var(--space-3) 0;
 }
 
 .checklist-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  transition: all var(--transition-fast);
+  padding: var(--space-4) var(--space-5);
+  transition: background-color var(--transition-fast);
   cursor: pointer;
+  touch-action: manipulation;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.checklist-item:last-child {
+  border-bottom: none;
 }
 
 .checklist-item:hover {
@@ -999,30 +1041,41 @@ onUnmounted(() => stopPolling());
 }
 
 .checklist-item.completed {
-  opacity: 0.5;
+  background: var(--bg-secondary);
+}
+
+.checklist-item.completed:hover {
+  background: var(--bg-secondary);
 }
 
 .checklist-content {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .checklist-text {
   font-size: var(--font-size-sm);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .checklist-item.completed .checklist-text {
   text-decoration: line-through;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .checklist-meta {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
   margin-top: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 通知列表 - 简洁版 */
@@ -1036,8 +1089,14 @@ onUnmounted(() => stopPolling());
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast);
   position: relative;
+  touch-action: manipulation;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
 }
 
 .notification-item:hover {
@@ -1045,7 +1104,11 @@ onUnmounted(() => stopPolling());
 }
 
 .notification-item.unread {
-  background: var(--bg-hover);
+  background: var(--bg-secondary);
+}
+
+.notification-item.unread:hover {
+  background: var(--bg-secondary);
 }
 
 /* 蓝点指示未读 - 简洁版 */
@@ -1061,6 +1124,7 @@ onUnmounted(() => stopPolling());
 .notif-content {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .notif-title {
@@ -1069,6 +1133,9 @@ onUnmounted(() => stopPolling());
   color: var(--text-primary);
   margin-bottom: var(--space-2);
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notif-desc {
@@ -1266,12 +1333,25 @@ html.dark-mode .breadcrumb-item.current::after {
   .breadcrumb-item {
     animation: none;
   }
-  
+
   .breadcrumb-item:not(.current):hover {
     transform: none;
   }
-  
+
   .breadcrumb-item:not(.current):hover .breadcrumb-icon {
+    transform: none;
+  }
+
+  .header-btn,
+  .collapse-btn,
+  .user-btn,
+  .checklist-item,
+  .notification-item,
+  .link-btn {
+    transition: none;
+  }
+
+  .link-btn:hover {
     transform: none;
   }
 }

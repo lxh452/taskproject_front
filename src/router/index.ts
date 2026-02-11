@@ -30,6 +30,28 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/flow/designer-vue.vue'),
             },
             {
+                path: '/ai-flow-designer',
+                name: 'ai-flow-designer',
+                meta: { 
+                    title: 'AI 流程设计器',
+                    noAuth: true 
+                },
+                component: () => import('../views/flow-designer/FlowDesigner.vue'),
+            },
+            {
+                path: '/ai-task-creator',
+                name: 'ai-task-creator',
+                meta: { 
+                    title: 'AI 任务助手',
+                    noAuth: true 
+                },
+                component: () => import('../views/task-creator/TaskCreator.vue'),
+            },
+            {
+                path: '/ai-dashboard',
+                redirect: '/dashboard',
+            },
+            {
                 path: '/system-user',
                 name: 'system-user',
                 meta: {
@@ -322,9 +344,10 @@ router.beforeEach((to, from, next) => {
         next('/login');
         return;
     }
-    
+
     // 如果有token但没有权限数据，尝试恢复权限
-    if (token && permiss.key.length === 0) {
+    const keys = permiss.key || [];
+    if (token && keys.length === 0) {
         const savedPermissions = localStorage.getItem('user_permissions');
         if (savedPermissions) {
             try {
@@ -334,8 +357,9 @@ router.beforeEach((to, from, next) => {
             }
         }
     }
-    
-    if (typeof to.meta.permiss == 'string' && !permiss.key.includes(to.meta.permiss)) {
+
+    const currentKeys = permiss.key || [];
+    if (typeof to.meta.permiss == 'string' && !currentKeys.includes(to.meta.permiss)) {
         // 如果没有权限，则进入403
         next('/403');
     } else {

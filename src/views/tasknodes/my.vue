@@ -39,6 +39,7 @@
             <div class="toolbar-right">
                 <el-button type="primary" :icon="Search" @click="applyFilter">搜索</el-button>
                 <el-button @click="resetFilter" :icon="Refresh">重置</el-button>
+                <el-button type="success" :icon="Plus" @click="goToCreate">创建任务节点</el-button>
             </div>
         </div>
         
@@ -118,8 +119,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { Search, Refresh, List, Calendar } from '@element-plus/icons-vue';
+import { ref, onMounted, onActivated, computed } from 'vue';
+import { Search, Refresh, List, Calendar, Plus } from '@element-plus/icons-vue';
 import { listMyTaskNodes, listTasks } from '@/api';
 import { useRouter } from 'vue-router';
 
@@ -183,7 +184,11 @@ function goToTaskDetail(taskId: string) {
     goToTask(taskId);
 }
 
-onMounted(async () => {
+function goToCreate() {
+    router.push('/task-nodes/create');
+}
+
+async function loadData() {
     loading.value = true;
     try {
         await loadTasks();
@@ -194,10 +199,10 @@ onMounted(async () => {
             return;
         }
         const responseData = resp.data?.data || resp.data || {};
-        
+
         const leaderTasks = responseData.leader_task || [];
         const executorTasks = responseData.executor_task || [];
-        
+
         // 合并并去重
         const allNodes = [...leaderTasks, ...executorTasks];
         const uniqueNodesMap = new Map();
@@ -207,13 +212,13 @@ onMounted(async () => {
                 uniqueNodesMap.set(id, n);
             }
         });
-        
+
         const validNodes = Array.from(uniqueNodesMap.values()).filter((n: any) => {
             const nodeId = n.id || n.taskNodeId;
             const nodeName = n.nodeName || n.taskNodeName || n.NodeName;
             return nodeId && nodeName && nodeName.trim() !== '';
         });
-        
+
         const now = Date.now();
         rows.value = validNodes.map((n: any) => {
             const deadline = n.nodeDeadline || n.endTime;
@@ -222,7 +227,7 @@ onMounted(async () => {
             const status = n.status ?? n.nodeStatus ?? 0;
             const taskId = n.taskId || n.TaskId || '';
             const task = taskMap.value[String(taskId)] || {};
-            
+
             return {
                 id: n.id || n.taskNodeId,
                 nodeName: n.nodeName || n.taskNodeName || n.NodeName,
@@ -242,7 +247,11 @@ onMounted(async () => {
     } finally {
         loading.value = false;
     }
-});
+}
+
+onMounted(() => { loadData(); });
+// keep-alive 激活时重新加载数据
+onActivated(() => { loadData(); });
 </script>
 
 <style scoped>

@@ -1,90 +1,86 @@
 <template>
-    <div>
-        <el-tree
-            class="mgb10"
-            ref="tree"
-            :data="data"
-            node-key="id"
-            default-expand-all
-            show-checkbox
-            :default-checked-keys="checkedKeys"
-        />
-        <el-button type="primary" @click="onSubmit">保存权限</el-button>
+  <div class="role-permission">
+    <el-tree
+      ref="treeRef"
+      :data="permissionTree"
+      show-checkbox
+      node-key="id"
+      :default-checked-keys="checkedKeys"
+      :props="{ label: 'name', children: 'children' }"
+    />
+    <div class="btn-group">
+      <el-button type="primary" @click="handleSave">保存</el-button>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ElTree } from 'element-plus';
-import { menuData } from '@/components/menu';
+import { ref, computed, watch } from 'vue';
+import { ElMessage, ElTree } from 'element-plus';
 
-const props = defineProps({
-    permissOptions: {
-        type: Object,
-        required: true,
-    },
-});
+interface PermissOptions {
+  id?: string;
+  permiss?: string[];
+}
 
-const menuObj = ref({});
-// const data = menuData.map((item) => {
-//     if (item.children) {
-//         menuObj.value[item.id] = item.children.map((sub) => sub.id);
-//     }
-//     return {
-//         id: item.id,
-//         label: item.title,
-//         children: item.children?.map((child) => {
-//             return {
-//                 id: child.id,
-//                 label: child.title,
-//             };
-//         }),
-//     };
-// });
+const props = defineProps<{
+  permissOptions: PermissOptions;
+}>();
 
-const getTreeData = (data) => {
-    return data.map((item) => {
-        const obj: any = {
-            id: item.id,
-            label: item.title,
-        };
-        if (item.children) {
-            menuObj.value[item.id] = item.children.map((sub) => sub.id);
-            obj.children = getTreeData(item.children);
-        }
-        return obj;
-    });
-};
-const data = getTreeData(menuData);
-const checkData = (data: string[]) => {
-    return data.filter((item) => {
-        return !menuObj.value[item] || data.toString().includes(menuObj.value[item].toString());
-    });
-};
-// 获取当前权限
-const checkedKeys = ref<string[]>(checkData(props.permissOptions.permiss));
+const treeRef = ref<InstanceType<typeof ElTree>>();
 
-// 保存权限
-const tree = ref<InstanceType<typeof ElTree>>();
-const onSubmit = () => {
-    // 获取选中的权限
-    const keys = [...tree.value!.getCheckedKeys(false), ...tree.value!.getHalfCheckedKeys()] as number[];
-    console.log(keys);
+// 权限树数据
+const permissionTree = ref([
+  {
+    id: '1',
+    name: '系统管理',
+    children: [
+      { id: '1-1', name: '用户管理' },
+      { id: '1-2', name: '角色管理' },
+      { id: '1-3', name: '权限管理' },
+    ],
+  },
+  {
+    id: '2',
+    name: '任务管理',
+    children: [
+      { id: '2-1', name: '任务列表' },
+      { id: '2-2', name: '任务创建' },
+      { id: '2-3', name: '任务分配' },
+    ],
+  },
+  {
+    id: '3',
+    name: '流程管理',
+    children: [
+      { id: '3-1', name: '流程设计' },
+      { id: '3-2', name: '流程审批' },
+    ],
+  },
+]);
+
+const checkedKeys = computed(() => props.permissOptions?.permiss || []);
+
+watch(() => props.permissOptions, (val) => {
+  if (val?.permiss && treeRef.value) {
+    treeRef.value.setCheckedKeys(val.permiss);
+  }
+}, { immediate: true });
+
+const handleSave = () => {
+  const checkedNodes = treeRef.value?.getCheckedKeys() || [];
+  console.log('保存权限:', checkedNodes);
+  ElMessage.success('权限保存成功');
 };
 </script>
 
 <style scoped>
-.mgb10 {
-    margin-bottom: 10px;
+.role-permission {
+  padding: 10px;
 }
-:deep(.el-tree) {
-    background: transparent;
-    color: var(--text-main);
-}
-:deep(.el-tree-node__content:hover) {
-    background-color: var(--bg-hover);
-}
-:deep(.el-tree-node:focus > .el-tree-node__content) {
-    background-color: var(--bg-hover);
+
+.btn-group {
+  margin-top: 20px;
+  text-align: right;
 }
 </style>

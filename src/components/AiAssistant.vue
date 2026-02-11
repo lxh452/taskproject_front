@@ -1,133 +1,146 @@
 <template>
   <div class="ai-assistant-container">
     <!-- 小圆球触发器 -->
-    <div 
-      class="ai-bubble" 
+    <button
+      class="ai-bubble"
       :class="{ 'has-data': suggestion, 'loading': loading }"
       @click="togglePanel"
+      :aria-label="loading ? '正在分析...' : (suggestion ? '点击查看工作建议' : 'AI 助手')"
+      :aria-expanded="isExpanded"
+      aria-haspopup="dialog"
     >
-      <div class="bubble-icon">
+      <div class="bubble-icon" aria-hidden="true">
         <el-icon v-if="loading" class="loading-spin"><Loading /></el-icon>
         <el-icon v-else><MagicStick /></el-icon>
       </div>
-      <div class="bubble-pulse" v-if="suggestion && !isExpanded"></div>
-      <div class="bubble-tooltip">
-        <span v-if="loading">正在分析...</span>
-        <span v-else-if="suggestion">点击查看工作建议</span>
-        <span v-else>AI 助手</span>
-      </div>
-    </div>
+      <div class="bubble-pulse" v-if="suggestion && !isExpanded" aria-hidden="true"></div>
+    </button>
 
     <!-- 展开的面板 -->
     <transition name="panel-slide">
-      <div v-if="isExpanded" class="ai-panel">
+      <div
+        v-if="isExpanded"
+        class="ai-panel"
+        role="dialog"
+        aria-labelledby="ai-panel-title"
+        aria-describedby="ai-panel-desc"
+      >
         <div class="panel-header">
           <div class="header-left">
-            <div class="ai-avatar">
+            <div class="ai-avatar" aria-hidden="true">
               <el-icon><MagicStick /></el-icon>
             </div>
             <div class="header-text">
-              <h3>工作助手</h3>
-              <p>{{ suggestion?.greeting || '为你智能规划今日工作' }}</p>
+              <h3 id="ai-panel-title">工作助手</h3>
+              <p id="ai-panel-desc">{{ suggestion?.greeting || '为你智能规划今日工作' }}</p>
             </div>
           </div>
           <div class="header-actions">
-            <el-button text :icon="Refresh" @click.stop="loadSuggestion" :loading="loading" />
-            <el-button text :icon="Close" @click.stop="isExpanded = false" />
+            <el-button text :icon="Refresh" @click.stop="loadSuggestion" :loading="loading" aria-label="刷新建议" />
+            <el-button text :icon="Close" @click.stop="isExpanded = false" aria-label="关闭面板" />
           </div>
         </div>
 
         <div class="panel-body" v-if="suggestion">
           <!-- AI分析 -->
           <div class="ai-analysis" v-if="suggestion.aiAnalysis">
-            <el-icon><InfoFilled /></el-icon>
+            <el-icon aria-hidden="true"><InfoFilled /></el-icon>
             <span>{{ suggestion.aiAnalysis }}</span>
           </div>
 
           <!-- 今日重点 -->
-          <div class="section" v-if="suggestion.todayFocus?.length">
-            <div class="section-title">
-              <el-icon><Star /></el-icon>
+          <section class="section" v-if="suggestion.todayFocus?.length" aria-labelledby="focus-title">
+            <div class="section-title" id="focus-title">
+              <el-icon aria-hidden="true"><Star /></el-icon>
               <span>今日重点</span>
             </div>
-            <div class="focus-list">
-              <div v-for="(focus, index) in suggestion.todayFocus" :key="index" class="focus-item">
-                <span class="focus-number">{{ index + 1 }}</span>
+            <ul class="focus-list" role="list">
+              <li v-for="(focus, index) in suggestion.todayFocus" :key="index" class="focus-item">
+                <span class="focus-number" aria-hidden="true">{{ index + 1 }}</span>
                 <span class="focus-text">{{ focus }}</span>
-              </div>
-            </div>
-          </div>
+              </li>
+            </ul>
+          </section>
 
           <!-- 时间安排 -->
-          <div class="section" v-if="suggestion.timeAllocation?.length">
-            <div class="section-title">
-              <el-icon><Clock /></el-icon>
+          <section class="section" v-if="suggestion.timeAllocation?.length" aria-labelledby="time-title">
+            <div class="section-title" id="time-title">
+              <el-icon aria-hidden="true"><Clock /></el-icon>
               <span>建议时间安排</span>
             </div>
-            <div class="time-blocks">
-              <div 
-                v-for="(block, index) in suggestion.timeAllocation" 
-                :key="index" 
+            <ul class="time-blocks" role="list">
+              <li
+                v-for="(block, index) in suggestion.timeAllocation"
+                :key="index"
                 class="time-block"
-                @click="goToTask(block.taskNodeId)"
               >
-                <div class="time-range">{{ block.timeRange }}</div>
-                <div class="time-content">
-                  <div class="task-name">{{ block.taskName }}</div>
-                  <div class="task-meta">
-                    <el-tag :type="getPriorityType(block.priority)" size="small">{{ block.priority }}</el-tag>
-                    <span class="task-reason">{{ block.reason }}</span>
+                <button
+                  class="time-block-btn"
+                  @click="goToTask(block.taskNodeId)"
+                  :aria-label="`${block.timeRange} - ${block.taskName}`"
+                >
+                  <div class="time-range">{{ block.timeRange }}</div>
+                  <div class="time-content">
+                    <div class="task-name">{{ block.taskName }}</div>
+                    <div class="task-meta">
+                      <el-tag :type="getPriorityType(block.priority)" size="small">{{ block.priority }}</el-tag>
+                      <span class="task-reason">{{ block.reason }}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </button>
+              </li>
+            </ul>
+          </section>
 
           <!-- 待处理事项 -->
-          <div class="section" v-if="suggestion.pendingApprovals?.length || suggestion.unreadNotices?.length">
-            <div class="section-title">
-              <el-icon><Bell /></el-icon>
+          <section class="section" v-if="suggestion.pendingApprovals?.length || suggestion.unreadNotices?.length" aria-labelledby="pending-title">
+            <div class="section-title" id="pending-title">
+              <el-icon aria-hidden="true"><Bell /></el-icon>
               <span>待处理</span>
               <el-badge :value="(suggestion.pendingApprovals?.length || 0) + (suggestion.unreadNotices?.length || 0)" class="section-badge" />
             </div>
-            <div class="pending-items">
-              <div v-for="approval in suggestion.pendingApprovals" :key="approval.id" class="pending-item" @click="goToApproval(approval)">
-                <el-icon><Document /></el-icon>
-                <span>{{ approval.title }}</span>
-                <el-tag type="warning" size="small">待审批</el-tag>
-              </div>
-              <div v-for="notice in suggestion.unreadNotices?.slice(0, 3)" :key="notice.id" class="pending-item" @click="goToNotification(notice)">
-                <el-icon><Message /></el-icon>
-                <span>{{ notice.title }}</span>
-              </div>
-            </div>
-          </div>
+            <ul class="pending-items" role="list">
+              <li v-for="approval in suggestion.pendingApprovals" :key="approval.id" class="pending-item">
+                <button class="pending-item-btn" @click="goToApproval(approval)" :aria-label="`待审批: ${approval.title}`">
+                  <el-icon aria-hidden="true"><Document /></el-icon>
+                  <span>{{ approval.title }}</span>
+                  <el-tag type="warning" size="small">待审批</el-tag>
+                </button>
+              </li>
+              <li v-for="notice in suggestion.unreadNotices?.slice(0, 3)" :key="notice.id" class="pending-item">
+                <button class="pending-item-btn" @click="goToNotification(notice)" :aria-label="`通知: ${notice.title}`">
+                  <el-icon aria-hidden="true"><Message /></el-icon>
+                  <span>{{ notice.title }}</span>
+                </button>
+              </li>
+            </ul>
+          </section>
 
           <!-- 建议 -->
-          <div class="section" v-if="suggestion.suggestions?.length">
-            <div class="section-title">
-              <el-icon><Opportunity /></el-icon>
+          <section class="section" v-if="suggestion.suggestions?.length" aria-labelledby="suggestions-title">
+            <div class="section-title" id="suggestions-title">
+              <el-icon aria-hidden="true"><Opportunity /></el-icon>
               <span>工作建议</span>
             </div>
-            <div class="suggestions-list">
-              <div v-for="(sug, index) in suggestion.suggestions" :key="index" class="suggestion-item">
-                <el-icon><Right /></el-icon>
+            <ul class="suggestions-list" role="list">
+              <li v-for="(sug, index) in suggestion.suggestions" :key="index" class="suggestion-item">
+                <el-icon aria-hidden="true"><Right /></el-icon>
                 <span>{{ sug }}</span>
-              </div>
-            </div>
-          </div>
+              </li>
+            </ul>
+          </section>
         </div>
 
-        <div class="panel-body" v-else-if="loading">
+        <div class="panel-body" v-else-if="loading" aria-live="polite" aria-busy="true">
           <div class="loading-state">
-            <el-icon class="loading-spin"><Loading /></el-icon>
-            <span>正在分析您的工作...</span>
+            <el-icon class="loading-spin" aria-hidden="true"><Loading /></el-icon>
+            <span>正在分析您的工作…</span>
           </div>
         </div>
 
-        <div class="panel-body" v-else>
+        <div class="panel-body" v-else aria-live="polite">
           <div class="empty-state">
-            <el-icon><Warning /></el-icon>
+            <el-icon aria-hidden="true"><Warning /></el-icon>
             <span>暂无建议数据</span>
             <el-button size="small" @click="loadSuggestion">重新加载</el-button>
           </div>
@@ -136,7 +149,7 @@
     </transition>
 
     <!-- 遮罩层 -->
-    <div v-if="isExpanded" class="panel-overlay" @click="isExpanded = false"></div>
+    <div v-if="isExpanded" class="panel-overlay" @click="isExpanded = false" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -235,7 +248,7 @@ onMounted(() => {
   align-items: center;
 }
 
-/* 小圆球 */
+/* 小圆球 - 改为 button */
 .ai-bubble {
   position: relative;
   width: 44px;
@@ -246,8 +259,10 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  border: none;
+  padding: 0;
 }
 
 .ai-bubble:hover {
@@ -255,8 +270,39 @@ onMounted(() => {
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
 }
 
+.ai-bubble:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
 .ai-bubble.loading {
   animation: bubble-pulse 1.5s ease-in-out infinite;
+}
+
+/* 尊重用户的动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .ai-bubble.loading {
+    animation: none;
+  }
+
+  .loading-spin {
+    animation: none;
+  }
+
+  .bubble-pulse {
+    animation: none;
+    display: none;
+  }
+
+  .panel-slide-enter-active,
+  .panel-slide-leave-active {
+    transition: none;
+  }
+
+  .time-block-btn:hover,
+  .pending-item-btn:hover {
+    transform: none;
+  }
 }
 
 @keyframes bubble-pulse {
@@ -291,33 +337,12 @@ onMounted(() => {
   border-radius: 50%;
   background: rgba(59, 130, 246, 0.4);
   animation: pulse-ring 2s ease-out infinite;
+  pointer-events: none;
 }
 
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.8); opacity: 0; }
-}
-
-/* 悬浮提示 */
-.bubble-tooltip {
-  position: absolute;
-  left: 100%;
-  margin-left: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
-}
-
-.ai-bubble:hover .bubble-tooltip {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* 遮罩层 */
@@ -452,6 +477,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .focus-item {
@@ -487,21 +515,37 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .time-block {
+  list-style: none;
+}
+
+.time-block-btn {
   display: flex;
   gap: 12px;
   padding: 10px 12px;
   background: var(--bg-hover);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
 }
 
-.time-block:hover {
+.time-block-btn:hover {
   background: var(--bg-active);
   transform: translateX(4px);
+}
+
+.time-block-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .time-range {
@@ -543,9 +587,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .pending-item {
+  list-style: none;
+}
+
+.pending-item-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -553,20 +604,29 @@ onMounted(() => {
   background: var(--bg-hover);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   font-size: 13px;
   color: var(--text-primary);
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
 }
 
-.pending-item:hover {
+.pending-item-btn:hover {
   background: var(--bg-active);
 }
 
-.pending-item .el-icon {
+.pending-item-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.pending-item-btn .el-icon {
   color: var(--text-muted);
 }
 
-.pending-item span {
+.pending-item-btn span {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -578,6 +638,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .suggestion-item {
@@ -615,7 +678,7 @@ onMounted(() => {
 /* 面板动画 */
 .panel-slide-enter-active,
 .panel-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .panel-slide-enter-from,
@@ -632,10 +695,6 @@ onMounted(() => {
     width: auto;
     top: 70px;
     max-height: calc(100vh - 100px);
-  }
-  
-  .bubble-tooltip {
-    display: none;
   }
 }
 

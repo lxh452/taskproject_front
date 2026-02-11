@@ -152,48 +152,40 @@ watch(
 .tabs {
     .el-tabs__header {
         margin-bottom: 0;
-        border-bottom: none !important;
     }
 
     .el-tabs__nav {
-        border: none !important;
+        height: 36px;
     }
 
     .el-tabs__nav-next,
     .el-tabs__nav-prev {
-        line-height: 24px;
+        line-height: 36px;
     }
 
     &.el-tabs {
-        --el-tabs-header-height: 24px;
+        --el-tabs-header-height: 36px;
     }
 
     :deep(.el-tabs__item) {
-        border-radius: 4px !important;
-        margin-right: 6px !important;
+        border-radius: 8px 8px 0 0;
+        margin-right: 4px;
         transition: all 0.3s ease;
-        border: 1px solid var(--border-color) !important;
-        background: var(--bg-card) !important;
-        color: var(--text-regular) !important;
-        height: 24px !important;
-        line-height: 22px !important;
-        margin-top: 6px !important;
-        font-size: 12px !important;
-        padding: 0 12px !important;
-        font-weight: normal !important;
+        border: 1px solid transparent;
+        color: var(--text-secondary);
     }
 
     :deep(.el-tabs__item:hover) {
-        color: var(--el-color-primary) !important;
-        border-color: var(--el-color-primary) !important;
-        background-color: var(--bg-card) !important;
+        background: var(--bg-hover);
+        color: var(--text-main);
     }
 
     :deep(.el-tabs__item.is-active) {
-        background-color: var(--el-color-primary) !important;
-        border-color: var(--el-color-primary) !important;
-        color: #fff !important;
-        font-weight: normal !important;
+        background: linear-gradient(135deg, var(--bg-hover) 0%, var(--bg-card) 100%);
+        border-color: var(--border-color);
+        border-bottom-color: var(--bg-card);
+        font-weight: 600;
+        color: var(--el-color-primary);
     }
 }
 

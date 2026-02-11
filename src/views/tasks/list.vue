@@ -143,9 +143,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onActivated, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { listTasks } from '@/api';
+import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage } from 'element-plus';
 import CreateTaskForm from './create-task-form.vue';
 import CreateNodeForm from '../tasknodes/create-node-form.vue';
@@ -170,11 +171,12 @@ const filteredRows = computed(() => {
 
 const resetFilter = () => { query.value = { keyword: '', priority: null, status: null }; };
 
-function openCreateTaskDialog() { createTaskDialogVisible.value = true; }
+function openCreateTaskDialog() { 
+  router.push({ path: '/ai-task-creator', query: { mode: 'task' } });
+}
 
 function openCreateNodeDialog(row: any) {
-  selectedTaskId.value = row.id;
-  createNodeDialogVisible.value = true;
+  router.push({ path: '/task-nodes/create', query: { taskId: row.id } });
 }
 
 function handleTaskCreated() { createTaskDialogVisible.value = false; loadData(); }
@@ -223,11 +225,25 @@ async function loadData() {
         statusText: status === 1 ? '进行中' : status === 2 ? '已完成' : '待处理',
       };
     });
-  } catch { ElMessage.error('加载任务列表失败'); rows.value = []; }
+  } catch (error: any) {
+    // 忽略防抖取消的请求，不显示错误提示
+    if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+      console.log('请求被防抖拦截，跳过错误提示');
+      return;
+    }
+    ElMessage.error('加载任务列表失败');
+    rows.value = [];
+  }
   finally { loading.value = false; }
 }
 
 onMounted(() => { loadData(); });
+// keep-alive 激活时重新加载数据
+onActivated(() => {
+  // 清除防抖记录，确保页面切换后能重新加载数据
+  clearDebounceForUrl('/task/list');
+  loadData();
+});
 </script>
 
 
@@ -274,28 +290,49 @@ onMounted(() => { loadData(); });
   background: var(--color-primary);
   color: #fff;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
 
 .btn-secondary {
   padding: var(--space-2) var(--space-4);
   background: var(--bg-primary);
   color: var(--color-primary);
   border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-secondary:hover { background: var(--color-primary-light); }
+.btn-secondary:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
 
 .btn-icon {
   display: flex;
@@ -305,13 +342,24 @@ onMounted(() => { loadData(); });
   height: 36px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-icon:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.btn-icon:hover {
+  background: var(--bg-hover);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.btn-icon:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
 
 /* Filter Bar */
 .filter-bar {
@@ -405,45 +453,36 @@ onMounted(() => { loadData(); });
   gap: var(--space-4);
 }
 
-/* Task Card with Priority Left Line */
+/* Task Card - Modern Design */
 .task-card {
   position: relative;
   background: var(--bg-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
   padding: var(--space-5);
-  padding-left: calc(var(--space-5) + 3px);
   cursor: pointer;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-
-.task-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-}
-
-/* Priority Colors */
-.task-card.priority-critical::before { background: #DC2626; }
-.task-card.priority-high::before { background: #D97706; }
-.task-card.priority-medium::before { background: #0284C7; }
-.task-card.priority-low::before { background: #94A3B8; }
 
 .task-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
+
+/* Priority Indicator - Top Border Style */
+.task-card.priority-critical { border-top: 3px solid #DC2626; }
+.task-card.priority-high { border-top: 3px solid #D97706; }
+.task-card.priority-medium { border-top: 3px solid #0284C7; }
+.task-card.priority-low { border-top: 3px solid #94A3B8; }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .task-title {
@@ -457,20 +496,22 @@ onMounted(() => { loadData(); });
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-wrap: balance;
 }
 
-/* Status Badge */
+/* Status Badge - Modern Tag Style */
 .status-badge {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
   white-space: nowrap;
+  letter-spacing: 0.3px;
 }
 
-.status-badge.completed { background: #D1FAE5; color: #059669; }
-.status-badge.progress { background: #FEF3C7; color: #D97706; }
-.status-badge.pending { background: #DBEAFE; color: #1D4ED8; }
+.status-badge.completed { background: rgba(5, 150, 105, 0.1); color: #059669; }
+.status-badge.progress { background: rgba(217, 119, 6, 0.1); color: #D97706; }
+.status-badge.pending { background: rgba(29, 78, 216, 0.1); color: #1D4ED8; }
 
 /* Task Meta */
 .task-meta {
@@ -503,9 +544,9 @@ onMounted(() => { loadData(); });
   background: currentColor;
 }
 
-/* Progress Section */
+/* Progress Section - Refined */
 .progress-section {
-  padding-top: var(--space-4);
+  padding: var(--space-4) 0;
   border-top: 1px solid var(--border-light);
   margin-bottom: var(--space-4);
 }
@@ -520,23 +561,23 @@ onMounted(() => { loadData(); });
 .progress-value { font-size: var(--font-size-xs); font-weight: 600; color: var(--text-primary); }
 
 .progress-bar {
-  height: 4px;
-  background: var(--border-light);
-  border-radius: 2px;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-  background: var(--color-warning);
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(90deg, var(--color-warning) 0%, #F59E0B 100%);
 }
 
-.progress-fill.complete { background: var(--color-success); }
-.progress-fill.high { background: var(--color-primary); }
+.progress-fill.complete { background: linear-gradient(90deg, var(--color-success) 0%, #34D399 100%); }
+.progress-fill.high { background: linear-gradient(90deg, var(--color-primary) 0%, #60A5FA 100%); }
 
-/* Card Actions */
+/* Card Actions - Ghost Button Style */
 .card-actions {
   display: flex;
   gap: var(--space-2);
@@ -548,25 +589,26 @@ onMounted(() => { loadData(); });
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  padding: var(--space-2);
-  background: var(--bg-secondary);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .action-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .action-btn.action-primary {
-  background: var(--color-primary-light);
-  border-color: transparent;
+  background: transparent;
+  border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
@@ -632,7 +674,8 @@ html.dark-mode .status-badge.progress { background: rgba(251, 191, 36, 0.15); co
 html.dark-mode .status-badge.pending { background: rgba(96, 165, 250, 0.15); color: #60A5FA; }
 
 html.dark-mode .action-btn.action-primary {
-  background: rgba(96, 165, 250, 0.15);
+  background: transparent;
+  border-color: #60A5FA;
   color: #60A5FA;
 }
 
@@ -643,6 +686,21 @@ html.dark-mode .action-btn.action-primary:hover {
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .task-card, .skeleton-header, .skeleton-line, .progress-fill { animation: none; transition: none; }
+  .task-card,
+  .skeleton-header,
+  .skeleton-line,
+  .progress-fill,
+  .btn-primary,
+  .btn-secondary,
+  .btn-icon,
+  .action-btn {
+    animation: none;
+    transition: none;
+  }
+
+  .btn-primary:hover,
+  .task-card:hover {
+    transform: none;
+  }
 }
 </style>

@@ -1,14 +1,55 @@
-zi'ca<template>
+<template>
     <div class="create-node-page">
-        <el-card shadow="hover" class="main-card" v-loading="loading">
-            <template #header>
-                <div class="card-header">
-                    <div class="card-header-left">
-                        <div class="card-header-title">创建任务节点</div>
-                        <div class="card-header-desc">填写节点信息，创建新的任务节点</div>
-                    </div>
+        <!-- 页面头部 - Swiss Minimalism -->
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">创建任务节点</h1>
+                <p class="page-desc">填写节点信息，创建新的任务节点并关联到指定任务</p>
+            </div>
+            <button class="btn-secondary" @click="goBack">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                返回
+            </button>
+        </div>
+
+        <!-- 步骤提示 -->
+        <div class="steps-hint">
+            <div class="step-item" :class="{ active: currentStep >= 1 }">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">填写信息</div>
+                    <div class="step-desc">完善节点基本信息</div>
                 </div>
-            </template>
+            </div>
+            <div class="step-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </div>
+            <div class="step-item" :class="{ active: currentStep >= 2 }">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">创建节点</div>
+                    <div class="step-desc">提交创建请求</div>
+                </div>
+            </div>
+            <div class="step-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </div>
+            <div class="step-item" :class="{ active: currentStep >= 3 }">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">流程设计</div>
+                    <div class="step-desc">配置节点依赖关系</div>
+                </div>
+            </div>
+        </div>
+
+        <el-card shadow="hover" class="main-card" v-loading="loading" :body-style="{ padding: '0' }">
             
             <el-form 
                 :model="form" 
@@ -31,6 +72,7 @@ zi'ca<template>
                                     placeholder="请选择任务" 
                                     class="full-width"
                                     @change="onTaskChange"
+                                    :disabled="!!initialTaskId"
                                 >
                                     <el-option 
                                         v-for="t in taskOptions" 
@@ -39,6 +81,10 @@ zi'ca<template>
                                         :value="t.id" 
                                     />
                                 </el-select>
+                                <div v-if="initialTaskId" class="form-hint" style="margin-top: 8px;">
+                                    <el-icon><InfoFilled /></el-icon>
+                                    已从任务列表自动填充所属任务
+                                </div>
                             </el-form-item>
                         </el-col>
                         <el-col :span="12">
@@ -211,17 +257,18 @@ zi'ca<template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Document, Calendar, User, Connection, Check, RefreshLeft, InfoFilled } from '@element-plus/icons-vue';
+import { Document, Calendar, User, Connection, Check, RefreshLeft, InfoFilled, CirclePlusFilled, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createTaskNode, listTasks, getMyEmployee, listEmployees } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useRouter, useRoute } from 'vue-router';
 
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
 const form = ref<any>({
     taskId: '',
     departmentId: '',
-    nodeType: undefined,
+    nodeType: 1,
     nodeName: '',
     nodeDetail: '',
     nodeStartTime: '',
@@ -238,6 +285,10 @@ const allEmployees = ref<{ id: string; name: string; positionLevel?: number; dep
 const currentEmployee = ref<any>(null);
 const userStore = useUserStore();
 const loading = ref(false);
+const router = useRouter();
+const route = useRoute();
+const currentStep = ref(1);
+const initialTaskId = ref<string>('');
 
 async function loadTasks() {
     try {
@@ -348,12 +399,23 @@ function filterEmployeeOptions() {
 }
 
 function onTaskChange() {
-    // 预留：切换任务时可自动筛选推荐部门
+    // 当任务改变时，更新选中任务的显示信息
+    const selectedTask = taskOptions.value.find(t => String(t.id) === String(form.value.taskId));
+    if (selectedTask) {
+        // 可以在这里添加任务切换时的额外逻辑
+        console.log('已选择任务:', selectedTask.title);
+    }
 }
 
 onMounted(async () => {
     loading.value = true;
     try {
+        // 从 URL 参数中获取 taskId
+        const queryTaskId = route.query.taskId as string;
+        if (queryTaskId) {
+            initialTaskId.value = queryTaskId;
+        }
+        
         await Promise.all([
             loadTasks().catch(err => {
                 console.error('加载任务失败:', err);
@@ -364,6 +426,12 @@ onMounted(async () => {
                 ElMessage.warning('加载部门信息失败，请检查权限设置');
             })
         ]);
+        
+        // 如果有初始 taskId，设置表单值
+        if (initialTaskId.value) {
+            form.value.taskId = initialTaskId.value;
+            onTaskChange();
+        }
     } catch (error: any) {
         console.error('初始化失败:', error);
         ElMessage.error('加载数据失败，请刷新页面重试');
@@ -428,8 +496,32 @@ const onSubmit = () => {
             };
             const resp = await createTaskNode(payload);
             if (resp.data.code !== 200) throw new Error(resp.data.msg || '创建失败');
-            ElMessage.success('创建成功');
-            onReset();
+            currentStep.value = 2;
+            ElMessage.success('节点创建成功！');
+            
+            // 询问用户下一步操作
+            const { ElMessageBox } = await import('element-plus');
+            try {
+                await ElMessageBox.confirm(
+                    '节点创建成功！您可以选择继续创建节点或前往流程设计器配置节点依赖关系。',
+                    '创建成功',
+                    {
+                        confirmButtonText: '前往流程设计器',
+                        cancelButtonText: '继续创建',
+                        type: 'success',
+                        distinguishCancelAndClose: true,
+                    }
+                );
+                // 用户选择前往流程设计器
+                currentStep.value = 3;
+                router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
+            } catch (action: any) {
+                if (action === 'cancel') {
+                    // 用户选择继续创建，重置表单
+                    onReset();
+                }
+                // 如果是关闭对话框，不做任何操作
+            }
         } catch (e: any) {
             ElMessage.error(e.message || '创建失败');
         } finally {
@@ -440,10 +532,11 @@ const onSubmit = () => {
 
 const onReset = () => {
     const deptId = form.value.departmentId;
+    const taskId = initialTaskId.value; // 保留初始 taskId
     form.value = { 
-        taskId: '', 
+        taskId: taskId || '', 
         departmentId: deptId, 
-        nodeType: undefined, 
+        nodeType: 1, 
         nodeName: '', 
         nodeDetail: '', 
         nodeStartTime: '', 
@@ -453,6 +546,10 @@ const onReset = () => {
         executorIds: [] 
     };
     formRef.value?.clearValidate();
+    
+    if (taskId) {
+        onTaskChange();
+    }
 };
 
 function formatDate(d: any) {
@@ -466,59 +563,158 @@ function openDesigner() {
         ElMessage.warning('请先填写所属任务ID');
         return;
     }
-    window.location.hash = `#/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`;
+    currentStep.value = 3;
+    router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
+}
+
+function goBack() {
+    router.back();
 }
 </script>
 
 <style scoped>
 .create-node-page {
-    padding: 20px;
-    background: var(--bg-page);
-    min-height: calc(100vh - 100px);
+    padding: var(--space-6);
+    background: var(--bg-secondary);
+    min-height: 100vh;
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-6);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.page-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.page-desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-primary);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: #fff;
 }
 
 .main-card {
     border-radius: 16px;
-    box-shadow: var(--shadow-lg);
-    border: none;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
     max-width: 1200px;
     margin: 0 auto;
-    background: var(--bg-card);
+    background: var(--bg-primary);
+    overflow: hidden;
 }
 
-.main-card :deep(.el-card__header) {
-    background: var(--bg-card);
-    border-bottom: 2px solid var(--border-color);
-    padding: 20px 24px;
-}
-
-.card-header {
+/* 步骤提示样式 */
+.steps-hint {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+    margin-bottom: 0;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.card-header-left {
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    opacity: 0.6;
+}
+
+.step-item.active {
+    opacity: 1;
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--bg-secondary) 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-number {
+    background: var(--color-primary);
+    color: white;
+}
+
+.step-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
 }
 
-.card-header-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-main);
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.card-header-desc {
+.step-title {
     font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.step-desc {
+    font-size: 12px;
     color: var(--text-secondary);
-    font-weight: 400;
+}
+
+.step-arrow {
+    color: var(--text-secondary);
+    font-size: 20px;
+    opacity: 0.5;
+}
+
+.step-item.active ~ .step-arrow {
+    color: var(--color-primary);
+    opacity: 1;
 }
 
 .create-form {
@@ -526,16 +722,17 @@ function openDesigner() {
 }
 
 .form-section {
-    margin-bottom: 32px;
+    margin: 24px;
     padding: 24px;
-    background: var(--bg-card);
-    border-radius: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .form-section:hover {
-    box-shadow: var(--shadow-md);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-sm);
 }
 
 .section-header {
@@ -544,7 +741,7 @@ function openDesigner() {
     gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .section-icon {
@@ -555,8 +752,7 @@ function openDesigner() {
 .section-title {
     font-size: 16px;
     font-weight: 600;
-    color: var(--text-main);
-    letter-spacing: -0.01em;
+    color: var(--text-primary);
 }
 
 .full-width {
@@ -565,83 +761,169 @@ function openDesigner() {
 
 .create-form :deep(.el-form-item__label) {
     font-weight: 500;
-    color: var(--text-main);
-    font-size: 14px;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    padding-bottom: 4px;
 }
 
-.create-form :deep(.el-input__inner),
-.create-form :deep(.el-select .el-input__inner),
+.create-form :deep(.el-form-item) {
+    margin-bottom: 20px;
+}
+
+.create-form :deep(.el-row) {
+    margin-bottom: 0;
+}
+
+.create-form :deep(.el-input__wrapper),
+.create-form :deep(.el-select .el-input__wrapper),
 .create-form :deep(.el-textarea__inner) {
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    font-size: 14px;
-    background-color: var(--bg-card);
-    color: var(--text-main);
+    transition: all 0.2s ease;
+    font-size: var(--font-size-sm);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: none;
+    padding: 4px 11px;
 }
 
-.create-form :deep(.el-input__inner:hover),
-.create-form :deep(.el-select .el-input__inner:hover),
+.create-form :deep(.el-input__wrapper:hover),
+.create-form :deep(.el-select .el-input__wrapper:hover),
 .create-form :deep(.el-textarea__inner:hover) {
     border-color: var(--color-primary);
 }
 
-.create-form :deep(.el-input__inner:focus),
-.create-form :deep(.el-select .el-input__inner:focus),
+.create-form :deep(.el-input__wrapper.is-focus),
+.create-form :deep(.el-select .el-input__wrapper.is-focus),
 .create-form :deep(.el-textarea__inner:focus) {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
+    box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .create-form :deep(.el-date-editor) {
     width: 100%;
 }
 
-.create-form :deep(.el-date-editor .el-input__inner) {
-    border-radius: 8px;
+.create-form :deep(.el-date-editor .el-input__wrapper) {
+    border-radius: var(--radius-md);
+}
+
+.create-form :deep(.el-input-number) {
+    width: 100%;
+}
+
+.create-form :deep(.el-input-number .el-input__wrapper) {
+    padding-left: 11px;
+    padding-right: 11px;
 }
 
 .info-alert {
-    margin: 24px 0;
-    border-radius: 8px;
+    margin: 24px;
+    border-radius: var(--radius-md);
     border-left: 4px solid var(--color-info);
+    background: rgba(59, 130, 246, 0.05);
 }
 
 .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 2px solid var(--border-color);
+    margin: 0 24px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border-color);
 }
 
 .form-actions .el-button {
-    padding: 12px 24px;
-    font-weight: 600;
-    border-radius: 10px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
 }
 
 .form-actions .el-button--primary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    background: var(--color-primary);
     border: none;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .form-actions .el-button--primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
 }
 
 .form-actions .el-button--success {
-    background: linear-gradient(135deg, var(--color-success) 0%, #22c55e 100%);
+    background: var(--color-success);
     border: none;
-    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.35);
 }
 
 .form-actions .el-button--success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(74, 222, 128, 0.45);
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.form-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.form-hint .el-icon {
+    font-size: 14px;
+    color: var(--color-info);
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+    .create-node-page {
+        padding: var(--space-4);
+    }
+    
+    .page-header {
+        flex-direction: column;
+        gap: var(--space-4);
+        align-items: stretch;
+    }
+    
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .steps-hint {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .step-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .step-item {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .form-section {
+        margin: 16px;
+        padding: 16px;
+    }
+    
+    .form-actions {
+        margin: 0 16px;
+        padding: 16px 0;
+        flex-direction: column;
+    }
+    
+    .form-actions .el-button {
+        width: 100%;
+    }
+    
+    .info-alert {
+        margin: 16px;
+    }
 }
 </style>

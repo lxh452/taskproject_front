@@ -163,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
@@ -172,7 +172,7 @@ import {
 } from '@element-plus/icons-vue';
 import TaskChecklist from '@/components/TaskChecklist.vue';
 import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval } from '@/api';
-import request from '@/utils/request';
+import request, { clearDebounceForUrl } from '@/utils/request';
 import { ElMessageBox } from 'element-plus';
 
 const route = useRoute();
@@ -350,6 +350,11 @@ async function loadNodeDetail() {
             router.go(-1);
         }
     } catch (error: any) {
+        // 忽略防抖取消的请求，不显示错误提示
+        if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+            console.log('请求被防抖拦截，跳过错误提示');
+            return;
+        }
         console.error('加载节点详情失败:', error);
         ElMessage.error('加载节点详情失败');
         router.go(-1);
@@ -361,6 +366,20 @@ async function loadNodeDetail() {
 onMounted(async () => {
     await loadCurrentEmployee();
     await loadNodeDetail();
+});
+
+// keep-alive 激活时重新加载数据
+onActivated(async () => {
+    // 清除防抖记录，确保页面切换后能重新加载数据
+    clearDebounceForUrl('/tasknode/get');
+    await loadNodeDetail();
+});
+
+// 监听路由参数变化，当节点ID变化时重新加载
+watch(() => route.params.id, async (newId, oldId) => {
+    if (newId && newId !== oldId) {
+        await loadNodeDetail();
+    }
 });
 </script>
 

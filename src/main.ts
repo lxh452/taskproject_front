@@ -79,7 +79,8 @@ app.directive('permiss', {
 });
 
 function checkPermission(el: HTMLElement, binding: any, permiss: any) {
-    if (binding.value && !permiss.key.includes(String(binding.value))) {
+    const keys = permiss.key || [];
+    if (binding.value && !keys.includes(String(binding.value))) {
         el.style.display = 'none';
     } else {
         el.style.display = '';

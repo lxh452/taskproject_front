@@ -402,7 +402,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated } from 'vue';
 import { Switch, UserFilled, Remove, CircleCheck, Clock, User, Document, Memo, Check, Close, Key } from '@element-plus/icons-vue';
 import { getMyHandoverApprovals, approveHandover as approveHandoverAPI, getPendingJoinApplications, approveJoinApplication, getDepartmentList, getPositionList, getMyEmployee, getMyTaskNodeApprovals, approveTaskNodeCompletion, listEmployees } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -916,6 +916,10 @@ async function loadData() {
 }
 
 onMounted(() => {
+  loadData();
+});
+// keep-alive 激活时重新加载数据
+onActivated(() => {
   loadData();
 });
 </script>

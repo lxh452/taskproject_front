@@ -249,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onActivated, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Bell, Refresh, Document, Warning, InfoFilled, CircleCheckFilled, CircleCloseFilled, UserFilled, OfficeBuilding, Folder, Avatar, ChatLineSquare } from '@element-plus/icons-vue';
 import { listNotifications, markNotificationRead, approveJoinApplication, getMyEmployee, getPendingJoinApplications, listDepartments, listPositions, approveTaskNodeCompletion } from '@/api';
@@ -643,6 +643,10 @@ async function loadData() {
 
 onMounted(() => {
   checkApprovePermission();
+  loadData();
+});
+// keep-alive 激活时重新加载数据
+onActivated(() => {
   loadData();
 });
 </script>

@@ -200,13 +200,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, onActivated, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
     Document, User, Check, RefreshLeft, Plus, InfoFilled, Search,
     Warning, ArrowUp, ArrowDown, Minus
 } from '@element-plus/icons-vue';
 import { listDepartments, listEmployees, getMyEmployee, createTask } from '@/api';
+
+const router = useRouter();
 
 const formRef = ref();
 const myCompanyId = ref<string>('');
@@ -270,6 +273,11 @@ onMounted(async () => {
         empByDept.value = byDept;
         rebuildChooserTree();
     } catch {}
+});
+
+// 每次进入页面时重置表单（解决keep-alive导致的数据残留问题）
+onActivated(() => {
+    reset();
 });
 
 function filterNode(value: string, data: any) {
@@ -362,6 +370,8 @@ async function submit() {
             if (resp.data?.code !== 200) throw new Error(resp.data?.msg || '创建任务失败');
             ElMessage.success('任务创建成功');
             reset();
+            // 返回任务列表
+            router.push('/tasks');
         } catch (e: any) {
             const url = e?.response?.config?.url || '';
             const status = e?.response?.status;

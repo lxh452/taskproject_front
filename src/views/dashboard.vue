@@ -1,16 +1,43 @@
 <template>
   <div class="dashboard">
-    <!-- 欢迎区域 - Swiss Minimalism 简洁风格 -->
-    <div class="welcome-section">
-      <div class="welcome-left">
-        <h1 class="welcome-title">{{ greeting }}，{{ username }}</h1>
-        <p class="welcome-subtitle">{{ currentDate }}</p>
+    <!-- 顶部切换栏 -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1 class="page-title">{{ greeting }}，{{ username }}</h1>
+        <p class="page-subtitle">{{ currentDate }}</p>
       </div>
-      <div class="welcome-right">
+      <div class="header-center">
+        <div class="view-mode-toggle">
+          <button
+            class="mode-btn"
+            :class="{ active: dashboardMode === 'traditional' }"
+            @click="dashboardMode = 'traditional'"
+          >
+            <el-icon><Odometer /></el-icon>
+            <span>传统仪表盘</span>
+          </button>
+          <button
+            class="mode-btn"
+            :class="{ active: dashboardMode === 'rts' }"
+            @click="dashboardMode = 'rts'"
+          >
+            <el-icon><Coordinate /></el-icon>
+            <span>指挥模式</span>
+          </button>
+        </div>
+      </div>
+      <div class="header-right">
         <AiAssistant />
       </div>
     </div>
 
+    <!-- 指挥模式 -->
+    <template v-if="dashboardMode === 'rts'">
+      <RTSCommandView @refresh="loadData" />
+    </template>
+
+    <!-- 传统仪表盘模式 -->
+    <template v-else>
     <!-- 统计卡片 - Bento Grid -->
     <div class="stats-grid">
       <div class="stat-card">
@@ -105,89 +132,54 @@
         </div>
       </div>
 
-      <!-- 任务趋势图 (占满一行) -->
-      <div class="chart-card chart-card-full">
-        <div class="card-header">
-          <span class="header-title">最近七天任务趋势</span>
-        </div>
-        <div class="card-body">
-          <v-chart v-if="!trendChartEmpty" :option="trendChartOption" class="chart chart-trend" autoresize />
-          <div v-else class="empty-chart">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
-              <path d="M3 3v18h18"/>
-              <path d="M18 17l-5-5-4 4-6-6"/>
-            </svg>
-            <p>暂无趋势数据</p>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- 任务视图区域 -->
+    <!-- 任务视图区域 - 只看板 -->
     <div class="task-view-section">
       <div class="section-header">
         <div class="header-left">
-          <h2 class="section-title">任务视图</h2>
+          <h2 class="section-title">我的任务看板</h2>
           <span class="task-count">{{ metrics.totalTasks }} 个任务</span>
-        </div>
-        <div class="view-switcher">
-          <button 
-            class="switch-btn" 
-            :class="{ active: activeView === 'kanban' }" 
-            @click="activeView = 'kanban'"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            看板
-          </button>
-          <button 
-            class="switch-btn" 
-            :class="{ active: activeView === 'gantt' }" 
-            @click="activeView = 'gantt'"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="4" y1="6" x2="20" y2="6"/>
-              <line x1="4" y1="12" x2="14" y2="12"/>
-              <line x1="4" y1="18" x2="18" y2="18"/>
-            </svg>
-            甘特图
-          </button>
         </div>
       </div>
       <div class="section-body">
-        <transition name="fade" mode="out-in">
-          <DashboardKanban v-if="activeView === 'kanban'" :department-id="departmentId" :key="'kanban'" />
-          <DepartmentGantt v-else :department-id="departmentId" :key="'gantt'" />
-        </transition>
+        <DashboardKanban :department-id="departmentId" />
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts" name="dashboard">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onActivated, computed, provide, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { use } from 'echarts/core';
 import { PieChart as EchartsPie, BarChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
+import { Odometer, Coordinate } from '@element-plus/icons-vue';
 import { getMyEmployee, listTasks, getMyTaskNodes, getDashboardStats } from '@/api';
 import { useUserStore } from '@/store/user';
+import { clearDebounceForUrl } from '@/utils/request';
 import countup from '@/components/countup.vue';
 import DashboardKanban from '@/components/DashboardKanban.vue';
-import DepartmentGantt from '@/components/DepartmentGantt.vue';
 import AiAssistant from '@/components/AiAssistant.vue';
+import RTSCommandView from './dashboard/RTSCommandView.vue';
 
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart, LineChart]);
 
+const router = useRouter();
 const userStore = useUserStore();
 const username = ref(userStore.username || localStorage.getItem('vuems_name') || '用户');
 const departmentId = ref('');
-const activeView = ref('kanban');
+// 仪表盘模式：仅在当前页面生命周期内有效，刷新后重置为传统模式
+const dashboardMode = ref('traditional');
+
+// 跳转到 AI 仪表盘
+const goToAiDashboard = () => {
+  router.push('/ai-dashboard');
+};
 
 const currentDate = computed(() => {
   const d = new Date();
@@ -212,12 +204,11 @@ const completionRate = computed(() => {
 });
 
 const metrics = ref({ totalTasks: 0, pendingApprovals: 0, completed: 0, critical: 0 });
+const taskList = ref<any[]>([]);
 const statusChartOption = ref<any>({});
 const priorityChartOption = ref<any>({});
-const trendChartOption = ref<any>({});
 const statusChartEmpty = ref(false);
 const priorityChartEmpty = ref(false);
-const trendChartEmpty = ref(false);
 
 async function loadData() {
   try {
@@ -245,47 +236,33 @@ async function loadData() {
       console.error('加载仪表盘统计失败:', e);
     }
 
-    if (departmentId.value) {
-      const res = await listTasks({ page: 1, pageSize: 100, departmentId: departmentId.value });
-      const list = res.data?.data?.list || [];
-      buildCharts(list);
-    } else {
-      const res = await getMyTaskNodes({ page: 1, pageSize: 100 });
-      const data = res.data?.data || {};
-      const allTasks = [...(data.executor_task || []), ...(data.leader_task || [])];
-      buildCharts(allTasks);
-    }
-  } catch (e) {
-    console.error('加载数据失败:', e);
-    statusChartEmpty.value = true;
-    priorityChartEmpty.value = true;
-    trendChartEmpty.value = true;
-  }
-}
+    // 传统仪表盘只加载个人任务数据
+    let list: any[] = [];
+    const res = await getMyTaskNodes({ page: 1, pageSize: 100 });
+    const data = res.data?.data || {};
+    list = [...(data.executor_task || []), ...(data.leader_task || [])];
+    taskList.value = list;
 
-function buildCharts(list: any[]) {
-  const statusData = {
-    done: list.filter((it: any) => (it.progress ?? 0) >= 100 || (it.status ?? 0) === 2).length,
-    inProgress: list.filter((it: any) => ((it.status ?? 0) === 1 || (it.status ?? 0) === 0) && (it.progress ?? 0) < 100).length,
-    review: list.filter((it: any) => (it.status ?? 0) === 3).length,
-    todo: list.filter((it: any) => (it.status ?? 0) === 0 && (it.progress ?? 0) === 0).length,
-  };
+    // 统计任务状态分布
+    const statusData = { done: 0, inProgress: 0, review: 0, todo: 0 };
+    const priorityData = { low: 0, medium: 0, high: 0, critical: 0 };
+    list.forEach((task: any) => {
+      const s = task.status ?? task.nodeStatus ?? 0;
+      if (s === 2) statusData.done++;
+      else if (s === 1) statusData.inProgress++;
+      else if (s === 3) statusData.review++;
+      else statusData.todo++;
 
-  const priorityData = {
-    low: list.filter((it: any) => (it.priority ?? 3) === 4).length,
-    medium: list.filter((it: any) => (it.priority ?? 3) === 3).length,
-    high: list.filter((it: any) => (it.priority ?? 3) === 2).length,
-    critical: list.filter((it: any) => (it.priority ?? 3) === 1).length,
-  };
-
-  const total1 = statusData.done + statusData.inProgress + statusData.review + statusData.todo;
-  const total2 = priorityData.low + priorityData.medium + priorityData.high + priorityData.critical;
-
-  statusChartEmpty.value = total1 === 0;
-  priorityChartEmpty.value = total2 === 0;
-
-  // 构建趋势图 - 从任务列表数据计算
-  buildTrendChartFromList(list);
+      const p = task.priority ?? 2;
+      if (p === 1) priorityData.low++;
+      else if (p === 2) priorityData.medium++;
+      else if (p === 3) priorityData.high++;
+      else if (p === 4) priorityData.critical++;
+    });
+    const total1 = statusData.done + statusData.inProgress + statusData.review + statusData.todo;
+    const total2 = priorityData.low + priorityData.medium + priorityData.high + priorityData.critical;
+    statusChartEmpty.value = total1 === 0;
+    priorityChartEmpty.value = total2 === 0;
 
   // Swiss Minimalism 风格图表配色
   if (total1 > 0) {
@@ -361,128 +338,50 @@ function buildCharts(list: any[]) {
       }]
     };
   }
-}
-
-function buildTrendChartFromList(list: any[]) {
-  // Get last 7 days
-  const now = new Date();
-  const days: string[] = [];
-  const createdCounts: number[] = [];
-  const completedCounts: number[] = [];
-
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
-    days.push(dateStr);
-
-    const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
-    const dayEnd = new Date(date.setHours(23, 59, 59, 999)).getTime();
-
-    // Count created tasks
-    const created = list.filter((task: any) => {
-      const createdTime = task.createdAt ? new Date(task.createdAt).getTime() : 0;
-      return createdTime >= dayStart && createdTime <= dayEnd;
-    }).length;
-    createdCounts.push(created);
-
-    // Count completed tasks
-    const completed = list.filter((task: any) => {
-      const updatedTime = task.updatedAt ? new Date(task.updatedAt).getTime() : 0;
-      return updatedTime >= dayStart && updatedTime <= dayEnd && (task.progress ?? 0) >= 100;
-    }).length;
-    completedCounts.push(completed);
-  }
-
-  trendChartEmpty.value = list.length === 0;
-
-  if (list.length > 0) {
-    trendChartOption.value = {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'cross' },
-        backgroundColor: '#fff',
-        borderColor: 'var(--border-color)',
-        borderWidth: 1,
-        textStyle: { color: 'var(--text-primary)', fontSize: 13 },
-        extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
-      },
-      legend: {
-        data: ['创建', '完成'],
-        bottom: 16,
-        left: 'center',
-        itemGap: 24,
-        itemWidth: 12,
-        itemHeight: 12,
-        textStyle: { color: 'var(--text-secondary)', fontSize: 13 }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '15%',
-        top: '8%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: days,
-        axisLabel: { color: 'var(--text-secondary)', fontSize: 12 },
-        axisLine: { lineStyle: { color: 'var(--border-color)' } },
-        axisTick: { show: false }
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
-        splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
-        axisLine: { show: false }
-      },
-      series: [
-        {
-          name: '创建',
-          type: 'line',
-          data: createdCounts,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: { width: 2, color: '#1E3A5F' },
-          itemStyle: { color: '#1E3A5F' },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: 'rgba(30, 58, 95, 0.2)' },
-                { offset: 1, color: 'rgba(30, 58, 95, 0.05)' }
-              ]
-            }
-          }
-        },
-        {
-          name: '完成',
-          type: 'line',
-          data: completedCounts,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: { width: 2, color: '#059669' },
-          itemStyle: { color: '#059669' },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: 'rgba(5, 150, 105, 0.2)' },
-                { offset: 1, color: 'rgba(5, 150, 105, 0.05)' }
-              ]
-            }
-          }
-        }
-      ]
-    };
+  } catch (error: any) {
+    // 忽略防抖取消的请求，不显示错误提示
+    if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+      console.log('请求被防抖拦截，跳过错误提示');
+      return;
+    }
+    console.error('加载仪表盘数据失败:', error);
   }
 }
+
+// 为 RTSCommandView 提供数据
+const dashboardData = computed(() => ({
+  tasks: {
+    total: metrics.value.totalTasks,
+    pending: metrics.value.pendingApprovals,
+    inProgress: taskList.value.filter((t: any) => t.status === 1).length,
+    completed: metrics.value.completed,
+    overdue: metrics.value.critical,
+    todayDue: 0
+  },
+  team: {
+    totalMembers: 0,
+    activeMembers: 0,
+    averageWorkload: 75,
+    efficiency: 85
+  },
+  projects: [],
+  recentTasks: taskList.value.slice(0, 5),
+  alerts: []
+}));
+
+const loading = ref(false);
+
+provide('dashboardData', dashboardData);
+provide('refreshDashboard', loadData);
+provide('loading', loading);
 
 onMounted(loadData);
+// keep-alive 激活时重新加载数据
+onActivated(() => {
+  // 清除防抖记录，确保页面切换后能重新加载数据
+  clearDebounceForUrl('/dashboard/stats');
+  loadData();
+});
 </script>
 
 
@@ -494,35 +393,97 @@ onMounted(loadData);
   background: var(--bg-secondary);
 }
 
-/* Welcome Section - Swiss Minimalism */
-.welcome-section {
+/* Dashboard Header - 顶部切换栏 */
+.dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-6);
-  padding: var(--space-6);
+  padding: var(--space-5) var(--space-6);
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
-.welcome-left {
+.header-left {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
 }
 
-.welcome-title {
-  font-size: var(--font-size-2xl);
+.page-title {
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
 }
 
-.welcome-subtitle {
+.page-subtitle {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
   margin: 0;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* 视图模式切换按钮组 */
+.view-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.mode-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.mode-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-btn .el-icon {
+  font-size: 16px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* 全屏视图容器 */
+.full-view-container {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-5);
+  min-height: calc(100vh - 200px);
 }
 
 /* Stats Grid - Bento Layout */
@@ -806,6 +767,17 @@ onMounted(loadData);
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .dashboard-header {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .header-center {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 992px) {
@@ -818,49 +790,78 @@ onMounted(loadData);
   .dashboard {
     padding: var(--space-4);
   }
-  
-  .welcome-section {
+
+  .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-4);
     padding: var(--space-4);
   }
-  
-  .welcome-title {
-    font-size: var(--font-size-xl);
+
+  .header-center {
+    width: 100%;
+    order: 2;
   }
-  
+
+  .view-mode-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mode-btn {
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-2) var(--space-2);
+  }
+
+  .mode-btn span {
+    display: none;
+  }
+
+  .header-right {
+    order: 3;
+  }
+
+  .page-title {
+    font-size: var(--font-size-lg);
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }
-  
+
   .stat-card {
     padding: var(--space-4);
   }
-  
+
   .stat-value {
     font-size: var(--font-size-2xl);
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
     padding: var(--space-4);
   }
-  
+
   .view-switcher {
     width: 100%;
   }
-  
+
   .switch-btn {
     flex: 1;
     justify-content: center;
   }
-  
+
   .section-body {
     padding: var(--space-4);
+  }
+
+  .full-view-container {
+    padding: var(--space-3);
+    min-height: calc(100vh - 180px);
   }
 }
 

@@ -146,8 +146,8 @@ const closeSidebar = () => {
 onMounted(async () => {
   // 展开当前路由所在的菜单组
   menuData.forEach(item => {
-    if (item.children) {
-      const hasActiveChild = item.children.some(child => isActive(child.index));
+    if (item.children && item.index) {
+      const hasActiveChild = item.children.some(child => child.index && isActive(child.index));
       if (hasActiveChild && !openGroups.value.includes(item.index)) {
         openGroups.value.push(item.index);
       }
@@ -158,8 +158,11 @@ onMounted(async () => {
     const empRes = await getMyEmployee();
     const emp = empRes?.data?.data || {};
     username.value = emp.realName || emp.name || username.value;
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    // 忽略请求取消错误
+    if (e?.code !== 'ERR_CANCELED') {
+      console.error('获取员工信息失败:', e);
+    }
   }
 });
 

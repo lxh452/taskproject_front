@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { Search } from '@element-plus/icons-vue';
 import { getMyChecklist, updateChecklist, batchCompleteChecklist } from '@/api';
@@ -269,6 +269,10 @@ async function loadChecklists() {
 }
 
 onMounted(() => {
+  loadChecklists();
+});
+// keep-alive 激活时重新加载数据
+onActivated(() => {
   loadChecklists();
 });
 </script>

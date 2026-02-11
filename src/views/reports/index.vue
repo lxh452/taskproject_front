@@ -152,24 +152,6 @@
         </div>
       </div>
 
-      <!-- 7-Day Trend -->
-      <div class="chart-card chart-card-wide">
-        <div class="card-header">
-          <span class="header-title">最近7天趋势</span>
-          <span class="header-subtitle">新建与完成</span>
-        </div>
-        <div class="card-body">
-          <v-chart v-if="!trendChartEmpty" :option="trendChartOption" class="chart" autoresize />
-          <div v-else class="empty-chart">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
-              <path d="M3 3v18h18"/>
-              <path d="M18 17l-5-5-4 4-6-6"/>
-            </svg>
-            <p>暂无趋势数据</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Top Performers -->
       <div class="chart-card chart-card-wide">
         <div class="card-header">
@@ -202,7 +184,6 @@ import { PieChart as EchartsPie, BarChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
-
 use([CanvasRenderer, GridComponent, TooltipComponent, LegendComponent, EchartsPie, BarChart, LineChart]);
 
 // State
@@ -236,8 +217,6 @@ const statusChartOption = ref<any>({});
 const statusChartEmpty = ref(false);
 const priorityChartOption = ref<any>({});
 const priorityChartEmpty = ref(false);
-const trendChartOption = ref<any>({});
-const trendChartEmpty = ref(false);
 
 // Computed
 const completionRate = computed(() => {
@@ -290,14 +269,12 @@ async function loadChartData() {
     buildPerformerChart(list);
     buildStatusChart(list);
     buildPriorityChart(list);
-    buildTrendChart(list);
     calculateAdvancedStats(list);
   } catch (error) {
     console.error('[Reports] 加载图表数据失败:', error);
     performerChartEmpty.value = true;
     statusChartEmpty.value = true;
     priorityChartEmpty.value = true;
-    trendChartEmpty.value = true;
   }
 }
 
@@ -520,113 +497,6 @@ function buildPriorityChart(list: any[]) {
           itemStyle: { color: p.color }
         }))
       }]
-    };
-  }
-}
-
-function buildTrendChart(list: any[]) {
-  // Get last 7 days
-  const now = new Date();
-  const days: string[] = [];
-  const createdCounts: number[] = [];
-  const completedCounts: number[] = [];
-
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
-    days.push(dateStr);
-
-    const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
-    const dayEnd = new Date(date.setHours(23, 59, 59, 999)).getTime();
-
-    // Count created tasks
-    const created = list.filter((task: any) => {
-      const createdTime = task.createdAt ? new Date(task.createdAt).getTime() : 0;
-      return createdTime >= dayStart && createdTime <= dayEnd;
-    }).length;
-    createdCounts.push(created);
-
-    // Count completed tasks
-    const completed = list.filter((task: any) => {
-      const updatedTime = task.updatedAt ? new Date(task.updatedAt).getTime() : 0;
-      return updatedTime >= dayStart && updatedTime <= dayEnd && (task.progress ?? 0) >= 100;
-    }).length;
-    completedCounts.push(completed);
-  }
-
-  trendChartEmpty.value = list.length === 0;
-
-  if (list.length > 0) {
-    trendChartOption.value = {
-      tooltip: {
-        trigger: 'axis',
-        backgroundColor: '#fff',
-        borderColor: 'var(--border-color)',
-        borderWidth: 1,
-        textStyle: { color: 'var(--text-primary)', fontSize: 13 },
-        extraCssText: 'box-shadow: var(--shadow-md); border-radius: 8px;'
-      },
-      legend: {
-        top: '5%',
-        textStyle: { color: 'var(--text-secondary)', fontSize: 12 }
-      },
-      grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: days,
-        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
-        axisLine: { lineStyle: { color: 'var(--border-color)' } }
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
-        splitLine: { lineStyle: { color: 'var(--border-light)', type: 'dashed' } },
-        axisLine: { show: false }
-      },
-      series: [
-        {
-          name: '新建任务',
-          type: 'line',
-          smooth: true,
-          data: createdCounts,
-          itemStyle: { color: '#0284C7' },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [
-                { offset: 0, color: 'rgba(2, 132, 199, 0.3)' },
-                { offset: 1, color: 'rgba(2, 132, 199, 0.05)' }
-              ]
-            }
-          }
-        },
-        {
-          name: '完成任务',
-          type: 'line',
-          smooth: true,
-          data: completedCounts,
-          itemStyle: { color: '#059669' },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [
-                { offset: 0, color: 'rgba(5, 150, 105, 0.3)' },
-                { offset: 1, color: 'rgba(5, 150, 105, 0.05)' }
-              ]
-            }
-          }
-        }
-      ]
     };
   }
 }
@@ -978,5 +848,65 @@ html.dark-mode .stat-icon-active {
   .charts-section {
     grid-template-columns: 1fr;
   }
+}
+
+/* Chart Card Enhancements */
+.chart-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-left: 8px;
+}
+
+.card-body {
+  padding: 20px;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scope Selector Enhancement */
+.filters-bar :deep(.el-segmented) {
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.filters-bar :deep(.el-segmented__item) {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.filters-bar :deep(.el-segmented__item.is-active) {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
 }
 </style>

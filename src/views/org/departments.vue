@@ -229,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated } from 'vue';
 import { 
   Refresh, Plus, Folder, View, Edit, MoreFilled, Search, Switch,
   OfficeBuilding, CircleCheck, CircleClose, User, UserFilled
@@ -394,6 +394,8 @@ async function loadData() {
 }
 
 onMounted(() => { loadData(); });
+// keep-alive 激活时重新加载数据
+onActivated(() => { loadData(); });
 </script>
 
 <style scoped>

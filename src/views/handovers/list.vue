@@ -192,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onActivated, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { listHandovers, getMyEmployee, approveTaskNodeCompletion } from '@/api';
 import request from '@/utils/request';
@@ -320,6 +320,8 @@ async function loadData() {
 }
 
 onMounted(() => { loadData(); });
+// keep-alive 激活时重新加载数据
+onActivated(() => { loadData(); });
 </script>
 
 

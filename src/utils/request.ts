@@ -4,17 +4,15 @@ import { ElMessage, ElNotification } from 'element-plus';
 function buildApiBaseUrl(): string {
     const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
     if (envUrl) return envUrl;
-    
-    // 自动使用当前访问的域名/IP，避免跨域问题
+
+    // 开发环境使用相对路径，走 Vite 代理，避免跨域
+    if ((import.meta as any).env?.DEV) {
+        return '/api/v1';
+    }
+
+    // 生产环境通过 nginx 代理，不需要端口
     const proto = window.location.protocol;
     const host = window.location.hostname;
-    
-    // 本地开发环境需要指定端口
-    if (host === 'localhost' || host === '127.0.0.1') {
-        return 'http://127.0.0.1:8888/api/v1';
-    }
-    
-    // 生产环境通过 nginx 代理，不需要端口
     return `${proto}//${host}/api/v1`;
 }
 
@@ -54,34 +52,68 @@ const errorNotificationState = {
     isShowing403: false,
 };
 
-// 请求去重机制
+// 请求去重机制 - 存储 AbortController
 const pendingRequests = new Map<string, AbortController>();
+// 请求防抖：记录上次请求时间，避免短时间内重复请求
+const requestTimestamps = new Map<string, number>();
+const DEBOUNCE_INTERVAL = 1000; // 1000ms 内的重复请求将被忽略（增加到1秒）
 
 /**
  * 生成请求唯一标识
+ * 注意：GET 请求不参与去重，因为它们通常是幂等的
  */
 function generateRequestKey(config: InternalAxiosRequestConfig): string {
     const { method, url, params, data } = config;
+    // GET 请求返回空字符串，不参与去重
+    if ((method || 'GET').toUpperCase() === 'GET') {
+        return '';
+    }
+    // 标记了 skipDedupe 的请求不参与去重（用于只读 POST 接口）
+    if ((config as any).skipDedupe) {
+        return '';
+    }
     return `${method}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`;
 }
 
 /**
  * 添加请求到待处理队列
+ * 返回 true 表示请求可以继续发送，false 表示请求应该被忽略（防抖）
  */
-function addPendingRequest(config: InternalAxiosRequestConfig): void {
+function addPendingRequest(config: InternalAxiosRequestConfig): boolean {
     const requestKey = generateRequestKey(config);
-    
-    // 如果已有相同请求在进行中，取消旧请求
+
+    // 空字符串表示不需要去重（GET 请求）
+    if (!requestKey) {
+        return true;
+    }
+
+    const now = Date.now();
+    const lastRequestTime = requestTimestamps.get(requestKey);
+
+    // 防抖检查：如果距离上次请求时间太近，则忽略本次请求
+    if (lastRequestTime && (now - lastRequestTime) < DEBOUNCE_INTERVAL) {
+        console.warn('请求过于频繁，已忽略:', requestKey);
+        return false;
+    }
+
+    // 如果已有相同请求在进行中，取消旧请求（新请求优先）
     if (pendingRequests.has(requestKey)) {
         const controller = pendingRequests.get(requestKey);
         controller?.abort();
         console.warn('取消重复请求:', requestKey);
+        // 清除时间戳，允许立即重试被替换的请求
+        requestTimestamps.delete(requestKey);
     }
-    
+
+    // 记录本次请求时间
+    requestTimestamps.set(requestKey, now);
+
     // 创建新的 AbortController
     const controller = new AbortController();
     config.signal = controller.signal;
     pendingRequests.set(requestKey, controller);
+
+    return true;
 }
 
 /**
@@ -89,7 +121,23 @@ function addPendingRequest(config: InternalAxiosRequestConfig): void {
  */
 function removePendingRequest(config: InternalAxiosRequestConfig): void {
     const requestKey = generateRequestKey(config);
-    pendingRequests.delete(requestKey);
+    if (requestKey) {
+        pendingRequests.delete(requestKey);
+    }
+}
+
+/**
+ * 清除指定 URL 模式的防抖记录（用于页面切换后重新加载）
+ * @param urlPattern URL 匹配模式，例如 '/task/get'
+ */
+export function clearDebounceForUrl(urlPattern: string): void {
+    for (const [key, timestamp] of requestTimestamps.entries()) {
+        if (key.includes(urlPattern)) {
+            requestTimestamps.delete(key);
+            pendingRequests.delete(key);
+            console.log(`[防抖] 清除 ${urlPattern} 的防抖记录`);
+        }
+    }
 }
 
 const service: AxiosInstance = axios.create({
@@ -99,9 +147,15 @@ const service: AxiosInstance = axios.create({
 
 service.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // 添加请求去重
-        addPendingRequest(config);
-        
+        // 添加请求去重，如果返回 false 表示请求过于频繁，取消本次请求
+        if (!addPendingRequest(config)) {
+            // 创建一个可识别的错误，让调用方知道这是被防抖取消的请求
+            const debounceError = new Error('请求被防抖拦截（重复请求）');
+            (debounceError as any).isDebounce = true;
+            (debounceError as any).config = config;
+            return Promise.reject(debounceError);
+        }
+
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const url = (config.url || '').toString();
         const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
@@ -148,7 +202,7 @@ service.interceptors.response.use(
     (response: AxiosResponse) => {
         // 移除已完成的请求
         removePendingRequest(response.config as InternalAxiosRequestConfig);
-        
+
         // 检查响应头中是否有CSRF Token（登录成功后返回）
         const newCsrfToken = response.headers['x-csrf-token'];
         if (newCsrfToken) {
@@ -161,10 +215,22 @@ service.interceptors.response.use(
         if (error.config) {
             removePendingRequest(error.config as InternalAxiosRequestConfig);
         }
-        
+
+        // 如果是防抖取消的请求，静默处理（不显示错误提示）
+        if ((error as any).isDebounce) {
+            console.log('请求被防抖拦截:', error.message);
+            return Promise.reject(error);
+        }
+
         // 如果是请求被取消，直接返回
         if (axios.isCancel(error)) {
             console.log('请求已取消:', error.message);
+            return Promise.reject(error);
+        }
+
+        // 如果是 AbortController 取消的请求，静默处理
+        if (error.name === 'AbortError' || error.name === 'CanceledError') {
+            console.log('请求被中止:', error.message);
             return Promise.reject(error);
         }
         

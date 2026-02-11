@@ -28,15 +28,12 @@ export const fetchRoleData = () =>
 // Task and TaskNode
 export const getMyTaskNodes = (data?: any) => {
     const params = data || { page: 1, pageSize: 100 };
-    // GET 请求使用 query 参数
-    const query = new URLSearchParams();
-    if (params.page) query.append('page', String(params.page));
-    if (params.pageSize) query.append('pageSize', String(params.pageSize));
-    const queryString = query.toString();
-    return request({ 
-        url: `/tasknode/get/user${queryString ? '?' + queryString : ''}`, 
-        method: 'get' 
-    });
+    return request({
+        url: '/tasknode/get/user',
+        method: 'post',
+        data: params,
+        skipDedupe: true,
+    } as any);
 };
 
 export const listTasks = (data: any) =>
@@ -180,15 +177,12 @@ export const createTask = (data: any) =>
 // Aliases for compatibility with views
 export const listMyTaskNodes = (data?: any) => {
     const params = data || { page: 1, pageSize: 100 };
-    // GET 请求使用 query 参数
-    const query = new URLSearchParams();
-    if (params.page) query.append('page', String(params.page));
-    if (params.pageSize) query.append('pageSize', String(params.pageSize));
-    const queryString = query.toString();
-    return request({ 
-        url: `/tasknode/get/user${queryString ? '?' + queryString : ''}`, 
-        method: 'get' 
-    });
+    return request({
+        url: '/tasknode/get/user',
+        method: 'post',
+        data: params,
+        skipDedupe: true,
+    } as any);
 };
 
 // TaskNode create/update/list by task
@@ -361,7 +355,224 @@ export const getTaskNode = (data: { taskNodeId: string }) =>
 
 // AI助手API
 export const getAiSuggestion = () =>
-    request({ url: '/ai/suggestion', method: 'get' });
+    request({ url: '/ai/suggestion', method: 'get', timeout: 30000 });
+
+// ===== VibeCraft AI Flow API =====
+// 生成设计方案
+export const suggestFlowDesigns = (data: { tasks: string[]; constraints?: Record<string, any> }) =>
+    request({ url: '/ai/flow/designs', method: 'post', data });
+
+// ===== VibeCraft AI Task API =====
+// 润色任务
+export const polishTask = (data: { rawDescription: string; context?: Record<string, any> }) =>
+    request({ url: '/ai/task/polish', method: 'post', data, timeout: 120000 }); // 120秒超时
+
+// 生成子任务
+export const generateSubtasks = (data: { taskDescription: string }) =>
+    request({ url: '/ai/task/subtasks', method: 'post', data, timeout: 120000 }); // 120秒超时
+
+// 流式润色任务
+export const streamPolishTask = (
+    data: { rawDescription: string; polishType?: string; context?: Record<string, any> },
+    onEvent: (event: string, data: any) => void,
+    onError?: (error: Error) => void
+) => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    
+    // 使用 fetch 的 ReadableStream 实现流式请求
+    return fetch('/api/v1/ai/task/polish/stream', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        function readStream(): Promise<void> {
+            return reader?.read().then(({ done, value }) => {
+                if (done) {
+                    return;
+                }
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    if (line.trim()) {
+                        // 解析 SSE 格式: event: xxx\ndata: xxx
+                        const eventMatch = line.match(/event: (\w+)/);
+                        const dataMatch = line.match(/data: (.+)/);
+                        if (eventMatch && dataMatch) {
+                            try {
+                                const event = eventMatch[1];
+                                const data = JSON.parse(dataMatch[1]);
+                                onEvent(event, data);
+                            } catch (e) {
+                                console.error('解析 SSE 数据失败:', e);
+                            }
+                        }
+                    }
+                }
+                
+                return readStream();
+            }) || Promise.resolve();
+        }
+        
+        return readStream();
+    }).catch(error => {
+        console.error('流式请求失败:', error);
+        onError?.(error);
+    });
+};
+
+// 流式AI对话（直接传递prompt给GLM）
+export const streamAIChat = (
+    prompt: string,
+    onChunk: (content: string) => void,
+    onError?: (error: Error) => void
+): Promise<string> => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+
+    return new Promise((resolve, reject) => {
+        fetch('/api/v1/ai/chat/stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ prompt })
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullContent = '';
+
+            function readStream(): Promise<void> {
+                return reader?.read().then(({ done, value }) => {
+                    if (done) {
+                        resolve(fullContent);
+                        return;
+                    }
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            const eventMatch = line.match(/event: (\w+)/);
+                            const dataMatch = line.match(/data: (.+)/s);
+                            if (eventMatch && dataMatch) {
+                                try {
+                                    const event = eventMatch[1];
+                                    const data = JSON.parse(dataMatch[1]);
+                                    if (event === 'chunk' && data.content) {
+                                        fullContent += data.content;
+                                        onChunk(data.content);
+                                    } else if (event === 'complete') {
+                                        // complete事件包含完整内容
+                                        if (data.content) fullContent = data.content;
+                                    } else if (event === 'error') {
+                                        throw new Error(data.message || 'AI服务错误');
+                                    }
+                                } catch (e: any) {
+                                    if (e.message && e.message !== 'AI服务错误') {
+                                        console.error('解析SSE数据失败:', e);
+                                    } else {
+                                        reject(e);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return readStream();
+                }) || Promise.resolve();
+            }
+
+            return readStream();
+        }).catch(error => {
+            console.error('流式AI对话请求失败:', error);
+            onError?.(error);
+            reject(error);
+        });
+    });
+};
+
+// 流式生成子任务
+export const streamGenerateSubtasks = (
+    data: { taskDescription: string; taskId?: string },
+    onEvent: (event: string, data: any) => void,
+    onError?: (error: Error) => void
+) => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    
+    fetch('/api/v1/ai/task/subtasks/stream', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        function readStream(): Promise<void> {
+            return reader?.read().then(({ done, value }) => {
+                if (done) {
+                    return;
+                }
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    if (line.trim()) {
+                        const eventMatch = line.match(/event: (\w+)/);
+                        const dataMatch = line.match(/data: (.+)/);
+                        if (eventMatch && dataMatch) {
+                            try {
+                                const event = eventMatch[1];
+                                const data = JSON.parse(dataMatch[1]);
+                                onEvent(event, data);
+                            } catch (e) {
+                                console.error('解析 SSE 数据失败:', e);
+                            }
+                        }
+                    }
+                }
+                
+                return readStream();
+            }) || Promise.resolve();
+        }
+        
+        return readStream();
+    }).catch(error => {
+        console.error('流式请求失败:', error);
+        onError?.(error);
+    });
+};
 
 // 仪表盘统计API
 export const getDashboardStats = (data?: { scope?: string }) =>

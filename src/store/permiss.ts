@@ -36,6 +36,8 @@ export const usePermissStore = defineStore('permiss', {
                 '42',
                 '5',
                 '7',
+                // AI center module - NEW
+                'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task',
                 // my work module - NEW
                 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals',
                 // task module
@@ -54,7 +56,7 @@ export const usePermissStore = defineStore('permiss', {
                 // user center - NEW
                 'ucenter'
             ],
-            user: ['0', 'org_tree_global', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'reports', 'notify', 'ucenter'],
+            user: ['0', 'org_tree_global', 'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'reports', 'notify', 'ucenter'],
         };
         // 初始化时使用默认权限，避免刷新时菜单变化
         // 权限会在登录后通过 applyPermissions 更新
@@ -64,12 +66,18 @@ export const usePermissStore = defineStore('permiss', {
         let initialKey: string[];
         if (savedPermissions) {
             try {
-                initialKey = JSON.parse(savedPermissions);
+                const parsed = JSON.parse(savedPermissions);
+                initialKey = Array.isArray(parsed) ? parsed : (username == 'admin' ? defaultList.admin : defaultList.user) as string[];
             } catch {
                 initialKey = (username == 'admin' ? defaultList.admin : defaultList.user) as string[];
             }
         } else {
             initialKey = (username == 'admin' ? defaultList.admin : defaultList.user) as string[];
+        }
+
+        // 确保 initialKey 始终是数组
+        if (!Array.isArray(initialKey)) {
+            initialKey = defaultList.user as string[];
         }
         
         return {

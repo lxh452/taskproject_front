@@ -367,7 +367,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { 
@@ -853,6 +853,18 @@ const loadData = async () => {
 
 onMounted(() => {
     loadData();
+});
+
+// keep-alive 激活时重新加载数据
+onActivated(() => {
+    loadData();
+});
+
+// 监听路由参数变化
+watch(() => route.params.id, (newId, oldId) => {
+    if (newId && newId !== oldId) {
+        loadData();
+    }
 });
 </script>
 

@@ -249,10 +249,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { Search, Refresh, User, Star, Calendar, OfficeBuilding, Document, Picture, Download, View } from '@element-plus/icons-vue';
 import { listMyTaskNodes, listTasks, getChecklistList, updateChecklist, getTaskNodeAttachments, getTaskComments, createTaskComment } from '@/api';
+import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage } from 'element-plus';
 
 const router = useRouter();
@@ -550,7 +551,26 @@ async function loadMyTasks() {
 
     executorTasks.value = processNodes(executorList);
     leaderTasks.value = processNodes(leaderList);
+    
+    // 调试信息
+    console.log('【调试】API返回数据:', {
+      executorListLength: executorList.length,
+      leaderListLength: leaderList.length,
+      executorTaskCount: responseData.executor_task_count,
+      leaderTaskCount: responseData.leader_task_count
+    });
+    console.log('【调试】处理后数据:', {
+      executorTasksLength: executorTasks.value.length,
+      leaderTasksLength: leaderTasks.value.length
+    });
+    console.log('【调试】当前Tab:', activeTab.value);
+    console.log('【调试】filteredTasks:', filteredTasks.value.length);
   } catch (error: any) {
+    // 忽略防抖取消的请求，不显示错误提示
+    if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+      console.log('请求被防抖拦截，跳过错误提示');
+      return;
+    }
     console.error('加载任务节点失败:', error);
     ElMessage.error('网络错误，请稍后重试');
   } finally {
@@ -559,6 +579,13 @@ async function loadMyTasks() {
 }
 
 onMounted(() => {
+  loadMyTasks();
+});
+// keep-alive 激活时重新加载数据
+onActivated(() => {
+  // 清除防抖记录，确保页面切换后能重新加载数据
+  clearDebounceForUrl('/tasknode/my');
+  clearDebounceForUrl('/task/list');
   loadMyTasks();
 });
 </script>

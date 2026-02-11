@@ -827,7 +827,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { 
@@ -844,7 +844,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import TaskChecklist from '@/components/TaskChecklist.vue';
 import { useUserStore } from '@/store/user';
 import { getFileUrl, processFileUrls } from '@/utils/fileUrl';
-import request from '@/utils/request';
+import request, { clearDebounceForUrl } from '@/utils/request';
 import * as echarts from 'echarts';
 
 const route = useRoute();
@@ -1311,8 +1311,8 @@ async function confirmDispatch() {
                     url: '/tasknode/update',
                     method: 'put',
                     data: {
-                        taskNodeId: nodeId,
-                        executorId: [employeeId]
+                        nodeId: nodeId,
+                        executorIds: [employeeId]
                     }
                 });
                 if (resp.data.code === 200) {
@@ -1320,8 +1320,37 @@ async function confirmDispatch() {
                 } else {
                     failCount++;
                 }
-            } catch (e) {
-                failCount++;
+            } catch (e: any) {
+                // 如果是防抖拦截的错误，不增加失败计数
+                if (e.isDebounce || (e.message && e.message.includes('防抖'))) {
+                    console.log(`节点 ${nodeId} 的请求被防抖拦截`);
+                    // 等待防抖间隔后再继续
+                    await new Promise(resolve => setTimeout(resolve, 1200));
+                    // 重试一次
+                    try {
+                        const retryResp = await request({
+                            url: '/tasknode/update',
+                            method: 'put',
+                            data: {
+                                nodeId: nodeId,
+                                executorIds: [employeeId]
+                            }
+                        });
+                        if (retryResp.data.code === 200) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (retryError) {
+                        failCount++;
+                    }
+                } else {
+                    failCount++;
+                }
+            }
+            // 在每个请求之间增加延迟，避免触发防抖（必须大于防抖间隔 1000ms）
+            if (selections.length > 1) {
+                await new Promise(resolve => setTimeout(resolve, 1200));
             }
         }
 
@@ -1499,6 +1528,11 @@ async function loadTaskDetail() {
             });
         }
     } catch (error: any) {
+        // 忽略防抖取消的请求，不显示错误提示也不输出控制台
+        if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+            console.log('请求被防抖拦截，跳过错误提示');
+            return;
+        }
         console.error('加载任务详情失败:', error);
         ElMessage.error('加载任务详情失败: ' + (error.message || '未知错误'));
     } finally {
@@ -1562,6 +1596,10 @@ async function loadAttachments() {
             attachments.value = processFileUrls(resp.data?.data?.list || []);
         }
     } catch (error: any) {
+        if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+            console.log('加载附件请求被防抖拦截');
+            return;
+        }
         console.error('加载附件失败:', error);
     }
 }
@@ -1577,6 +1615,10 @@ async function loadComments() {
             comments.value = resp.data?.data?.list || [];
         }
     } catch (error: any) {
+        if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
+            console.log('加载评论请求被防抖拦截');
+            return;
+        }
         console.error('加载评论失败:', error);
     }
 }
@@ -2356,15 +2398,36 @@ onMounted(async () => {
     } catch (error: any) {
         console.error('获取当前用户信息失败:', error);
     }
-    
+
     await loadEmployees();
     await loadTaskDetail();
     loadAttachments();
     loadComments();
-    
+
     // 检查URL参数，如果有edit参数则自动打开编辑对话框
     if (route.query.edit === 'true' && canEditTask.value) {
         openEditDialog();
+    }
+});
+
+// keep-alive 激活时重新加载数据
+onActivated(async () => {
+    // 清除防抖记录，确保页面切换后能重新加载数据
+    clearDebounceForUrl('/task/get');
+    clearDebounceForUrl('/upload/task/attachments');
+    clearDebounceForUrl('/task/comment/list');
+    
+    await loadTaskDetail();
+    loadAttachments();
+    loadComments();
+});
+
+// 监听路由参数变化，当任务ID变化时重新加载
+watch(() => route.params.id, async (newId, oldId) => {
+    if (newId && newId !== oldId) {
+        await loadTaskDetail();
+        loadAttachments();
+        loadComments();
     }
 });
 

@@ -19,7 +19,7 @@
         </div>
         <div class="column-body">
           <div 
-            v-for="task in displayPendingTasks" 
+            v-for="task in pendingTasks" 
             :key="task.id" 
             class="task-card"
             :class="getPriorityClass(task.priority)"
@@ -65,7 +65,7 @@
         </div>
         <div class="column-body">
           <div 
-            v-for="task in displayInProgressTasks" 
+            v-for="task in inProgressTasks" 
             :key="task.id" 
             class="task-card"
             :class="getPriorityClass(task.priority)"
@@ -111,7 +111,7 @@
         </div>
         <div class="column-body">
           <div 
-            v-for="task in displayCompletedTasks" 
+            v-for="task in completedTasks" 
             :key="task.id" 
             class="task-card task-completed"
             @click="viewTask(task)"
@@ -155,11 +155,6 @@ import { getMyTaskNodes } from '@/api';
 import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
 
-const props = defineProps({
-  maxTasksPerColumn: { type: Number, default: 10 },
-  showExpiring: { type: Boolean, default: false }
-});
-
 const router = useRouter();
 const loading = ref(false);
 const tasks = ref<any[]>([]);
@@ -168,10 +163,6 @@ const filterStatus = ref<number | string>('');
 const pendingTasks = computed(() => tasks.value.filter(t => (t.status ?? t.nodeStatus ?? 0) === 0));
 const inProgressTasks = computed(() => tasks.value.filter(t => (t.status ?? t.nodeStatus ?? 0) === 1));
 const completedTasks = computed(() => tasks.value.filter(t => (t.status ?? t.nodeStatus ?? 0) === 2));
-
-const displayPendingTasks = computed(() => pendingTasks.value.slice(0, props.maxTasksPerColumn));
-const displayInProgressTasks = computed(() => inProgressTasks.value.slice(0, props.maxTasksPerColumn));
-const displayCompletedTasks = computed(() => completedTasks.value.slice(0, props.maxTasksPerColumn));
 
 function getPriorityClass(priority: number): string {
   switch (priority) {
@@ -291,6 +282,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-height: 680px;
 }
 
 /* Column Header - Swiss Minimalism */
@@ -338,12 +330,12 @@ onMounted(() => {
 }
 
 .column-body {
-  flex: 1;
   padding: var(--space-3);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  max-height: 600px;
 }
 
 /* Task Card - Priority Left Line */
@@ -539,6 +531,34 @@ html.dark-mode .status-progress {
 html.dark-mode .status-completed {
   background: rgba(52, 211, 153, 0.15);
   color: #34D399;
+}
+
+/* Custom Scrollbar for Column Body */
+.column-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.column-body::-webkit-scrollbar-track {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+.column-body::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.column-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Show scroll hint when more than 6 tasks */
+.column-header:has(~ .column-body > .task-card:nth-child(7))::after {
+  content: '↓ 滚动查看更多';
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-weight: 400;
 }
 
 /* Reduced Motion */

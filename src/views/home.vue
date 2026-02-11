@@ -8,11 +8,10 @@
         <v-sidebar />
         <div class="content-box" :class="{ 'content-collapse': sidebar.collapse }">
             <v-header />
-            <v-tabs></v-tabs>
             <div class="content">
                 <router-view v-slot="{ Component }">
                     <transition name="move" mode="out-in">
-                        <keep-alive :include="tabs.nameList">
+                        <keep-alive>
                             <component :is="Component"></component>
                         </keep-alive>
                     </transition>
@@ -24,13 +23,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useSidebarStore } from '@/store/sidebar';
-import { useTabsStore } from '@/store/tabs';
 import vHeader from '@/components/header.vue';
 import vSidebar from '@/components/sidebar.vue';
-import vTabs from '@/components/tabs.vue';
 
 const sidebar = useSidebarStore();
-const tabs = useTabsStore();
 
 const isMobile = ref(false);
 

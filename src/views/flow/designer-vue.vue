@@ -1,25 +1,128 @@
 <template>
   <div class="flow-designer-page" @contextmenu.prevent="onCanvasContextMenu">
-    <!-- 顶部工具栏 -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-button
-          :icon="leftDrawerVisible ? 'Fold' : 'Expand'"
-          @click="toggleLeftDrawer"
-          circle
-          class="drawer-toggle"
-          :class="{ active: leftDrawerVisible }"
-          title="节点库"
-        />
-        <div class="toolbar-title">
-          <el-icon class="title-icon"><Connection /></el-icon>
-          <span>流程设计器</span>
+    <!-- 浮动工具栏 - 毛玻璃效果 -->
+    <div class="floating-toolbar">
+      <div class="toolbar-section toolbar-left">
+        <div class="node-library-trigger" ref="nodeLibraryTrigger">
+          <button
+            class="icon-btn node-library-btn"
+            :class="{ active: nodeDockExpanded }"
+            @click="toggleNodeDock"
+            title="节点库"
+          >
+            <el-icon><Box /></el-icon>
+            <span class="btn-label">节点库</span>
+            <el-icon class="arrow-icon" :class="{ rotated: nodeDockExpanded }"><ArrowDown /></el-icon>
+          </button>
+          <!-- 节点库下拉面板 -->
+          <transition name="dropdown-slide">
+            <div
+              v-show="nodeDockExpanded"
+              class="node-library-dropdown"
+              @mouseenter="onNodeDockHover(true)"
+              @mouseleave="onNodeDockHover(false)"
+            >
+              <div class="dropdown-header">
+                <el-icon class="header-icon"><Box /></el-icon>
+                <span class="header-title">节点库</span>
+                <span class="node-count" v-if="filteredAvailableNodes.length">{{ filteredAvailableNodes.length }} 个节点</span>
+              </div>
+              <!-- 部门筛选器 -->
+              <div class="dropdown-filter">
+                <el-select
+                  v-model="selectedDepartmentId"
+                  placeholder="按部门筛选"
+                  clearable
+                  filterable
+                  size="small"
+                  class="department-filter"
+                  @change="filterNodesByDepartment"
+                >
+                  <el-option
+                    v-for="dept in departmentList"
+                    :key="dept.id"
+                    :label="dept.name"
+                    :value="dept.id"
+                  />
+                </el-select>
+              </div>
+              <!-- 节点列表 -->
+              <div class="dropdown-nodes" v-loading="loadingNodes">
+                <div v-if="filteredAvailableNodes.length === 0" class="empty-nodes">
+                  <el-icon class="empty-icon"><DocumentRemove /></el-icon>
+                  <p class="empty-text">{{ selectedDepartmentId ? '该部门暂无节点' : '请先选择任务' }}</p>
+                </div>
+                <div
+                  v-for="node in filteredAvailableNodes"
+                  :key="node.taskNodeId"
+                  class="node-card"
+                  :class="{
+                    'draggable': true,
+                    'arranged': isNodeArranged(node.taskNodeId)
+                  }"
+                  :draggable="true"
+                  @dragstart="onDragStart(node)"
+                  @dragend="onDragEnd"
+                  @touchstart="onTouchStart($event, node)"
+                  @touchmove="onTouchMove"
+                  @touchend="onTouchEnd"
+                  @click="selectNodeFromLibrary(node)"
+                >
+                  <div class="node-card-content">
+                    <div class="node-type-badge" :class="getNodeTypeClass(node.nodeType)">
+                      <el-icon><component :is="getNodeTypeIcon(node.nodeType)" /></el-icon>
+                    </div>
+                    <div class="node-info">
+                      <div class="node-name">{{ node.nodeName || '未命名节点' }}</div>
+                      <div class="node-meta">
+                        <el-icon><OfficeBuilding /></el-icon>
+                        <span>{{ getDepartmentName(node.departmentId) || '-' }}</span>
+                      </div>
+                    </div>
+                    <div class="node-status">
+                      <el-tag
+                        v-if="isNodeArranged(node.taskNodeId)"
+                        size="small"
+                        type="success"
+                        effect="light"
+                      >
+                        已安排
+                      </el-tag>
+                      <el-tag
+                        v-else-if="node.prerequisiteNodes && node.prerequisiteNodes.length > 0"
+                        size="small"
+                        type="warning"
+                        effect="light"
+                      >
+                        有前置
+                      </el-tag>
+                      <el-tag
+                        v-else
+                        size="small"
+                        type="info"
+                        effect="light"
+                      >
+                        待安排
+                      </el-tag>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="dropdown-footer">
+                <span class="drag-hint">
+                  <el-icon><Rank /></el-icon>
+                  拖拽节点到画布添加
+                </span>
+              </div>
+            </div>
+          </transition>
         </div>
+        <div class="toolbar-divider"></div>
         <el-select
           v-model="selectedTaskId"
           placeholder="选择任务"
           @change="loadTaskNodes"
-          class="task-selector"
+          class="task-select"
           filterable
           clearable
         >
@@ -31,189 +134,168 @@
           />
         </el-select>
       </div>
-      <div class="toolbar-right">
-        <el-button :icon="Refresh" @click="refreshFlow" circle title="刷新" />
-        <el-button :icon="FullScreen" @click="fitViewFlow" circle title="适应画布" />
-        <el-button :icon="MagicStick" @click="autoLayout" circle title="自动布局" />
-        <el-button
-          type="primary"
-          :icon="DocumentChecked"
-          @click="saveFlow"
-          :loading="saving"
-          :disabled="!selectedTaskId"
-          title="保存流程"
+
+      <div class="toolbar-section toolbar-center">
+        <div class="zoom-controls">
+          <button class="icon-btn small" @click="zoomOut" title="缩小">
+            <el-icon><Minus /></el-icon>
+          </button>
+          <span class="zoom-value">{{ Math.round(viewport.zoom * 100) }}%</span>
+          <button class="icon-btn small" @click="zoomIn" title="放大">
+            <el-icon><Plus /></el-icon>
+          </button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <button class="icon-btn" @click="fitViewFlow" title="适应画布">
+          <el-icon><FullScreen /></el-icon>
+        </button>
+        <button class="icon-btn" @click="autoLayout" title="自动布局">
+          <el-icon><MagicStick /></el-icon>
+        </button>
+        <button class="icon-btn" @click="refreshFlow" title="刷新">
+          <el-icon><Refresh /></el-icon>
+        </button>
+      </div>
+
+      <div class="toolbar-section toolbar-right">
+        <button
+          class="ai-trigger"
+          :class="{ active: aiPanelVisible, thinking: aiLoading }"
+          @click="toggleAiPanel"
         >
-          保存流程
-        </el-button>
-        <el-button
-          :icon="QuestionFilled"
-          @click="startOnboarding"
-          circle
-          title="帮助引导"
-        />
+          <div class="ai-indicator">
+            <el-icon><MagicStick /></el-icon>
+            <span class="ai-badge" v-if="aiChatMessages.length && !aiPanelVisible">{{ aiChatMessages.length }}</span>
+          </div>
+          <span class="ai-label">AI助手</span>
+          <div class="ai-pulse" v-if="aiChatMessages.length && !aiPanelVisible"></div>
+        </button>
+        <button
+          class="save-btn"
+          @click="saveFlow"
+          :disabled="!selectedTaskId || saving"
+        >
+          <el-icon v-if="saving" class="is-loading"><Loading /></el-icon>
+          <el-icon v-else><DocumentChecked /></el-icon>
+          <span>保存</span>
+        </button>
+        <button class="icon-btn" @click="startOnboarding" title="帮助">
+          <el-icon><QuestionFilled /></el-icon>
+        </button>
       </div>
     </div>
 
-    <div class="flow-container">
-      <!-- 左侧智能面板：节点库 / 节点详情 -->
-      <transition name="drawer-slide-left">
-        <div
-          v-show="leftDrawerVisible"
-          class="sidebar-left drawer"
-          @mouseenter="panEnabled=false"
-          @mouseleave="panEnabled=true"
-        >
-        <!-- 智能面板头部 -->
-        <div class="sidebar-header">
-          <el-icon class="header-icon">
-            <component :is="selected || selectedEdge ? 'InfoFilled' : 'Box'" />
-          </el-icon>
-          <span class="header-title">{{ selected || selectedEdge ? '节点详情' : '节点库' }}</span>
-          <el-button
-            :icon="Fold"
-            @click="toggleLeftDrawer"
-            circle
-            size="small"
-            class="collapse-btn"
-            title="收起面板"
-          />
+
+    <!-- AI 智能助手面板 -->
+    <transition name="ai-panel-slide">
+      <div class="ai-panel" v-show="aiPanelVisible">
+        <div class="ai-header">
+          <div class="ai-avatar" :class="{ pulse: aiLoading }">
+            <el-icon><MagicStick /></el-icon>
+          </div>
+          <div class="ai-title-section">
+            <h3 class="ai-title">AI 流程助手</h3>
+            <p class="ai-status">{{ aiStatus }}</p>
+          </div>
+          <button class="close-btn" @click="aiPanelVisible = false">
+            <el-icon><Close /></el-icon>
+          </button>
         </div>
 
-        <!-- 节点库内容（未选中节点时显示） -->
-        <transition name="panel-fade" mode="out-in">
-          <div v-if="!selected && !selectedEdge" key="node-library" class="panel-content">
-            <!-- 部门筛选器 -->
-            <div class="filter-section">
-              <el-select
-                v-model="selectedDepartmentId"
-                placeholder="按部门筛选"
-                clearable
-                filterable
-                class="department-filter"
-                @change="filterNodesByDepartment"
-              >
-                <el-option
-                  v-for="dept in departmentList"
-                  :key="dept.id"
-                  :label="dept.name"
-                  :value="dept.id"
-                />
-              </el-select>
-            </div>
-            <div class="nodes-list" v-loading="loadingNodes">
-              <div v-if="filteredAvailableNodes.length === 0" class="empty-nodes">
-                <el-icon class="empty-icon"><DocumentRemove /></el-icon>
-                <p class="empty-text">{{ selectedDepartmentId ? '该部门暂无节点' : '请先选择任务' }}</p>
-                <p class="empty-hint">{{ selectedDepartmentId ? '尝试选择其他部门' : '选择任务后将显示可用的任务节点' }}</p>
-              </div>
-              <div
-                v-for="node in filteredAvailableNodes"
-                :key="node.taskNodeId"
-                class="node-card"
-                :class="{
-                  'draggable': true,
-                  'readonly': !node.canDrag
-                }"
-                :draggable="true"
-                @dragstart="onDragStart(node)"
-                @dragend="onDragEnd"
-                @touchstart="onTouchStart($event, node)"
-                @touchmove="onTouchMove"
-                @touchend="onTouchEnd"
-                @click="selectNodeFromLibrary(node)"
-              >
-                <div class="node-card-header">
-                  <div class="node-type-badge" :class="getNodeTypeClass(node.nodeType)">
-                    <el-icon><component :is="getNodeTypeIcon(node.nodeType)" /></el-icon>
-                  </div>
-                  <div class="node-info">
-                    <div class="node-name">{{ node.nodeName || '未命名节点' }}</div>
-                    <div class="node-meta">
-                      <el-icon><OfficeBuilding /></el-icon>
-                      <span>{{ getDepartmentName(node.departmentId) || '-' }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="node-card-footer">
-                  <el-tag
-                    v-if="isNodeArranged(node.taskNodeId)"
-                    size="small"
-                    type="primary"
-                    class="prereq-tag"
-                  >
-                    <el-icon><DocumentChecked /></el-icon>
-                    已安排
-                  </el-tag>
-                  <el-tag
-                    v-else-if="node.prerequisiteNodes && node.prerequisiteNodes.length > 0"
-                    size="small"
-                    type="warning"
-                    class="prereq-tag"
-                  >
-                    <el-icon><Connection /></el-icon>
-                    有前置
-                  </el-tag>
-                  <el-tag
-                    v-else
-                    size="small"
-                    type="info"
-                    class="prereq-tag"
-                  >
-                    <el-icon><Clock /></el-icon>
-                    未安排
-                  </el-tag>
-                  <div class="node-status" v-if="node.status !== undefined">
-                    <el-tag :type="getStatusType(node.status)" size="small">
-                      {{ getStatusText(node.status) }}
-                    </el-tag>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="sidebar-footer">
-              <el-alert
-                title="提示"
-                type="info"
-                :closable="false"
-                show-icon
-              >
-                <template #default>
-                  <p class="tip-text">拖拽节点到画布上进行流程设计</p>
-                  <p class="tip-text">点击画布上的节点查看详情</p>
-                </template>
-              </el-alert>
-            </div>
+        <!-- 聊天消息区 -->
+        <div class="ai-chat-body" ref="aiChatContainer">
+          <!-- 空状态 -->
+          <div class="ai-empty" v-if="!aiChatMessages.length && !aiLoading">
+            <el-icon class="ai-empty-icon"><ChatDotRound /></el-icon>
+            <p>AI 流程助手</p>
+            <span>通过对话分析任务依赖、生成和修改流程图</span>
+            <button
+              v-if="availableNodes.length > 0"
+              class="ai-quick-action"
+              @click="startAiFlowGeneration"
+            >
+              <el-icon><MagicStick /></el-icon>
+              一键生成流程图
+            </button>
           </div>
+          <!-- 消息列表 -->
+          <template v-for="msg in aiChatMessages" :key="msg.id">
+            <div class="ai-chat-msg" :class="msg.role">
+              <div class="msg-avatar" v-if="msg.role === 'assistant'">
+                <el-icon><MagicStick /></el-icon>
+              </div>
+              <div class="msg-bubble">
+                <div class="msg-content" v-html="renderMarkdown(msg.content)"></div>
+                <div class="msg-time">{{ formatMsgTime(msg.timestamp) }}</div>
+                <span v-if="msg.isStreaming" class="typing-dot"></span>
+              </div>
+              <div class="msg-avatar user-avatar" v-if="msg.role === 'user'">
+                <el-icon><User /></el-icon>
+              </div>
+            </div>
+          </template>
+        </div>
 
-          <!-- 节点详情内容（选中节点时显示） -->
-          <div v-else key="node-detail" class="panel-content">
-            <div class="detail-content">
+        <!-- 自然语言输入区 -->
+        <div class="ai-input-area">
+          <div class="input-wrapper">
+            <textarea
+              v-model="aiQuery"
+              placeholder="输入指令，如：把测试放在开发之后..."
+              @keydown.enter.ctrl="askAi"
+              rows="2"
+            ></textarea>
+            <button class="send-btn" @click="askAi" :disabled="aiLoading || !aiQuery.trim()">
+              <el-icon v-if="aiLoading" class="is-loading"><Loading /></el-icon>
+              <el-icon v-else><Promotion /></el-icon>
+            </button>
+          </div>
+          <div class="input-hints">
+            <span>Ctrl + Enter 发送</span>
+            <span>支持自然语言描述</span>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 节点详情面板 -->
+    <transition name="detail-panel-slide">
+      <div class="detail-panel" v-show="selected || selectedEdge" @mouseenter="panEnabled=false" @mouseleave="panEnabled=true">
+        <div class="detail-header">
+          <el-icon class="header-icon"><InfoFilled /></el-icon>
+          <span class="header-title">{{ selected ? '节点详情' : '连接详情' }}</span>
+          <button class="close-btn" @click="clearSelection">
+            <el-icon><Close /></el-icon>
+          </button>
+        </div>
+
+        <div class="detail-content" v-if="selected">
           <!-- 节点详情 -->
-          <div v-if="selected" class="detail-section">
+          <div class="detail-section">
             <div class="section-title">基本信息</div>
             <div class="detail-grid">
               <div class="detail-item">
                 <div class="detail-label">
                   <el-icon><Document /></el-icon>
                   <span>节点名称</span>
-        </div>
+                </div>
                 <div class="detail-value">{{ selected.data?.label || '-' }}</div>
-            </div>
+              </div>
               <div class="detail-item">
                 <div class="detail-label">
                   <el-icon><User /></el-icon>
                   <span>负责人</span>
-            </div>
+                </div>
                 <div class="detail-value">
                   <div class="employee-info" v-if="detailAssignee && detailAssignee !== '-'">
                     <el-avatar :size="24" :src="getLeaderAvatar()" class="detail-avatar">
                       {{ detailAssignee[0] }}
                     </el-avatar>
                     <span>{{ detailAssignee }}</span>
-            </div>
+                  </div>
                   <span v-else>-</span>
-          </div>
-        </div>
+                </div>
+              </div>
               <div class="detail-item">
                 <div class="detail-label">
                   <el-icon><UserFilled /></el-icon>
@@ -278,17 +360,17 @@
             <div class="section-title">人员分配</div>
             <el-form label-width="80px" size="default" class="role-form">
               <el-form-item label="负责人">
-                <el-select 
-                  v-model="formLeader" 
-                  placeholder="选择负责人" 
-                  filterable 
+                <el-select
+                  v-model="formLeader"
+                  placeholder="选择负责人"
+                  filterable
                   style="width: 100%"
                   clearable
                 >
-                  <el-option 
-                    v-for="emp in employees" 
-                    :key="emp.id" 
-                    :value="emp.id" 
+                  <el-option
+                    v-for="emp in employees"
+                    :key="emp.id"
+                    :value="emp.id"
                     :label="emp.realName || emp.name || emp.id"
                   >
                     <div class="employee-option" :class="{
@@ -300,15 +382,15 @@
                       </el-avatar>
                       <span class="employee-name">{{ emp.realName || emp.name || emp.id }}</span>
                       <div class="role-badges">
-                        <el-icon 
-                          v-if="employeeRoles[String(emp.id)]?.isLeader || String(formLeader) === String(emp.id)" 
+                        <el-icon
+                          v-if="employeeRoles[String(emp.id)]?.isLeader || String(formLeader) === String(emp.id)"
                           class="role-badge leader-badge"
                           :size="16"
                         >
                           <CircleCheckFilled />
                         </el-icon>
-                        <el-icon 
-                          v-if="employeeRoles[String(emp.id)]?.isExecutor" 
+                        <el-icon
+                          v-if="employeeRoles[String(emp.id)]?.isExecutor"
                           class="role-badge executor-badge"
                           :size="16"
                         >
@@ -318,21 +400,21 @@
                     </div>
                   </el-option>
                 </el-select>
-          </el-form-item>
+              </el-form-item>
               <el-form-item label="执行人">
-                <el-select 
-                  v-model="formExecutors" 
-                  multiple 
-                  placeholder="选择执行人" 
-                  filterable 
+                <el-select
+                  v-model="formExecutors"
+                  multiple
+                  placeholder="选择执行人"
+                  filterable
                   style="width: 100%"
                   collapse-tags
                   collapse-tags-tooltip
                 >
-                  <el-option 
-                    v-for="emp in employees" 
-                    :key="emp.id" 
-                    :value="emp.id" 
+                  <el-option
+                    v-for="emp in employees"
+                    :key="emp.id"
+                    :value="emp.id"
                     :label="emp.realName || emp.name || emp.id"
                   >
                     <div class="employee-option" :class="{
@@ -344,15 +426,15 @@
                       </el-avatar>
                       <span class="employee-name">{{ emp.realName || emp.name || emp.id }}</span>
                       <div class="role-badges">
-                        <el-icon 
-                          v-if="employeeRoles[String(emp.id)]?.isLeader" 
+                        <el-icon
+                          v-if="employeeRoles[String(emp.id)]?.isLeader"
                           class="role-badge leader-badge"
                           :size="16"
                         >
                           <CircleCheckFilled />
                         </el-icon>
-                        <el-icon 
-                          v-if="employeeRoles[String(emp.id)]?.isExecutor || formExecutors.some((eid: any) => String(eid) === String(emp.id))" 
+                        <el-icon
+                          v-if="employeeRoles[String(emp.id)]?.isExecutor || formExecutors.some((eid: any) => String(eid) === String(emp.id))"
                           class="role-badge executor-badge"
                           :size="16"
                         >
@@ -362,11 +444,11 @@
                     </div>
                   </el-option>
                 </el-select>
-          </el-form-item>
+              </el-form-item>
               <el-form-item>
-                <el-button 
-                  type="primary" 
-                  @click="saveRoles" 
+                <el-button
+                  type="primary"
+                  @click="saveRoles"
                   :loading="savingRoles"
                   :disabled="!selected"
                   style="width: 100%"
@@ -374,9 +456,9 @@
                   <el-icon><Check /></el-icon>
                   保存分配
                 </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
+              </el-form-item>
+            </el-form>
+          </div>
 
           <div class="detail-section" v-if="detailDescription && detailDescription !== '-'">
             <div class="section-title">节点描述</div>
@@ -384,23 +466,25 @@
           </div>
 
           <!-- 操作按钮 -->
-          <div class="detail-section" v-if="selected">
+          <div class="detail-section">
             <div class="section-title">操作</div>
             <div class="action-buttons">
-      <el-button 
-        type="danger" 
-                :icon="Delete" 
+              <el-button
+                type="danger"
+                :icon="Delete"
                 @click="handleDeleteNode"
                 :disabled="!canDeleteNode"
                 style="width: 100%"
               >
                 删除节点
-      </el-button>
-      </div>
+              </el-button>
+            </div>
           </div>
+        </div>
 
-          <!-- 边操作 -->
-          <div v-if="selectedEdge && !selected" class="detail-section edge-detail-section">
+        <!-- 边详情 -->
+        <div class="detail-content" v-else-if="selectedEdge">
+          <div class="detail-section edge-detail-section">
             <div class="section-title">
               <el-icon><Connection /></el-icon>
               <span>连接信息</span>
@@ -433,26 +517,24 @@
               <span>操作</span>
             </div>
             <div class="action-buttons">
-      <el-button 
-                type="danger" 
-                :icon="Delete" 
+              <el-button
+                type="danger"
+                :icon="Delete"
                 @click="handleDeleteEdge"
                 style="width: 100%"
                 size="default"
               >
                 删除连接
-      </el-button>
+              </el-button>
             </div>
           </div>
-            </div>
-          </div>
-        </transition>
         </div>
-      </transition>
+      </div>
+    </transition>
 
-      <!-- 画布区域 -->
-      <div class="canvas-area" ref="canvasTopEl">
-        <VueFlow
+    <!-- 画布区域 - 全屏 -->
+    <div class="canvas-area" ref="canvasTopEl">
+      <VueFlow
           v-model:nodes="nodes"
           v-model:edges="edges"
           :node-types="nodeTypes"
@@ -487,7 +569,6 @@
           <Controls position="bottom-right" />
           <MiniMap zoomable pannable position="bottom-left" />
         </VueFlow>
-      </div>
     </div>
 
     <!-- 右键菜单 -->
@@ -544,23 +625,55 @@ import {
   Connection, Refresh, FullScreen, DocumentChecked, Box, DocumentRemove,
   InfoFilled, Document, User, UserFilled, Calendar, DataLine, CircleCheck, CircleCheckFilled, Clock, Check,
   OfficeBuilding, Setting, List, Promotion, Timer, Delete, ArrowRight, MagicStick,
-  DocumentCopy, Aim, Select, QuestionFilled, Fold, Expand
+  DocumentCopy, Aim, Select, QuestionFilled, Fold, Expand, Menu, Minus, Plus, Close,
+  Loading, ChatDotRound, Warning, Link, Grid, ArrowDown, Rank
 } from '@element-plus/icons-vue'
-import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType } from '@vue-flow/core'
+import { VueFlow, Handle, useVueFlow, Position, type Node, type Edge, MarkerType, applyNodeChanges } from '@vue-flow/core'
 import { Background, Controls, MiniMap } from '@vue-flow/additional-components'
 import '@vue-flow/core/dist/style.css'
 import { useFlowStore } from '@/stores/flowStore'
-import { listTasks, listTaskNodesByTask, getMyEmployee, listEmployees, updatePrerequisiteNodes, updateTaskNode, listDepartments } from '@/api'
+import { listTasks, listTaskNodesByTask, getMyEmployee, listEmployees, updatePrerequisiteNodes, updateTaskNode, listDepartments, streamAIChat } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { markRaw } from 'vue'
 import { useFlowOnboarding } from '@/composables/useFlowOnboarding'
+import request from '@/utils/request'
 
 const store = useFlowStore()
 
 // 新手引导
 const { startOnboarding, initOnboarding } = useFlowOnboarding()
 
-// 抽屉状态
+// ========== 新UI状态 ==========
+// 节点库Dock状态
+const nodeDockExpanded = ref(false)
+const nodeDockHoverTimer = ref<number | null>(null)
+const nodeLibraryTrigger = ref<HTMLElement | null>(null)
+
+// AI面板状态
+const aiPanelVisible = ref(false)
+const aiQuery = ref('')
+const aiLoading = ref(false)
+const aiStatus = ref('就绪')
+
+// AI聊天消息
+interface AiChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  isStreaming?: boolean
+}
+const aiChatMessages = ref<AiChatMessage[]>([])
+const aiChatContainer = ref<HTMLElement | null>(null)
+
+// 节点类型分组（用于Dock图标）
+const nodeTypeGroups = computed(() => [
+  { label: '任务节点', icon: 'List' },
+  { label: '条件节点', icon: 'Promotion' },
+  { label: '审批节点', icon: 'Timer' },
+])
+
+// 抽屉状态（保留兼容）
 const leftDrawerVisible = ref(true)
 
 // 右键菜单状态
@@ -790,7 +903,7 @@ const edgeOptions = {
 } as any
 
 const vueFlowInstance = useVueFlow()
-const { screenToFlowCoordinate, getNodes, getEdges, fitView, removeEdges, removeNodes, setViewport, viewport, applyNodeChanges } = vueFlowInstance
+const { screenToFlowCoordinate, getNodes, getEdges, fitView, removeEdges, removeNodes, setViewport, viewport } = vueFlowInstance
 
 // 节点类型图标
 function getNodeTypeIcon(type: number) {
@@ -839,10 +952,19 @@ let resizeObserver: ResizeObserver | null = null
 
 // 点击外部关闭右键菜单
 function handleClickOutside(event: MouseEvent) {
+  const target = event.target as HTMLElement
+
+  // 关闭右键菜单
   if (contextMenu.value.visible) {
-    const target = event.target as HTMLElement
     if (!target.closest('.context-menu')) {
       closeContextMenu()
+    }
+  }
+
+  // 关闭节点库下拉面板
+  if (nodeDockExpanded.value) {
+    if (!target.closest('.node-library-trigger')) {
+      nodeDockExpanded.value = false
     }
   }
 }
@@ -949,6 +1071,20 @@ async function loadEmployees(companyId: string) {
   }
 }
 
+// 处理执行人ID数据
+function processExecutorIds(n: any): string[] {
+  const execIds = n.executorIds || n.ExecutorIds || n.executorId || n.ExecutorId || []
+  if (Array.isArray(execIds)) {
+    return execIds.filter((id: any) => id && String(id).trim())
+  }
+  if (typeof execIds === 'string') {
+    // 如果是字符串，可能是逗号分隔的ID列表
+    if (execIds.trim() === '') return []
+    return execIds.split(',').map((id: string) => id.trim()).filter((id: string) => id)
+  }
+  return []
+}
+
 async function loadTaskNodes() {
   if (!selectedTaskId.value) {
     availableNodes.value = []
@@ -969,23 +1105,8 @@ async function loadTaskNodes() {
     availableNodes.value = (Array.isArray(list) ? list : []).map((n: any) => {
       const nodeId = n.id || n.taskNodeId || n.TaskNodeId
       const leaderId = n.leaderId || n.LeaderId || ''
-      const isLeader = String(leaderId) === String(currentEmployeeId.value)
       
-      // 打印原始节点数据，用于调试
-      console.log('原始节点数据:', {
-        nodeId,
-        nodeName: n.nodeName || n.NodeName,
-        allKeys: Object.keys(n),
-        prerequisiteNodes: n.prerequisiteNodes,
-        PrerequisiteNodes: n.PrerequisiteNodes,
-        prerequisiteNodeIds: n.prerequisiteNodeIds,
-        PrerequisiteNodeIds: n.PrerequisiteNodeIds,
-        prerequisiteNode: n.prerequisiteNode,
-        PrerequisiteNode: n.PrerequisiteNode,
-      })
-      
-      // 解析前置节点（后端字段：ex_node_ids，API返回可能是 prerequisiteNodes 或 exNodeIds）
-      // 后端存储格式：逗号分隔的字符串，例如 "start,node_1,node_2"
+      // 解析前置节点
       const prereqNodes = n.prerequisiteNodes || 
                           n.PrerequisiteNodes || 
                           n.exNodeIds ||
@@ -994,60 +1115,33 @@ async function loadTaskNodes() {
                           ''
       
       let prereqList: string[] = []
-      try {
-        if (typeof prereqNodes === 'string') {
-          // 后端格式：逗号分隔的字符串，例如 "start,node_1,node_2"
-          const trimmed = prereqNodes.trim()
-          if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') {
-            prereqList = []
-          } else {
-            // 按逗号分割，去除空白和无效值
-            prereqList = trimmed.split(',')
-              .map(id => id.trim())
-              .filter(id => id && id !== 'null' && id !== 'undefined')
-          }
-        } else if (Array.isArray(prereqNodes)) {
-          // 如果已经是数组，直接使用
-          prereqList = prereqNodes
-            .map((id: any) => String(id).trim())
-            .filter((id: string) => id && id !== 'null' && id !== 'undefined')
-        }
-        
-        console.log(`节点 ${nodeId} 解析后的前置节点:`, prereqList)
-      } catch (e) {
-        console.warn('解析前置节点失败:', prereqNodes, e)
-        prereqList = []
+      if (typeof prereqNodes === 'string' && prereqNodes.trim() && prereqNodes !== 'null' && prereqNodes !== 'undefined') {
+        prereqList = prereqNodes.split(',')
+          .map((id: string) => id.trim())
+          .filter((id: string) => id && id !== 'null' && id !== 'undefined')
+      } else if (Array.isArray(prereqNodes)) {
+        prereqList = prereqNodes
+          .map((id: any) => String(id).trim())
+          .filter((id: string) => id && id !== 'null' && id !== 'undefined')
       }
       
       const deptId = n.departmentId || n.DepartmentId || ''
       const deptName = departmentMap.value[String(deptId)] || n.departmentName || n.DepartmentName || ''
       
-        return {
+      return {
         taskNodeId: nodeId,
         nodeName: n.nodeName || n.NodeName || '未命名',
         nodeType: n.nodeType || n.NodeType || 1,
         departmentId: deptId,
         departmentName: deptName,
         leaderId,
-        executorIds: (() => {
-          // 处理执行人数据：可能是数组、字符串或不存在
-          const execIds = n.executorIds || n.ExecutorIds || n.executorId || n.ExecutorId || []
-          if (Array.isArray(execIds)) {
-            return execIds.filter(id => id && String(id).trim())
-          }
-          if (typeof execIds === 'string') {
-            // 如果是字符串，可能是逗号分隔的ID列表
-            if (execIds.trim() === '') return []
-            return execIds.split(',').map(id => id.trim()).filter(id => id)
-          }
-          return []
-        })(),
+        executorIds: processExecutorIds(n),
         status: n.status || n.Status || 0,
         progress: n.progress || n.Progress || 0,
         nodeDeadline: n.nodeDeadline || n.NodeDeadline || '',
         estimatedHours: n.estimatedHours || n.EstimatedHours || 0,
         nodeDetail: n.nodeDetail || n.NodeDetail || '',
-        canDrag: isLeader,
+        canDrag: true,
         hasNoPrereq: prereqList.length === 0,
         prerequisiteNodes: prereqList,
       }
@@ -1169,7 +1263,7 @@ function buildFlowGraph() {
     type: 'start',
     position: { x: 100, y: 200 },
     data: { label: '开始' },
-    draggable: true, // Allow start node to be dragged
+    draggable: false, // Start node should not be draggable
     style: {
       background: '#1E3A5F',
       color: '#fff',
@@ -1244,7 +1338,7 @@ function buildFlowGraph() {
             bgTo: deptColor.bgTo,
           },
         },
-        draggable: true, // Allow all task nodes to be dragged for layout purposes
+        draggable: true, // 允许所有人拖动节点
         style: {
           background: deptColor.bgFrom || '#FFFFFF',
           border: `2px solid ${deptColor.color || '#E2E8F0'}`,
@@ -1265,7 +1359,7 @@ function buildFlowGraph() {
     type: 'end',
     position: { x: endX, y: 200 },
     data: { label: '结束' },
-    draggable: true, // Allow end node to be dragged
+    draggable: false, // End node should not be draggable
     style: {
       background: '#DC2626',
       color: '#fff',
@@ -1582,7 +1676,7 @@ function handleTouchDrop(clientX: number, clientY: number) {
       prerequisiteNodes: node.prerequisiteNodes || [],
       canDrag: String(node.leaderId) === String(currentEmployeeId.value),
     },
-    draggable: true,
+    draggable: String(node.leaderId) === String(currentEmployeeId.value),
   }
   
   nodes.value.push(newNode)
@@ -1603,6 +1697,356 @@ function selectNodeFromLibrary(node: any) {
 // ========== 抽屉切换功能 ==========
 function toggleLeftDrawer() {
   leftDrawerVisible.value = !leftDrawerVisible.value
+}
+
+// ========== 节点库Dock功能 ==========
+function toggleNodeDock() {
+  nodeDockExpanded.value = !nodeDockExpanded.value
+}
+
+function onNodeDockHover(isHovering: boolean) {
+  if (nodeDockHoverTimer.value) {
+    clearTimeout(nodeDockHoverTimer.value)
+    nodeDockHoverTimer.value = null
+  }
+
+  if (isHovering) {
+    // 悬停时延迟展开
+    nodeDockHoverTimer.value = window.setTimeout(() => {
+      nodeDockExpanded.value = true
+    }, 200)
+  } else {
+    // 离开时延迟收起
+    nodeDockHoverTimer.value = window.setTimeout(() => {
+      nodeDockExpanded.value = false
+    }, 300)
+  }
+}
+
+// ========== AI面板功能 ==========
+async function toggleAiPanel() {
+  aiPanelVisible.value = !aiPanelVisible.value
+  if (aiPanelVisible.value && aiChatMessages.value.length === 0 && availableNodes.value.length > 0) {
+    await startAiFlowGeneration()
+  }
+}
+
+// 准备节点库数据
+function prepareLibraryNodes() {
+  return availableNodes.value.map((node, index) => ({
+    index,
+    id: String(node.taskNodeId || node.id || index),
+    name: node.nodeName || node.name || `任务${index + 1}`,
+    departmentId: node.departmentId || '',
+    leaderId: node.leaderId || '',
+    executorIds: node.executorIds || [],
+    status: node.status || 0,
+    progress: node.progress || 0,
+    deadline: node.nodeDeadline || '',
+    estimatedHours: node.estimatedHours || 0,
+    nodeDetail: node.nodeDetail || '',
+    nodeType: node.nodeType || 1
+  }))
+}
+
+// 构建初始分析 prompt
+function buildInitialAnalysisPrompt(libraryNodes: ReturnType<typeof prepareLibraryNodes>) {
+  return `作为流程设计专家，请分析以下任务节点，识别它们的依赖关系并确定执行顺序。
+
+任务节点列表：
+${libraryNodes.map(n => `- ID:${n.id}, 名称:${n.name}${n.nodeDetail ? `, 描述:${n.nodeDetail}` : ''}`).join('\n')}
+
+分析要求：
+1. 识别任务间的逻辑依赖关系（哪些任务必须在其他任务之前完成）
+2. 考虑任务类型关键词（如：需求→设计→开发→测试→部署）
+3. 识别可以并行执行的任务
+4. 返回JSON格式（用 \`\`\`json 包裹）：
+\`\`\`json
+{
+  "analysis": "分析说明",
+  "dependencies": [
+    {"nodeId": "实际节点ID", "dependsOn": ["start"]},
+    {"nodeId": "实际节点ID", "dependsOn": ["前置节点ID"]},
+    ...
+  ]
+}
+\`\`\`
+
+注意：
+- nodeId 使用实际的节点ID（如上面列表中的ID）
+- 没有前置依赖的起始节点，dependsOn 为 ["start"]
+- 有依赖的节点，dependsOn 填写其前置节点的ID`
+}
+
+// 应用AI流程结果到画布
+function applyAiFlowResult(parsedResult: any, libraryNodes: ReturnType<typeof prepareLibraryNodes>) {
+  const dependencies = parsedResult.dependencies || []
+
+  // 更新 availableNodes 的 prerequisiteNodes
+  dependencies.forEach((dep: any) => {
+    const nodeId = String(dep.nodeId)
+    const dependsOn = (dep.dependsOn || []).map((d: any) => String(d))
+    const nodeInList = availableNodes.value.find(n => String(n.taskNodeId) === nodeId)
+    if (nodeInList) {
+      nodeInList.prerequisiteNodes = dependsOn.length > 0 ? dependsOn : ['start']
+    }
+  })
+
+  // 重建画布
+  buildFlowGraph()
+
+  // 调整视图
+  nextTick(() => {
+    fitView({ padding: 0.2 })
+  })
+}
+
+// 一键生成流程图
+async function startAiFlowGeneration() {
+  if (availableNodes.value.length === 0) {
+    ElMessage.warning('节点库中没有可用节点')
+    return
+  }
+
+  const libraryNodes = prepareLibraryNodes()
+
+  // 添加用户消息
+  const userMsg: AiChatMessage = {
+    id: `user-${Date.now()}`,
+    role: 'user',
+    content: '请分析所有任务节点的依赖关系，生成流程图',
+    timestamp: Date.now()
+  }
+  aiChatMessages.value.push(userMsg)
+  scrollChatToBottom()
+
+  // 添加AI占位消息
+  const aiMsg: AiChatMessage = {
+    id: `ai-${Date.now()}`,
+    role: 'assistant',
+    content: '',
+    timestamp: Date.now(),
+    isStreaming: true
+  }
+  aiChatMessages.value.push(aiMsg)
+
+  aiLoading.value = true
+  aiStatus.value = '正在分析任务依赖...'
+
+  try {
+    const prompt = buildInitialAnalysisPrompt(libraryNodes)
+    const aiResponse = await streamAIChat(
+      prompt,
+      (chunk) => {
+        aiMsg.content += chunk
+        scrollChatToBottom()
+      }
+    )
+
+    aiMsg.content = aiResponse
+    aiMsg.isStreaming = false
+    aiMsg.timestamp = Date.now()
+
+    // 解析JSON结果
+    let parsedResult: any
+    const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)```/) || aiResponse.match(/(\{[\s\S]*\})/)
+    if (jsonMatch) {
+      parsedResult = JSON.parse(jsonMatch[1] || jsonMatch[0])
+      applyAiFlowResult(parsedResult, libraryNodes)
+      const depCount = parsedResult.dependencies?.length || 0
+      ElMessage.success(`AI流程图生成完成！共${depCount}个任务节点`)
+    } else {
+      ElMessage.warning('AI未返回有效的流程数据')
+    }
+  } catch (e) {
+    console.error('AI分析失败:', e)
+    aiMsg.content = aiMsg.content || 'AI分析失败，请重试'
+    aiMsg.isStreaming = false
+    ElMessage.error('AI生成流程图失败，请重试')
+  } finally {
+    aiLoading.value = false
+    aiStatus.value = '就绪'
+    scrollChatToBottom()
+  }
+}
+
+// 构建对话式修改 prompt
+function buildChatPrompt(userMessage: string, libraryNodes: ReturnType<typeof prepareLibraryNodes>) {
+  // 获取当前画布上的节点及其前置关系
+  const currentFlowState = availableNodes.value
+    .filter(n => {
+      const prereqs = n.prerequisiteNodes || []
+      return prereqs.length > 0 && prereqs.some((id: any) => String(id).trim() !== '')
+    })
+    .map(n => {
+      const nodeId = String(n.taskNodeId)
+      const name = n.nodeName || n.name || '未命名'
+      const prereqs = (n.prerequisiteNodes || []).map((id: any) => String(id))
+      return `- ${name} (ID:${nodeId}), 前置节点: [${prereqs.join(', ')}]`
+    })
+    .join('\n')
+
+  const allNodes = libraryNodes
+    .map(n => `- ID:${n.id}, 名称:${n.name}${n.nodeDetail ? `, 描述:${n.nodeDetail}` : ''}`)
+    .join('\n')
+
+  return `你是一个流程设计AI助手。
+
+当前流程图状态：
+${currentFlowState || '（画布为空）'}
+
+所有可用任务节点：
+${allNodes}
+
+用户指令：${userMessage}
+
+回复要求：
+1. 简要说明你的修改方案（或回答用户的问题）
+2. 如果需要修改流程，输出修改后的完整依赖关系JSON（用 \`\`\`json 包裹）：
+\`\`\`json
+{
+  "analysis": "修改说明",
+  "dependencies": [
+    {"nodeId": "实际节点ID", "dependsOn": ["start"]},
+    {"nodeId": "实际节点ID", "dependsOn": ["前置节点ID"]},
+    ...
+  ]
+}
+\`\`\`
+3. 如果用户只是提问（不需要修改流程），直接回答即可，不需要输出JSON`
+}
+
+// 从AI回复中尝试提取并应用流程修改
+function tryApplyFlowFromResponse(aiResponse: string, libraryNodes: ReturnType<typeof prepareLibraryNodes>) {
+  // 优先匹配 ```json 代码块
+  const jsonBlockMatch = aiResponse.match(/```json\s*([\s\S]*?)```/)
+  let jsonStr = jsonBlockMatch ? jsonBlockMatch[1].trim() : null
+
+  // 其次尝试裸JSON
+  if (!jsonStr) {
+    const bareJsonMatch = aiResponse.match(/\{[\s\S]*"dependencies"[\s\S]*\}/)
+    jsonStr = bareJsonMatch ? bareJsonMatch[0] : null
+  }
+
+  if (!jsonStr) return // 没有JSON，AI只是回答问题，不做操作
+
+  try {
+    const parsedResult = JSON.parse(jsonStr)
+    if (parsedResult.dependencies && Array.isArray(parsedResult.dependencies)) {
+      applyAiFlowResult(parsedResult, libraryNodes)
+      ElMessage.success('流程已更新')
+    }
+  } catch (e) {
+    console.error('解析AI流程JSON失败:', e)
+  }
+}
+
+// 自然语言对话修改流程
+async function askAi() {
+  if (!aiQuery.value.trim() || aiLoading.value) return
+
+  const userMessage = aiQuery.value.trim()
+  aiQuery.value = ''
+
+  const libraryNodes = prepareLibraryNodes()
+
+  // 添加用户消息
+  const userMsg: AiChatMessage = {
+    id: `user-${Date.now()}`,
+    role: 'user',
+    content: userMessage,
+    timestamp: Date.now()
+  }
+  aiChatMessages.value.push(userMsg)
+  scrollChatToBottom()
+
+  // 添加AI占位消息
+  const aiMsg: AiChatMessage = {
+    id: `ai-${Date.now()}`,
+    role: 'assistant',
+    content: '',
+    timestamp: Date.now(),
+    isStreaming: true
+  }
+  aiChatMessages.value.push(aiMsg)
+
+  aiLoading.value = true
+  aiStatus.value = '思考中...'
+
+  try {
+    const prompt = buildChatPrompt(userMessage, libraryNodes)
+    const aiResponse = await streamAIChat(
+      prompt,
+      (chunk) => {
+        aiMsg.content += chunk
+        scrollChatToBottom()
+      }
+    )
+
+    aiMsg.content = aiResponse
+    aiMsg.isStreaming = false
+    aiMsg.timestamp = Date.now()
+
+    // 尝试从回复中提取JSON并更新流程
+    tryApplyFlowFromResponse(aiResponse, libraryNodes)
+  } catch (e) {
+    console.error('AI对话失败:', e)
+    aiMsg.content = aiMsg.content || '请求失败，请重试'
+    aiMsg.isStreaming = false
+    ElMessage.error('AI请求失败')
+  } finally {
+    aiLoading.value = false
+    aiStatus.value = '就绪'
+    scrollChatToBottom()
+  }
+}
+
+// 滚动聊天到底部
+function scrollChatToBottom() {
+  nextTick(() => {
+    if (aiChatContainer.value) {
+      aiChatContainer.value.scrollTop = aiChatContainer.value.scrollHeight
+    }
+  })
+}
+
+// 轻量级 Markdown 渲染（换行 + 加粗 + 代码块隐藏JSON）
+function renderMarkdown(text: string): string {
+  if (!text) return ''
+  // 隐藏 ```json ... ``` 代码块，只显示分析文本
+  let result = text.replace(/```json[\s\S]*?```/g, '<span style="color:#94a3b8;font-size:12px">[流程数据已应用]</span>')
+  // 加粗
+  result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  // 换行
+  result = result.replace(/\n/g, '<br>')
+  return result
+}
+
+// 格式化消息时间
+function formatMsgTime(ts: number): string {
+  const d = new Date(ts)
+  const h = d.getHours().toString().padStart(2, '0')
+  const m = d.getMinutes().toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
+// 清除选择
+function clearSelection() {
+  store.setSelection(null)
+  selectedEdge.value = null
+}
+
+// ========== 缩放功能 ==========
+function zoomIn() {
+  const currentZoom = viewport.value.zoom
+  const newZoom = Math.min(currentZoom * 1.2, 4)
+  setViewport({ ...viewport.value, zoom: newZoom })
+}
+
+function zoomOut() {
+  const currentZoom = viewport.value.zoom
+  const newZoom = Math.max(currentZoom / 1.2, 0.1)
+  setViewport({ ...viewport.value, zoom: newZoom })
 }
 
 // ========== 右键菜单功能 ==========
@@ -1857,7 +2301,7 @@ function onDrop(event: DragEvent) {
         bgTo: deptColor.bgTo,
       },
     },
-    draggable: true, // Allow all users to drag nodes for layout
+    draggable: true, // 允许所有人拖动节点
     style: {
       background: deptColor.bgFrom || '#FFFFFF',
       border: `2px solid ${deptColor.color || '#E2E8F0'}`,
@@ -2107,8 +2551,26 @@ const dragState = ref({
 
 // 节点变化
 function onNodesChange(changes: any[]) {
-  // 直接应用所有变更，允许所有节点拖动
-  applyNodeChanges(changes)
+  // 过滤掉不可拖动节点的位置变更
+  const filteredChanges = changes.filter((change: any) => {
+    if (change.type === 'position') {
+      const node = nodes.value.find(n => n.id === change.id)
+      if (!node) return false
+
+      // 检查节点是否可拖动（开始节点和结束节点不可拖动）
+      if (node.id === 'start' || node.id === 'end') {
+        return false
+      }
+
+      // 允许所有人拖动节点，移除canDrag检查
+    }
+    return true
+  })
+
+  // 使用 applyNodeChanges 应用过滤后的变更
+  if (filteredChanges.length > 0) {
+    nodes.value = applyNodeChanges(filteredChanges, nodes.value as any)
+  }
 }
 
 // 边变化
@@ -2564,326 +3026,827 @@ const nodeTypes = {
 </script>
 
 <style scoped>
-/* ==================== Swiss Minimalism Flow Designer ==================== */
+/* ==================== Modern Flow Designer - System Theme ==================== */
+
+/* 页面容器 - 全屏画布 */
 .flow-designer-page {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 60px);
-  background: var(--bg-secondary);
-}
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4) var(--space-6);
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-}
-
-.toolbar-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.title-icon {
-  font-size: 20px;
-  color: var(--color-primary);
-}
-
-.task-selector {
-  width: 280px;
-}
-
-.task-selector :deep(.el-input__wrapper) {
-  border-radius: var(--radius-md);
-  box-shadow: 0 0 0 1px var(--border-color) inset;
-  transition: all var(--transition-base);
-}
-
-.task-selector :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px var(--border-dark) inset;
-}
-
-.task-selector :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 2px var(--color-primary) inset;
-}
-
-.toolbar-right {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.toolbar-right :deep(.el-button) {
-  border-radius: var(--radius-md);
-  transition: all var(--transition-base);
-}
-
-.toolbar-right :deep(.el-button:hover) {
-  /* 移除 transform 保持按钮稳定 */
-}
-
-.flow-container {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Flow Container - Full Screen Canvas with Drawers */
-.flow-container {
   position: relative;
-  flex: 1;
-  display: flex;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  background: var(--bg-canvas);
+  background: linear-gradient(135deg, var(--bg-secondary, #f8fafc) 0%, var(--bg-tertiary, #f1f5f9) 100%);
 }
 
-/* Drawer Styles */
-.drawer {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 10;
-  background: var(--bg-primary);
-  box-shadow: var(--shadow-lg);
-}
-
-.sidebar-left.drawer {
-  left: 0;
-  width: 340px;
-  border-right: 1px solid var(--border-color);
-}
-
-.sidebar-right.drawer {
-  right: 0;
-  width: 360px;
-  border-left: 1px solid var(--border-color);
-}
-
-/* Drawer Animations */
-.drawer-slide-left-enter-active,
-.drawer-slide-left-leave-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.drawer-slide-left-enter-from {
-  transform: translateX(-100%);
-}
-
-.drawer-slide-left-leave-to {
-  transform: translateX(-100%);
-}
-
-.drawer-slide-right-enter-active,
-.drawer-slide-right-leave-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.drawer-slide-right-enter-from {
-  transform: translateX(100%);
-}
-
-.drawer-slide-right-leave-to {
-  transform: translateX(100%);
-}
-
-/* Panel Content Fade Transition */
-.panel-fade-enter-active,
-.panel-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.panel-fade-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.panel-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* Panel Content Styles */
-.panel-content {
+/* ==================== 浮动工具栏 ==================== */
+.floating-toolbar {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  z-index: 100;
 }
 
-/* Drawer Toggle Button */
-.drawer-toggle {
-  transition: all 0.3s ease;
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.drawer-toggle.active {
-  background: var(--color-primary);
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color, #e2e8f0);
+  margin: 0 4px;
+}
+
+/* 图标按钮 */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--color-primary-light, #ebf4ff);
+  color: var(--color-primary, #1e3a5f);
+}
+
+.icon-btn.active {
+  background: var(--color-primary, #1e3a5f);
   color: white;
 }
 
-.drawer-toggle:hover {
-  /* 移除 transform 保持按钮稳定 */
+.icon-btn.small {
+  width: 28px;
+  height: 28px;
 }
 
-.sidebar-left {
+/* 缩放控制 */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+}
+
+.zoom-value {
+  min-width: 48px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+/* 任务选择器 */
+.task-select {
+  width: 200px;
+}
+
+.task-select :deep(.el-input__wrapper) {
+  border-radius: 10px;
+  box-shadow: none;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.task-select :deep(.el-input__wrapper:hover) {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.task-select :deep(.el-input__wrapper.is-focus) {
+  background: white;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* AI触发按钮 */
+.ai-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-primary, #1e3a5f);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-trigger:hover {
+  background: var(--color-primary-hover, #2c4a6e);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
+}
+
+.ai-trigger.active {
+  background: var(--color-primary-active, #162d4a);
+}
+
+.ai-trigger.thinking {
+  animation: thinking-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.ai-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ai-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--color-danger, #dc2626);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.ai-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ai-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--color-primary, #1e3a5f);
+  animation: ai-pulse-anim 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ai-pulse-anim {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.3; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* 保存按钮 */
+.save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--color-success, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: var(--color-success-dark, #047857);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== 节点库下拉面板 ==================== */
+.node-library-trigger {
+  position: relative;
+}
+
+.node-library-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.node-library-btn .btn-label {
+  color: inherit;
+}
+
+.node-library-btn .arrow-icon {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.node-library-btn .arrow-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.node-library-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 360px;
+  max-height: 480px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 200;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.sidebar-header {
+.dropdown-slide-enter-active,
+.dropdown-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-slide-enter-from,
+.dropdown-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.dropdown-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary, #f8fafc);
 }
 
-.sidebar-header .header-title {
+.dropdown-header .header-icon {
+  font-size: 18px;
+  color: var(--color-primary, #1e3a5f);
+}
+
+.dropdown-header .header-title {
   flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
 }
 
-.collapse-btn {
-  margin-left: auto;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+.dropdown-header .node-count {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  background: var(--bg-tertiary, #f1f5f9);
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
-.collapse-btn:hover {
-  opacity: 1;
+.dropdown-filter {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light, #f1f5f9);
 }
 
-.filter-section {
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-}
-
-.department-filter {
+.dropdown-filter .department-filter {
   width: 100%;
 }
 
-.department-filter :deep(.el-input__wrapper) {
-  border-radius: var(--radius-md);
+.dropdown-filter :deep(.el-input__wrapper) {
+  border-radius: 8px;
+  background: var(--bg-secondary, #f8fafc);
+  box-shadow: none;
+  border: 1px solid var(--border-color, #e2e8f0);
 }
 
-.header-icon {
-  font-size: 18px;
-  color: var(--color-primary);
+.dropdown-filter :deep(.el-input__wrapper:hover) {
+  border-color: var(--color-primary, #1e3a5f);
 }
 
-.header-title {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.nodes-list {
+.dropdown-nodes {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-4);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 8px;
+  max-height: 320px;
 }
 
-.nodes-list::-webkit-scrollbar {
-  width: 5px;
+.dropdown-nodes::-webkit-scrollbar {
+  width: 6px;
 }
 
-.nodes-list::-webkit-scrollbar-track {
+.dropdown-nodes::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.nodes-list::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+.dropdown-nodes::-webkit-scrollbar-thumb {
+  background: var(--border-color, #e2e8f0);
   border-radius: 3px;
 }
 
-.nodes-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+.dropdown-nodes::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted, #94a3b8);
 }
 
+/* 节点卡片 */
+.node-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: grab;
+  transition: all 0.15s ease;
+}
+
+.node-card:hover {
+  border-color: var(--color-primary, #1e3a5f);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+  transform: translateY(-1px);
+}
+
+.node-card.arranged {
+  background: var(--color-success-light, #d1fae5);
+  border-color: var(--color-success, #059669);
+}
+
+.node-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.node-card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.node-card .node-type-badge {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.node-card .node-type-badge.type-task {
+  background: var(--color-info-light, #e0f2fe);
+  color: var(--color-info, #0284c7);
+}
+
+.node-card .node-type-badge.type-condition {
+  background: var(--color-warning-light, #fef3c7);
+  color: var(--color-warning, #d97706);
+}
+
+.node-card .node-type-badge.type-approval {
+  background: var(--tag-review-bg, #f3e8ff);
+  color: var(--tag-review-text, #7c3aed);
+}
+
+.node-card .node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-card .node-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-card .node-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.node-card .node-meta .el-icon {
+  font-size: 12px;
+}
+
+.node-card .node-status {
+  flex-shrink: 0;
+}
+
+.dropdown-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-light, #f1f5f9);
+  background: var(--bg-secondary, #f8fafc);
+}
+
+.drag-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.drag-hint .el-icon {
+  font-size: 14px;
+}
+
+/* 空状态 */
 .empty-nodes {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-10) var(--space-5);
+  padding: 32px 16px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.empty-nodes .empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-nodes .empty-text {
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ==================== AI智能面板 ==================== */
+.ai-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 380px;
+  max-height: 70vh;
+  background: var(--bg-card, #ffffff);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ai-panel-slide-enter-active,
+.ai-panel-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-panel-slide-enter-from,
+.ai-panel-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ai-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.ai-avatar.pulse {
+  animation: ai-avatar-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ai-avatar-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+}
+
+.ai-title-section {
+  flex: 1;
+}
+
+.ai-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.ai-status {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+/* AI聊天消息区 */
+.ai-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-chat-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ai-chat-msg.user {
+  flex-direction: row-reverse;
+}
+
+.msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.msg-avatar.user-avatar {
+  background: linear-gradient(135deg, #10B981, #059669);
+}
+
+.msg-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  position: relative;
+  word-break: break-word;
+}
+
+.ai-chat-msg.assistant .msg-bubble {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1e293b;
+  border-top-left-radius: 4px;
+}
+
+.ai-chat-msg.user .msg-bubble {
+  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+.msg-content {
+  word-break: break-word;
+}
+
+.msg-time {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.5;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3B82F6;
+  margin-left: 4px;
+  animation: typing-blink 1s ease-in-out infinite;
+}
+
+@keyframes typing-blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.ai-quick-action {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ai-quick-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* AI空状态 */
+.ai-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   text-align: center;
 }
 
-.empty-icon {
+.ai-empty-icon {
   font-size: 48px;
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
+  color: #cbd5e1;
+  margin-bottom: 16px;
 }
 
-.empty-text {
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-2);
+.ai-empty p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 8px 0;
 }
 
-.empty-hint {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+.ai-empty span {
+  font-size: 12px;
+  color: #94a3b8;
 }
 
-/* Node Card - Swiss Minimalism */
-.node-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+/* AI输入区 */
+.ai-input-area {
+  padding: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.input-wrapper {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.input-wrapper textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1e293b;
+  outline: none;
+}
+
+.input-wrapper textarea::placeholder {
+  color: #94a3b8;
+}
+
+.send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  color: white;
+  border: none;
   cursor: pointer;
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  align-self: flex-end;
+  flex-shrink: 0;
 }
 
-.node-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
+.send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
 }
 
-.node-card.draggable {
-  cursor: grab;
-  border-left: 3px solid var(--color-primary);
-}
-
-.node-card.draggable:active {
-  cursor: grabbing;
-  /* 移除 transform 避免拖拽时卡片缩放 */
-}
-
-.node-card.readonly {
+.send-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.input-hints {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ==================== 节点详情面板 ==================== */
+.detail-panel {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  width: 360px;
+  max-height: calc(100vh - 200px);
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-panel-slide-enter-active,
+.detail-panel-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.detail-panel-slide-enter-from,
+.detail-panel-slide-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.detail-header .header-icon {
+  font-size: 18px;
+  color: var(--color-primary, #1e3a5f);
+}
+
+.detail-header .header-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+/* ==================== 画布区域 ==================== */
+.canvas-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--bg-secondary, #f8fafc) 0%, var(--bg-tertiary, #f1f5f9) 100%);
+}
+
+/* ==================== 节点卡片样式 ==================== */
 .node-card-header {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .node-type-badge {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2892,18 +3855,18 @@ const nodeTypes = {
 }
 
 .node-type-badge.type-task {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: var(--color-info-light, #e0f2fe);
+  color: var(--color-info, #0284c7);
 }
 
 .node-type-badge.type-condition {
-  background: var(--color-success-light);
-  color: var(--color-success);
+  background: var(--color-success-light, #d1fae5);
+  color: var(--color-success, #059669);
 }
 
 .node-type-badge.type-approval {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
+  background: var(--color-danger-light, #fee2e2);
+  color: var(--color-danger, #dc2626);
 }
 
 .node-info {
@@ -2912,10 +3875,10 @@ const nodeTypes = {
 }
 
 .node-name {
-  font-size: var(--font-size-sm);
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: var(--space-1);
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2924,18 +3887,18 @@ const nodeTypes = {
 .node-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
 }
 
 .node-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border-light);
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light, #f1f5f9);
 }
 
 .prereq-tag {
@@ -2944,37 +3907,265 @@ const nodeTypes = {
   gap: 4px;
 }
 
-.sidebar-footer {
-  padding: var(--space-4);
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+/* ==================== 空状态 ==================== */
+.empty-nodes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
 }
 
-.tip-text {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  margin: var(--space-1) 0;
-  line-height: 1.5;
+.empty-icon {
+  font-size: 40px;
+  color: #cbd5e1;
+  margin-bottom: 12px;
 }
 
-/* Canvas Area - Full Screen */
-.canvas-area {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fafafa;
+.empty-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
 }
 
-/* Context Menu */
+/* ==================== 详情内容样式 ==================== */
+.detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.detail-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.detail-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detail-content::-webkit-scrollbar-thumb {
+  background: var(--border-color, #e2e8f0);
+  border-radius: 2px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary, #1e3a5f);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-primary-light, #ebf4ff);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #f1f5f9);
+  transition: all 0.15s ease;
+}
+
+.detail-item:hover {
+  background: var(--bg-tertiary, #f1f5f9);
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+}
+
+.detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.detail-description {
+  padding: 12px;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #f1f5f9);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary, #475569);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-buttons :deep(.el-button) {
+  border-radius: 8px;
+}
+
+/* ==================== 员工信息样式 ==================== */
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-avatar {
+  flex-shrink: 0;
+}
+
+.executors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.executor-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.executor-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.executor-item.executor-requested {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.executor-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.requested-check {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.no-data-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* ==================== 角色表单样式 ==================== */
+.role-form {
+  margin-top: 12px;
+}
+
+.role-form :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #475569;
+}
+
+.role-form :deep(.el-select .el-input__wrapper) {
+  border-radius: 10px;
+}
+
+.employee-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.employee-name {
+  flex: 1;
+  font-size: 13px;
+}
+
+.role-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.role-badge {
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.leader-badge {
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.executor-badge {
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.employee-option.is-leader {
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid #10b981;
+  padding-left: 8px;
+  border-radius: 0 8px 8px 0;
+}
+
+.employee-option.is-executor {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+  padding-left: 8px;
+  border-radius: 0 8px 8px 0;
+}
+
+.employee-option.is-leader.is-executor {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border-left: 3px solid #10b981;
+  padding-left: 8px;
+}
+
+.option-avatar {
+  flex-shrink: 0;
+}
+
+/* ==================== 右键菜单 ==================== */
 .context-menu {
   position: fixed;
   z-index: 9999;
   background: white;
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  padding: var(--space-2);
+  padding: 8px;
   min-width: 200px;
   animation: contextMenuFadeIn 0.15s ease-out;
 }
@@ -2993,25 +4184,25 @@ const nodeTypes = {
 .context-menu-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .context-menu-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
+  font-size: 13px;
+  color: #1e293b;
   user-select: none;
 }
 
 .context-menu-item:hover {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .context-menu-item .el-icon {
@@ -3020,285 +4211,282 @@ const nodeTypes = {
 
 .context-menu-item .shortcut {
   margin-left: auto;
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
+  font-size: 11px;
+  color: #94a3b8;
   padding: 2px 6px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
 }
 
 .context-menu-divider {
   height: 1px;
-  background: var(--border-color);
-  margin: var(--space-1) 0;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 4px 0;
 }
 
-.canvas-wrapper :deep(.vue-flow) {
-  width: 100% !important;
-  height: 100% !important;
+/* ==================== Vue Flow 样式覆盖 ==================== */
+:deep(.vue-flow__handle) {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  background: #3b82f6 !important;
+  border: 3px solid white !important;
+  opacity: 0 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+  cursor: crosshair !important;
+  z-index: 100 !important;
 }
 
-.canvas-wrapper :deep(.vue-flow__viewport) {
-  width: 100% !important;
-  height: 100% !important;
+:deep(.vue-flow__node:hover .vue-flow__handle) {
+  opacity: 1 !important;
+  transform: scale(1.2) !important;
 }
 
-/* Detail Panel */
-.detail-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-5);
+:deep(.vue-flow__node.selected .vue-flow__handle) {
+  opacity: 1 !important;
 }
 
-.detail-content::-webkit-scrollbar {
-  width: 5px;
+:deep(.vue-flow__handle:hover) {
+  transform: scale(1.4) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5) !important;
 }
 
-.detail-content::-webkit-scrollbar-track {
-  background: transparent;
+:deep(.vue-flow__edge-path) {
+  stroke: #3b82f6 !important;
+  stroke-width: 2.5px !important;
+  transition: all 0.2s ease !important;
 }
 
-.detail-content::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
+:deep(.vue-flow__edge:hover .vue-flow__edge-path) {
+  stroke: #3b82f6 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3)) !important;
 }
 
-.detail-section {
-  margin-bottom: var(--space-6);
+:deep(.vue-flow__edge.selected .vue-flow__edge-path) {
+  stroke: #3b82f6 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4)) !important;
 }
 
-.section-title {
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 2px solid var(--color-primary-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+:deep(.vue-flow__node) {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: move !important;
 }
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
+:deep(.vue-flow__node:hover) {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08)) !important;
 }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  transition: all var(--transition-base);
+:deep(.vue-flow__node.selected) {
+  filter: drop-shadow(0 8px 20px rgba(59, 130, 246, 0.3)) !important;
 }
 
-.detail-item:hover {
-  background: var(--bg-tertiary);
+:deep(.vue-flow__node.dragging) {
+  opacity: 0.8 !important;
 }
 
-.detail-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--text-muted);
+:deep(.vue-flow__controls) {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding: 8px !important;
+  gap: 4px !important;
 }
 
-.detail-value {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-primary);
+:deep(.vue-flow__controls-button) {
+  width: 36px !important;
+  height: 36px !important;
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  color: #64748b !important;
 }
 
-.detail-description {
-  padding: var(--space-4);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  font-size: var(--font-size-sm);
-  line-height: 1.6;
-  color: var(--text-secondary);
+:deep(.vue-flow__controls-button:hover) {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-color: #3b82f6 !important;
 }
 
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+:deep(.vue-flow__controls-button svg) {
+  width: 18px !important;
+  height: 18px !important;
 }
 
-.action-buttons :deep(.el-button) {
-  border-radius: var(--radius-md);
+:deep(.vue-flow__minimap) {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
 }
 
-.employee-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+:deep(.vue-flow__minimap-mask) {
+  fill: rgba(59, 130, 246, 0.1) !important;
+  stroke: #3b82f6 !important;
+  stroke-width: 2px !important;
 }
 
-.detail-avatar {
-  flex-shrink: 0;
+:deep(.vue-flow__minimap-node) {
+  fill: rgba(59, 130, 246, 0.2) !important;
+  stroke: #3b82f6 !important;
+  stroke-width: 1px !important;
 }
 
-.executors-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+:deep(.vue-flow__background) {
+  background-color: transparent !important;
 }
 
-.executor-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  transition: all var(--transition-base);
+:deep(.vue-flow__background-pattern) {
+  stroke: #e2e8f0 !important;
+  stroke-width: 1px !important;
 }
 
-.executor-item:hover {
-  background: var(--bg-tertiary);
+:deep(.vue-flow__handle.connecting) {
+  opacity: 1 !important;
+  background: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
 }
 
-.executor-item.executor-requested {
-  background: var(--color-success-light);
-  border-color: var(--color-success);
+:deep(.vue-flow__handle.h-left) {
+  left: -7px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
 }
 
-.executor-name {
-  flex: 1;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+:deep(.vue-flow__handle.h-right) {
+  right: -7px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
 }
 
-.requested-check {
-  color: var(--color-success);
-  flex-shrink: 0;
+:deep(.vue-flow__node) {
+  overflow: visible !important;
 }
 
-.no-data-text {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  color: var(--text-muted);
-  font-size: var(--font-size-sm);
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 1024px) {
+  .floating-toolbar {
+    padding: 6px 12px;
+    gap: 6px;
+  }
+
+  .task-select {
+    width: 160px;
+  }
+
+  .ai-label {
+    display: none;
+  }
+
+  .node-library-dropdown {
+    width: 320px;
+  }
+
+  .ai-panel {
+    width: 340px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .detail-panel {
+    width: 320px;
+    right: 12px;
+  }
 }
 
-.role-form {
-  margin-top: var(--space-3);
+@media (max-width: 768px) {
+  .floating-toolbar {
+    top: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+  }
+
+  .toolbar-center {
+    display: none;
+  }
+
+  .task-select {
+    width: 140px;
+  }
+
+  .node-library-btn .btn-label {
+    display: none;
+  }
+
+  .node-library-dropdown {
+    width: 280px;
+    left: -8px;
+  }
+
+  .ai-panel {
+    width: calc(100vw - 24px);
+    max-width: 360px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .detail-panel {
+    width: calc(100vw - 24px);
+    max-width: 340px;
+    right: 12px;
+    top: 60px;
+  }
 }
 
-.role-form :deep(.el-form-item__label) {
-  font-weight: 500;
-  color: var(--text-secondary);
+/* ==================== 动画减少模式 ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .floating-toolbar,
+  .node-library-dropdown,
+  .ai-panel,
+  .detail-panel,
+  .icon-btn,
+  .ai-trigger,
+  .save-btn,
+  .node-card,
+  .ai-chat-msg,
+  :deep(.vue-flow__handle),
+  :deep(.vue-flow__edge) {
+    transition: none !important;
+  }
+
+  .ai-avatar.pulse,
+  .ai-trigger.thinking,
+  .ai-pulse {
+    animation: none !important;
+  }
+}
+</style>
+
+<!-- Global styles for driver.js onboarding -->
+<style>
+/* Driver.js Onboarding Popover Styles */
+.flow-onboarding-popover {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #1f2937;
+  --driver-popover-title: #111827;
+  --driver-popover-description: #4b5563;
+  --driver-popover-progress: #3b82f6;
 }
 
-.role-form :deep(.el-select .el-input__wrapper) {
-  border-radius: var(--radius-md);
-}
-
-.employee-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-1) 0;
-}
-
-.employee-name {
-  flex: 1;
-  font-size: var(--font-size-sm);
-}
-
-.role-badges {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-}
-
-.role-badge {
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-}
-
-.leader-badge {
-  color: var(--color-success) !important;
-  background: var(--color-success-light);
-}
-
-.executor-badge {
-  color: var(--color-primary) !important;
-  background: var(--color-primary-light);
-}
-
-.employee-option.is-leader {
-  background: var(--color-success-light);
-  border-left: 3px solid var(--color-success);
-  padding-left: var(--space-2);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-}
-
-.employee-option.is-executor {
-  background: var(--color-primary-light);
-  border-left: 3px solid var(--color-primary);
-  padding-left: var(--space-2);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-}
-
-.employee-option.is-leader.is-executor {
-  background: linear-gradient(90deg, var(--color-success-light) 0%, var(--color-primary-light) 100%);
-  border-left: 3px solid var(--color-success);
-  padding-left: var(--space-2);
-}
-
-.option-avatar {
-  flex-shrink: 0;
-}
-
-.detail-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-10) var(--space-5);
-  text-align: center;
-}
-
-.detail-empty .empty-icon {
-  font-size: 48px;
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
-}
-
-.detail-empty .empty-text {
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-2);
-}
-
-.detail-empty .empty-hint {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-}
-
-.node-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+.flow-onboarding-popover .driver-popover {
   border-radius: 12px;
-  padding: 16px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.flow-onboarding-popover .driver-popover-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--driver-popover-title);
+  margin-bottom: 8px;
+}
+
+.flow-onboarding-popover .driver-popover-description {
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   position: relative;
