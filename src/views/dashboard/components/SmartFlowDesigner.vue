@@ -1918,21 +1918,113 @@ function goToCreateNode() {
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .characteristics-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .scheme-metrics {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .alternative-list {
     grid-template-columns: 1fr;
   }
-  
+
   .scheme-actions {
     flex-wrap: wrap;
+  }
+
+  /* 移动端隐藏辅助文字 */
+  .designer-subtitle,
+  .metric-label,
+  .alternative-desc,
+  .characteristic-desc,
+  .node-desc,
+  .prereq-label,
+  .no-prereq,
+  .preview-section h4,
+  .scheme-comparison h4,
+  .alternatives-section h4 {
+    display: none !important;
+  }
+
+  .designer-header h3 {
+    font-size: 16px;
+  }
+
+  .scheme-card {
+    padding: 12px;
+  }
+
+  .scheme-header h4 {
+    font-size: 14px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+  }
+
+  .alternative-item {
+    padding: 10px;
+  }
+
+  .alternative-name {
+    font-size: 13px;
+  }
+
+  .alternative-metric {
+    font-size: 11px;
+  }
+
+  .characteristic-item {
+    padding: 10px;
+  }
+
+  .characteristic-label {
+    font-size: 12px;
+  }
+
+  .node-name {
+    font-size: 13px;
+  }
+
+  .prereq-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .designer-header h3 {
+    font-size: 15px;
+  }
+
+  .scheme-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .scheme-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scheme-actions .el-button {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  .characteristics-grid {
+    gap: 8px;
+  }
+
+  .characteristic-item {
+    padding: 8px;
   }
 }
 </style>

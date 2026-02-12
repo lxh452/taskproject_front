@@ -1086,9 +1086,326 @@ const formatTime = (d: Date) => {
   .overview-cards { grid-template-columns: repeat(2, 1fr); }
   .keypoints-list { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 768px) {
-  .template-grid { grid-template-columns: 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .option-row { flex-direction: column; }
+  /* 移动端隐藏副标题和描述文字 */
+  .page-header .subtitle,
+  .intro-content p,
+  .label-tip,
+  .template-desc,
+  .feature-desc,
+  .team-tasks,
+  .history-time,
+  .analysis-text,
+  .node-body p,
+  .skills-label,
+  .confidence-card .label,
+  .step-name {
+    display: none !important;
+  }
+
+  /* 移动端简化页面头部 */
+  .page-header h1 {
+    font-size: 18px;
+    margin-bottom: 0;
+  }
+
+  .page-header {
+    margin-bottom: 12px;
+  }
+
+  /* 移动端隐藏AI介绍区块的文字描述 */
+  .ai-intro {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .intro-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .intro-content h3 {
+    font-size: 14px;
+  }
+
+  /* 移动端简化模板卡片 */
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .template-card {
+    padding: 10px;
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .template-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .template-name {
+    font-size: 12px;
+  }
+
+  /* 移动端简化概览卡片 */
+  .overview-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .overview-card {
+    padding: 10px;
+  }
+
+  .card-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .card-label {
+    font-size: 10px;
+  }
+
+  .card-value {
+    font-size: 13px;
+  }
+
+  /* 移动端隐藏关键要点的序号 */
+  .keypoints-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .keypoint-item {
+    padding: 8px 10px;
+  }
+
+  .point-num {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+
+  .point-text {
+    font-size: 12px;
+  }
+
+  /* 移动端简化任务节点 */
+  .nodes-section {
+    padding: 12px 16px;
+  }
+
+  .nodes-intro {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .node-header {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .node-order {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  .node-title {
+    font-size: 13px;
+  }
+
+  .node-tags {
+    display: none;
+  }
+
+  /* 移动端简化表单布局 */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .option-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 移动端简化结果头部 */
+  .result-header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+
+  .task-title {
+    font-size: 16px;
+  }
+
+  .task-meta {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* 移动端简化右侧面板内容 */
+  .card-title {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .team-name {
+    font-size: 12px;
+  }
+
+  .feature-name {
+    font-size: 12px;
+  }
+
+  /* 移动端调整输入区域 */
+  .ai-input-panel,
+  .ai-result-panel,
+  .manual-form-panel {
+    padding: 16px;
+  }
+
+  .input-section {
+    margin-bottom: 12px;
+  }
+
+  .section-label {
+    margin-bottom: 6px;
+  }
+
+  .label-text {
+    font-size: 12px;
+  }
+
+  /* 移动端简化模式标签 */
+  .mode-tab {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .mode-tab span {
+    font-size: 13px;
+  }
+
+  /* 移动端隐藏复杂度分析器的标签 */
+  .meter-labels {
+    display: none;
+  }
+
+  /* 移动端简化加载状态 */
+  .ai-loading-panel {
+    padding: 40px 16px;
+  }
+
+  .loading-info h3 {
+    font-size: 14px;
+  }
+
+  .step-indicators {
+    gap: 16px;
+  }
+
+  /* 移动端调整提交按钮 */
+  .submit-btn {
+    min-width: 140px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  /* 移动端简化结果区块 */
+  .result-section {
+    margin-bottom: 16px;
+  }
+
+  .section-header h4 {
+    font-size: 13px;
+  }
+
+  .description-box {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  /* 移动端调整整体布局 */
+  .task-creator-page {
+    padding: 12px 16px;
+  }
+
+  .creator-layout {
+    gap: 12px;
+  }
+
+  /* 移动端隐藏风险提示的详细文字 */
+  .risk-box p {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* 移动端隐藏AI建议的图标文字 */
+  .suggestion-item span {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 更小屏幕进一步简化 */
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .overview-card {
+    padding: 8px;
+  }
+
+  .card-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .card-content {
+    min-width: 0;
+  }
+
+  .card-label {
+    font-size: 9px;
+  }
+
+  .card-value {
+    font-size: 12px;
+  }
+
+  /* 隐藏更多辅助文字 */
+  .meta-item,
+  .section-badge,
+  .help-icon {
+    display: none !important;
+  }
+
+  /* 保持主要按钮文字 */
+  .submit-btn,
+  .mode-tab span,
+  .task-title,
+  .node-title,
+  .feature-name,
+  .team-name,
+  .template-name {
+    display: inline-flex !important;
+  }
 }
 </style>

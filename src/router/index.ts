@@ -209,12 +209,7 @@ const routes: RouteRecordRaw[] = [
                 meta: { title: '通知中心' },
                 component: () => import('../views/notifications/list.vue'),
             },
-            {
-                path: '/reports',
-                name: 'reports',
-                meta: { title: '统计报表' },
-                component: () => import('../views/reports/index.vue'),
-            },
+
             {
                 path: '/ucenter',
                 name: 'ucenter',

@@ -668,8 +668,259 @@ async function applyDesign() {
 @media (max-width: 1200px) {
   .detail-panel { width: 240px; }
 }
+
 @media (max-width: 992px) {
   .designer-layout { flex-direction: column; }
   .input-panel, .detail-panel { width: 100%; max-height: 300px; }
+}
+
+@media (max-width: 768px) {
+  /* 移动端隐藏描述文字和辅助信息 */
+  .section-desc,
+  .input-stats,
+  .design-card p,
+  .pros-cons .items,
+  .stat-label,
+  .ai-suggestions span,
+  .node-assignee,
+  .toolbar-actions .btn-secondary,
+  .empty-state p,
+  .analyzing-state p,
+  .progress-bar,
+  .designs-count,
+  .ai-suggestions .suggestion-item span {
+    display: none !important;
+  }
+
+  /* 移动端简化左侧面板 */
+  .input-panel {
+    width: 100%;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .panel-section {
+    padding: 12px 16px;
+  }
+
+  .panel-section h3 {
+    font-size: 13px;
+  }
+
+  .task-input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .form-grid {
+    gap: 10px;
+  }
+
+  .form-item label {
+    font-size: 11px;
+  }
+
+  .panel-actions {
+    padding: 12px 16px;
+  }
+
+  .btn-block {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  /* 移动端简化设计方案卡片 */
+  .designs-view {
+    padding: 16px;
+  }
+
+  .designs-header {
+    margin-bottom: 16px;
+  }
+
+  .designs-header h3 {
+    font-size: 15px;
+  }
+
+  .designs-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .design-card {
+    padding: 16px;
+  }
+
+  .design-card h4 {
+    font-size: 14px;
+  }
+
+  .card-header {
+    margin-bottom: 8px;
+  }
+
+  .card-meta {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    font-size: 11px;
+    gap: 12px;
+  }
+
+  .confidence-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .card-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    top: 12px;
+    right: 12px;
+  }
+
+  /* 移动端简化优缺点展示 */
+  .pros-cons {
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .pros-cons .label {
+    min-width: 30px;
+    font-size: 11px;
+  }
+
+  /* 移动端简化右侧面板 */
+  .detail-panel {
+    width: 100%;
+    max-height: none;
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .overview-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat-item {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .node-detail {
+    gap: 10px;
+  }
+
+  .detail-row input,
+  .detail-row select {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  /* 移动端简化流程图工具栏 */
+  .flow-toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .toolbar-title {
+    font-size: 13px;
+  }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* 移动端简化空状态和分析状态 */
+  .empty-state h3,
+  .analyzing-state h3 {
+    font-size: 16px;
+  }
+
+  .analyzing-animation {
+    width: 80px;
+    height: 80px;
+  }
+
+  /* 移动端简化流程节点 */
+  .flow-node {
+    padding: 8px 12px;
+    min-width: 100px;
+  }
+
+  .node-label {
+    font-size: 12px;
+  }
+
+  /* 移动端简化AI提示 */
+  .ai-suggestions {
+    gap: 8px;
+  }
+
+  .suggestion-item {
+    padding: 8px;
+  }
+
+  /* 移动端整体布局调整 */
+  .flow-designer {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .designer-layout {
+    flex-direction: column;
+  }
+
+  .flow-area {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 更小屏幕进一步简化 */
+  .header-tags {
+    display: none !important;
+  }
+
+  .card-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .risk-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .overview-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .stat-item {
+    padding: 8px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .pros-cons {
+    display: none !important;
+  }
+
+  /* 保持必要的文字 */
+  .btn,
+  .design-card h4,
+  .toolbar-title,
+  .node-label,
+  .panel-section h3 {
+    display: block !important;
+  }
 }
 </style>

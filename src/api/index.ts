@@ -574,10 +574,6 @@ export const streamGenerateSubtasks = (
     });
 };
 
-// 仪表盘统计API
-export const getDashboardStats = (data?: { scope?: string }) =>
-    request({ url: '/dashboard/stats', method: 'get', params: data });
-
 // 更新员工直属上级
 export const updateEmployeeSupervisor = (data: { employeeId: string; supervisorId: string }) =>
     request({ url: '/employee/supervisor', method: 'put', data });

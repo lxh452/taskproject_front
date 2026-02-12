@@ -319,12 +319,58 @@ watch(() => props.tasks, () => {
 }
 
 @media (max-width: 768px) {
-  .fab-text {
-    display: none;
+  .flow-ai-assistant {
+    right: 16px;
+    bottom: 16px;
   }
+
+  .fab-text {
+    display: none !important;
+  }
+
   .fab-button {
-    padding: 14px;
+    padding: 12px;
     border-radius: 50%;
+    font-size: 20px;
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .fab-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+  }
+
+  .tip-message {
+    right: 0;
+    bottom: 60px;
+    padding: 10px 14px;
+    font-size: 12px;
+    min-width: 200px;
+    max-width: 260px;
+    border-radius: 8px;
+  }
+
+  .tip-message span {
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .flow-ai-assistant {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .fab-button {
+    padding: 10px;
+    font-size: 18px;
+  }
+
+  .tip-message {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-width: 180px;
+    max-width: 220px;
   }
 }
 </style>

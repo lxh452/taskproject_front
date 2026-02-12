@@ -535,4 +535,190 @@ const getComplexityPercent = (complexity: string): string => {
 .btn.primary:hover {
   background: #66b1ff;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  /* 隐藏辅助描述文字 */
+  .field-group label,
+  .improvement-tag,
+  .subtask-desc,
+  .assignee-dept,
+  .match-label,
+  .match-reason,
+  .key-points-list li,
+  .confidence-badge,
+  .complexity-label {
+    display: none !important;
+  }
+
+  .polished-task-view {
+    border-radius: 8px;
+  }
+
+  .header {
+    padding: 12px 16px;
+  }
+
+  .header h4 {
+    font-size: 14px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .field-group {
+    margin-bottom: 16px;
+  }
+
+  .field-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .field-value {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .field-value.title {
+    font-size: 14px;
+  }
+
+  .priority-badge {
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+
+  .tags-list {
+    gap: 6px;
+  }
+
+  .tag {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .complexity-bar {
+    height: 24px;
+  }
+
+  .subtask-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .subtask-order {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  .subtask-title {
+    font-size: 13px;
+  }
+
+  .subtask-time {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .assignee-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .assignee-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .assignee-name {
+    font-size: 14px;
+  }
+
+  .match-score {
+    font-size: 18px;
+  }
+
+  .actions {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+  }
+
+  .header h4 {
+    font-size: 13px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .field-group {
+    margin-bottom: 12px;
+  }
+
+  .field-value {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .field-value.title {
+    font-size: 13px;
+  }
+
+  .subtask-card {
+    padding: 8px;
+  }
+
+  .subtask-order {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .subtask-title {
+    font-size: 12px;
+  }
+
+  .assignee-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .assignee-name {
+    font-size: 13px;
+  }
+
+  .match-score {
+    font-size: 16px;
+  }
+
+  .actions {
+    padding: 10px 12px;
+    flex-direction: column;
+  }
+
+  .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  /* 隐藏更多辅助信息 */
+  .subtask-time,
+  .match-indicator {
+    display: none !important;
+  }
+}
 </style>

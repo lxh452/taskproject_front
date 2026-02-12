@@ -53,12 +53,6 @@ export const menuData: Menus[] = [
         ],
     },
     {
-        id: 'reports',
-        icon: 'DataAnalysis',
-        index: '/reports',
-        title: '统计报表',
-    },
-    {
         id: 'notify',
         icon: 'Bell',
         index: '/notifications',

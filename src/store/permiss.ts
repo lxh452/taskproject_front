@@ -49,14 +49,12 @@ export const usePermissStore = defineStore('permiss', {
                 'employee', 'employee_list', 'my_nodes',
                 // org module
                 'org', 'company', 'department', 'position', 'role', 'invites', 'join_apps', 'join_applications',
-                // reports module - NEW
-                'reports',
                 // notification module
                 'notify', 'settings',
                 // user center - NEW
                 'ucenter'
             ],
-            user: ['0', 'org_tree_global', 'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'reports', 'notify', 'ucenter'],
+            user: ['0', 'org_tree_global', 'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'notify', 'ucenter'],
         };
         // 初始化时使用默认权限，避免刷新时菜单变化
         // 权限会在登录后通过 applyPermissions 更新
@@ -101,7 +99,7 @@ export const usePermissStore = defineStore('permiss', {
                 return;
             }
 
-            const result = new Set<string>(['0','org_tree_global','reports','ucenter']);
+            const result = new Set<string>(['0','org_tree_global','ucenter']);
 
             const grantByCode = (code: number) => {
                 // 任务模块 (1-5)
@@ -189,9 +187,6 @@ export const usePermissStore = defineStore('permiss', {
                 }
                 if (p.startsWith('org:') || p === 'org:*') {
                     ['org','company','department','position','role','invites','join_apps','join_applications'].forEach(x=>result.add(x)); 
-                }
-                if (p.startsWith('report')) {
-                    result.add('reports');
                 }
                 if (p === 'ucenter' || p === 'user:profile') {
                     result.add('ucenter');

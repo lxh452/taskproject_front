@@ -159,7 +159,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { Odometer, Coordinate } from '@element-plus/icons-vue';
-import { getMyEmployee, listTasks, getMyTaskNodes, getDashboardStats } from '@/api';
+import { getMyEmployee, listTasks, getMyTaskNodes } from '@/api';
 import { useUserStore } from '@/store/user';
 import { clearDebounceForUrl } from '@/utils/request';
 import countup from '@/components/countup.vue';
@@ -219,29 +219,19 @@ async function loadData() {
     const rawDept = emp.departmentId ?? emp.DepartmentId ?? emp.department_id;
     departmentId.value = typeof rawDept === 'object' ? (rawDept?.String || '') : (rawDept != null ? String(rawDept) : '');
 
-    try {
-      console.log('========== 开始加载仪表盘统计 ==========');
-      const statsRes = await getDashboardStats({ scope: 'personal' });
-      console.log('仪表盘统计API响应:', statsRes);
-      console.log('响应数据:', statsRes?.data);
-
-      const stats = statsRes?.data?.data || {};
-      console.log('解析后的stats:', stats);
-
-      metrics.value.totalTasks = stats.totalTasks || 0;
-      metrics.value.pendingApprovals = stats.pendingApprovals || 0;
-      metrics.value.completed = stats.completedTasks || 0;
-      metrics.value.critical = stats.criticalTasks || 0;
-    } catch (e) {
-      console.error('加载仪表盘统计失败:', e);
-    }
-
     // 传统仪表盘只加载个人任务数据
     let list: any[] = [];
     const res = await getMyTaskNodes({ page: 1, pageSize: 100 });
     const data = res.data?.data || {};
     list = [...(data.executor_task || []), ...(data.leader_task || [])];
     taskList.value = list;
+
+    // 从任务列表计算指标
+    metrics.value.totalTasks = list.length;
+    metrics.value.completed = list.filter((t: any) => (t.status ?? t.nodeStatus ?? 0) === 2).length;
+    metrics.value.critical = list.filter((t: any) => (t.priority ?? 2) === 4).length;
+    // pendingApprovals 暂时设为0，因为需要额外的审批数据
+    metrics.value.pendingApprovals = 0;
 
     // 统计任务状态分布
     const statusData = { done: 0, inProgress: 0, review: 0, todo: 0 };
