@@ -537,16 +537,6 @@ function applyAIFlow(flowData: any) {
   });
 }
 
-// 清除输入
-function clearInput() {
-  taskListInput.value = '';
-  extractedTasks.value = [];
-  designOptions.value = [];
-  selectedDesign.value = null;
-  flowNodes.value = [];
-  flowEdges.value = [];
-}
-
 function backToDesigns() {
   selectedDesign.value = null;
   selectedNode.value = null;

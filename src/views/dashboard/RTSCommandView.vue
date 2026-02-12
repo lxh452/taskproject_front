@@ -988,7 +988,7 @@ async function generateNodes() {
                 nodeType: 1,
                 selected: false,
                 isThinking: true
-              });
+              } as any);
             }
             
             generatedNodes.value = displayNodes;

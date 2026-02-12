@@ -3,23 +3,23 @@
     <!-- 头部：任务分析和需求输入 -->
     <div class="designer-header">
       <div class="header-left">
-        <div class="task-info-card" v-if="selectedTask">
+        <div class="task-info-card" v-if="task">
           <div class="task-icon">
             <el-icon><Document /></el-icon>
           </div>
           <div class="task-details">
-            <h3>{{ selectedTask.taskTitle || selectedTask.name }}</h3>
+            <h3>{{ task.taskTitle || task.name }}</h3>
             <p class="task-meta">
-              <el-tag size="small" :type="getTaskTypeType(selectedTask.taskType)">
-                {{ getTaskTypeLabel(selectedTask.taskType) }}
+              <el-tag size="small" :type="getTaskTypeType(task.taskType)">
+                {{ getTaskTypeLabel(task.taskType) }}
               </el-tag>
               <span class="meta-item">
                 <el-icon><Calendar /></el-icon>
-                {{ formatDate(selectedTask.taskDeadline) }}
+                {{ formatDate(task.taskDeadline) }}
               </span>
-              <span class="meta-item" v-if="selectedTask.leaderName">
+              <span class="meta-item" v-if="task.leaderName">
                 <el-icon><User /></el-icon>
-                负责人: {{ selectedTask.leaderName }}
+                负责人: {{ task.leaderName }}
               </span>
             </p>
           </div>
@@ -561,6 +561,9 @@ const analysisSteps = [
 const currentStepHint = computed(() => {
   return analysisSteps[currentStep.value]?.hint || '';
 });
+
+// 类型安全的任务访问
+const task = computed<Task | null>(() => props.selectedTask);
 
 const displayedNodes = computed(() => {
   if (showAllNodes.value) {
