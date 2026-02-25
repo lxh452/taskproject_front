@@ -386,9 +386,14 @@ const mentionFilter = ref('');
 const mentionListPosition = ref({ top: 0, left: 0 });
 
 // 文件类型
+// 获取文件扩展名（优先用 fileInfo，fallback 到 route.query.fileName）
+const fileExt = computed(() => {
+    const name = fileInfo.value?.fileName || route.query.fileName as string || '';
+    return name.split('.').pop()?.toLowerCase() || '';
+});
+
 const fileIconType = computed(() => {
-    const fileName = fileInfo.value?.fileName || route.query.fileName as string || '';
-    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const ext = fileExt.value;
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'image';
     if (ext === 'pdf') return 'pdf';
     if (['doc', 'docx'].includes(ext)) return 'word';
@@ -398,29 +403,25 @@ const fileIconType = computed(() => {
     return 'other';
 });
 
-const isImage = computed(() => fileInfo.value?.fileType?.includes('image'));
-const isPdf = computed(() => fileInfo.value?.fileType?.includes('pdf'));
-const isMarkdown = computed(() => {
-    const ext = (fileInfo.value?.fileName || '').split('.').pop()?.toLowerCase();
-    return ext === 'md' || ext === 'markdown';
+const isImage = computed(() => {
+    if (fileInfo.value?.fileType?.includes('image')) return true;
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(fileExt.value);
 });
-const isWord = computed(() => {
-    const ext = (fileInfo.value?.fileName || '').split('.').pop()?.toLowerCase();
-    return ['doc', 'docx'].includes(ext || '');
+const isPdf = computed(() => {
+    if (fileInfo.value?.fileType?.includes('pdf')) return true;
+    return fileExt.value === 'pdf';
 });
-const isExcel = computed(() => {
-    const ext = (fileInfo.value?.fileName || '').split('.').pop()?.toLowerCase();
-    return ['xls', 'xlsx', 'csv'].includes(ext || '');
-});
+const isMarkdown = computed(() => fileExt.value === 'md' || fileExt.value === 'markdown');
+const isWord = computed(() => ['doc', 'docx'].includes(fileExt.value));
+const isExcel = computed(() => ['xls', 'xlsx', 'csv'].includes(fileExt.value));
 const isTextFile = computed(() => {
-    const ext = (fileInfo.value?.fileName || '').split('.').pop()?.toLowerCase();
-    if (['md', 'markdown', 'doc', 'docx', 'xls', 'xlsx', 'csv'].includes(ext || '')) return false;
+    if (['md', 'markdown', 'doc', 'docx', 'xls', 'xlsx', 'csv'].includes(fileExt.value)) return false;
     const textExts = ['txt', 'js', 'ts', 'vue', 'py', 'go', 'java', 'c', 'cpp', 'h', 'css', 'scss', 'json', 'xml', 'yaml', 'yml', 'html', 'jsx', 'tsx', 'sql', 'sh', 'php', 'rb', 'rs', 'swift', 'kt', 'log', 'ini', 'conf', 'env'];
-    return textExts.includes(ext || '');
+    return textExts.includes(fileExt.value);
 });
 
 const fileLanguage = computed(() => {
-    const ext = (fileInfo.value?.fileName || '').split('.').pop()?.toLowerCase() || '';
+    const ext = fileExt.value;
     const map: Record<string, string> = { 'js': 'JavaScript', 'ts': 'TypeScript', 'vue': 'Vue', 'py': 'Python', 'go': 'Go', 'java': 'Java', 'json': 'JSON', 'html': 'HTML', 'css': 'CSS', 'sql': 'SQL' };
     return map[ext] || ext.toUpperCase();
 });
@@ -458,28 +459,29 @@ function formatFileSize(bytes: number) {
 
 function goBack() { router.go(-1); }
 async function downloadFile() {
-    if (!fileInfo.value?.fileId) return;
-    
+    const fileId = fileInfo.value?.fileId || route.params.fileId as string;
+    if (!fileId) return;
+
     try {
         // 通过fetch获取文件内容（携带token）
-        const url = getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId);
+        const url = getFileUrl(fileInfo.value?.fileUrl, fileId);
         const response = await fetchWithToken(url);
-        
+
         if (!response.ok) {
             ElMessage.error('下载文件失败');
             return;
         }
-        
+
         // 创建blob并下载
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = fileInfo.value.fileName;
+        link.download = fileInfo.value?.fileName || route.query.fileName as string || 'download';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // 清理blob URL
         setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
     } catch (error) {
@@ -577,18 +579,38 @@ async function loadFileInfo() {
         const resp = await request({ url: '/upload/file/detail', method: 'post', data: { fileId } });
         if (resp.data?.code === 200) {
             fileInfo.value = resp.data.data;
-            // 使用fileId通过代理接口访问（解决CORS问题）
-            if (fileInfo.value.fileId) {
-                // 对于图片和PDF，需要先加载为blob URL以携带token
-                if (isImage.value) await loadImage();
-                else if (isPdf.value) await loadPdf();
-                else if (isMarkdown.value) await loadMarkdown();
-                else if (isWord.value) await loadWord();
-                else if (isExcel.value) await loadExcel();
-                else if (isTextFile.value) await loadText();
-            }
+        } else {
+            console.warn('获取文件详情失败:', resp.data?.msg);
         }
-    } catch (e) { console.error('加载文件失败:', e); } finally { loading.value = false; }
+    } catch (e) {
+        console.error('加载文件详情失败:', e);
+    }
+
+    // 即使 file/detail API 失败，也尝试用 route 参数构造 fileInfo 并加载文件内容
+    if (!fileInfo.value) {
+        fileInfo.value = {
+            fileId: fileId,
+            fileName: route.query.fileName as string || '',
+            fileUrl: '',
+            fileType: '',
+        };
+    }
+
+    // 加载文件内容
+    if (fileInfo.value.fileId) {
+        try {
+            if (isImage.value) await loadImage();
+            else if (isPdf.value) await loadPdf();
+            else if (isMarkdown.value) await loadMarkdown();
+            else if (isWord.value) await loadWord();
+            else if (isExcel.value) await loadExcel();
+            else if (isTextFile.value) await loadText();
+        } catch (e) {
+            console.error('加载文件内容失败:', e);
+        }
+    }
+
+    loading.value = false;
 }
 
 // 获取认证token
@@ -617,14 +639,18 @@ async function fetchWithToken(url: string, options: RequestInit = {}): Promise<R
     return fetch(url, { ...options, headers });
 }
 
+// 获取当前文件的代理URL
+function getProxyUrl(): string {
+    const fileId = fileInfo.value?.fileId || route.params.fileId as string;
+    return getFileUrl(fileInfo.value?.fileUrl, fileId);
+}
+
 // 加载图片为blob URL
 async function loadImage() {
-    if (!fileInfo.value?.fileId) return;
     try {
-        const response = await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId));
+        const response = await fetchWithToken(getProxyUrl());
         if (response.ok) {
             const blob = await response.blob();
-            // 释放之前的blob URL
             if (imageBlobUrl.value) {
                 URL.revokeObjectURL(imageBlobUrl.value);
             }
@@ -637,12 +663,10 @@ async function loadImage() {
 
 // 加载PDF为blob URL
 async function loadPdf() {
-    if (!fileInfo.value?.fileId) return;
     try {
-        const response = await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId));
+        const response = await fetchWithToken(getProxyUrl());
         if (response.ok) {
             const blob = await response.blob();
-            // 释放之前的blob URL
             if (pdfBlobUrl.value) {
                 URL.revokeObjectURL(pdfBlobUrl.value);
             }
@@ -654,15 +678,13 @@ async function loadPdf() {
 }
 
 async function loadText() {
-    if (!fileInfo.value?.fileId) return;
-    try { fileContent.value = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text(); }
+    try { fileContent.value = await (await fetchWithToken(getProxyUrl())).text(); }
     catch { fileContent.value = '// 无法加载文件内容'; }
 }
 
 async function loadMarkdown() {
-    if (!fileInfo.value?.fileId) return;
     try {
-        const txt = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).text();
+        const txt = await (await fetchWithToken(getProxyUrl())).text();
         fileContent.value = txt;
         marked.setOptions({ breaks: true, gfm: true });
         markdownHtml.value = marked.parse(txt) as string;
@@ -670,20 +692,18 @@ async function loadMarkdown() {
 }
 
 async function loadWord() {
-    if (!fileInfo.value?.fileId) return;
     wordLoading.value = true; wordError.value = '';
     try {
-        const buf = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
+        const buf = await (await fetchWithToken(getProxyUrl())).arrayBuffer();
         const res = await mammoth.convertToHtml({ arrayBuffer: buf });
         wordHtml.value = res.value;
-    } catch { wordError.value = '无法解析此文档'; } finally { wordLoading.value = false; }
+    } catch { wordError.value = '无法解析此文档，请尝试下载后查看'; } finally { wordLoading.value = false; }
 }
 
 async function loadExcel() {
-    if (!fileInfo.value?.fileId) return;
     excelLoading.value = true; excelError.value = '';
     try {
-        const buf = await (await fetchWithToken(getFileUrl(fileInfo.value.fileUrl, fileInfo.value.fileId))).arrayBuffer();
+        const buf = await (await fetchWithToken(getProxyUrl())).arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
         excelWorkbook.value = wb; excelSheets.value = wb.SheetNames;
         if (wb.SheetNames.length > 0) { currentSheet.value = wb.SheetNames[0]; loadSheetData(wb.SheetNames[0]); }
