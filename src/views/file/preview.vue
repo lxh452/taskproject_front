@@ -792,12 +792,14 @@ onBeforeUnmount(() => {
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     background: var(--bg-page);
     font-family: var(--font-sans);
     color: var(--text-primary);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* ========== 深色模式 ========== */
