@@ -879,10 +879,16 @@ onBeforeUnmount(() => {
 /* ========== 主内容 ========== */
 .preview-main { flex: 1; display: flex; overflow: hidden; }
 
-.content-section { flex: 1; overflow: hidden; background: var(--bg-page); display: flex; flex-direction: column; }
+.content-section { flex: 1; overflow: hidden; background: var(--bg-page); display: flex; flex-direction: column; min-width: 0; }
 
 /* 所有预览容器统一填满高度并内部滚动 */
-.content-section > div { flex: 1; overflow: auto; min-height: 0; }
+.content-section > .preview-image,
+.content-section > .preview-pdf,
+.content-section > .preview-markdown,
+.content-section > .preview-document,
+.content-section > .preview-excel,
+.content-section > .preview-code,
+.content-section > .preview-unsupported { flex: 1; overflow: auto; min-height: 0; }
 
 /* 图片预览 */
 .preview-image { display: flex; align-items: center; justify-content: center; padding: 40px; }
@@ -978,7 +984,7 @@ onBeforeUnmount(() => {
     display: flex; flex-direction: column; position: relative;
 }
 
-.sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--border-color); }
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
 .sidebar-header h2 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; }
 .sidebar-header .count { background: var(--accent-light); color: var(--accent-color); padding: 2px 10px; border-radius: 12px; font-size: 13px; font-weight: 600; }
 .filter-select { width: 100px; }
@@ -1085,8 +1091,8 @@ onBeforeUnmount(() => {
     margin-top: 8px;
 }
 
-/* 评论输入框 */
-.comment-input-box { padding: 16px; border-top: 1px solid var(--border-color); background: var(--bg-hover); }
+/* 评论输入框 - 固定在侧边栏底部 */
+.comment-input-box { padding: 16px; border-top: 1px solid var(--border-color); background: var(--bg-hover); flex-shrink: 0; }
 .input-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .node-select { width: 120px; }
 .input-body { margin-bottom: 10px; }
