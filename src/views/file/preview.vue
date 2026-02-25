@@ -243,13 +243,24 @@
                             </div>
                             <div class="comment-text" v-html="renderCommentContent(comment.content)"></div>
                             <div class="comment-footer">
-                                <el-button link size="small" @click.stop>
-                                    <el-icon><Star /></el-icon>
-                                    {{ comment.likeCount || 0 }}
-                                </el-button>
-                                <el-button link size="small" @click.stop>
+                                <el-button link size="small" @click.stop="startReply(comment)">
                                     回复
                                 </el-button>
+                            </div>
+                            <!-- 子回复列表 -->
+                            <div v-if="getChildComments(comment.commentId).length > 0" class="reply-list">
+                                <div v-for="reply in getChildComments(comment.commentId)" :key="reply.commentId" class="reply-item">
+                                    <el-avatar :size="24" class="reply-avatar">
+                                        {{ getAvatarText(reply.userId, reply.employeeName) }}
+                                    </el-avatar>
+                                    <div class="reply-content">
+                                        <span class="reply-author">{{ reply.employeeName || getEmployeeName(reply.userId) || '匿名' }}</span>
+                                        <span class="reply-to" v-if="reply.replyToName"> 回复 {{ reply.replyToName }}</span>
+                                        <span class="reply-time">{{ formatTime(reply.createTime) }}</span>
+                                        <div class="reply-text" v-html="renderCommentContent(reply.content)"></div>
+                                        <el-button link size="small" class="reply-btn" @click.stop="startReply(reply, comment)">回复</el-button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -259,7 +270,11 @@
                 <!-- 评论输入框 -->
                 <div class="comment-input-box">
                     <div class="input-header">
-                        <span>发表评论</span>
+                        <span v-if="replyTarget">
+                            回复 {{ replyTarget.employeeName || getEmployeeName(replyTarget.userId) || '匿名' }}
+                            <el-button link size="small" @click="cancelReply" style="margin-left: 4px; color: #999;">取消</el-button>
+                        </span>
+                        <span v-else>发表评论</span>
                         <el-select v-if="taskNodes.length > 0" v-model="sidebarCommentNodeId" placeholder="关联节点" clearable size="small" class="node-select">
                             <el-option v-for="node in taskNodes" :key="node.id || node.taskNodeId" :label="node.nodeName" :value="node.id || node.taskNodeId" />
                         </el-select>
@@ -308,10 +323,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, Star, List } from '@element-plus/icons-vue';
+import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, List } from '@element-plus/icons-vue';
 import { getTask, getAttachmentComments, createAttachmentComment, listEmployees, getMyEmployee } from '@/api';
 import { useUserStore } from '@/store/user';
 import request from '@/utils/request';
@@ -385,6 +400,10 @@ const showSidebarMentionList = ref(false);
 const mentionFilter = ref('');
 const mentionListPosition = ref({ top: 0, left: 0 });
 
+// 回复
+const replyTarget = ref<any>(null);
+const replyParentId = ref('');  // 顶级评论ID（用于parentId）
+
 // 文件类型
 // 获取文件扩展名（优先用 fileInfo，fallback 到 route.query.fileName）
 const fileExt = computed(() => {
@@ -427,7 +446,6 @@ const fileLanguage = computed(() => {
 });
 
 const fileLines = computed(() => fileContent.value ? fileContent.value.split('\n') : []);
-const filteredComments = computed(() => commentNodeFilter.value ? allComments.value.filter(c => c.taskNodeId === commentNodeFilter.value) : allComments.value);
 const filteredMentionEmployees = computed(() => {
     const emps = Object.values(employeesMap.value);
     if (!mentionFilter.value) return emps;
@@ -442,6 +460,17 @@ function getNodeName(nodeId: string) { return taskNodes.value.find(n => (n.id ||
 function getEmployeeName(id: string) { return employeesMap.value[String(id)]?.name || ''; }
 function getEmployeeAvatar(id: string) { return employeesMap.value[String(id)]?.avatar || ''; }
 function getAvatarText(id: string, fallback?: string) { return (employeesMap.value[String(id)]?.name || fallback || '未')[0] || 'U'; }
+
+// 回复相关
+function getChildComments(parentId: string) {
+    return allComments.value.filter(c => c.parentId === parentId);
+}
+// 顶级评论（非回复）
+const topLevelComments = computed(() => allComments.value.filter(c => !c.parentId));
+const filteredComments = computed(() => {
+    const base = topLevelComments.value;
+    return commentNodeFilter.value ? base.filter(c => c.taskNodeId === commentNodeFilter.value) : base;
+});
 function renderCommentContent(content: string) { return content ? content.replace(/@(\S+)/g, '<span class="mention">@$1</span>') : ''; }
 function formatTime(time: string) {
     if (!time) return '';
@@ -546,6 +575,23 @@ function insertSidebarMention(emp: any) {
     showSidebarMentionList.value = false;
 }
 
+function startReply(comment: any, topComment?: any) {
+    // topComment 用于回复子评论时，parentId 仍指向顶级评论
+    replyTarget.value = comment;
+    replyParentId.value = topComment ? topComment.commentId : comment.commentId;
+    sidebarComment.value = '';
+    // 聚焦输入框
+    nextTick(() => {
+        const el = sidebarCommentInputRef.value as any;
+        if (el?.focus) el.focus();
+        else if (el?.$el) el.$el.querySelector('textarea')?.focus();
+    });
+}
+function cancelReply() {
+    replyTarget.value = null;
+    replyParentId.value = '';
+}
+
 async function submitSidebarComment() {
     if (!sidebarComment.value.trim()) { ElMessage.warning('请输入评论内容'); return; }
     const fileId = route.params.fileId as string;
@@ -561,11 +607,15 @@ async function submitSidebarComment() {
                 if (emp) atIds.push((emp as any).id);
             }
         }
-        const resp = await createAttachmentComment({
+        const payload: any = {
             fileId, taskId: route.query.taskId as string, taskNodeId: sidebarCommentNodeId.value || undefined,
             content: sidebarComment.value, atEmployeeIds: atIds.length > 0 ? atIds : undefined, annotationType: 'general_comment'
-        });
-        if (resp.data?.code === 200) { ElMessage.success('评论成功'); sidebarComment.value = ''; sidebarCommentNodeId.value = ''; await loadComments(); }
+        };
+        if (replyParentId.value) {
+            payload.parentId = replyParentId.value;
+        }
+        const resp = await createAttachmentComment(payload);
+        if (resp.data?.code === 200) { ElMessage.success('评论成功'); sidebarComment.value = ''; sidebarCommentNodeId.value = ''; cancelReply(); await loadComments(); }
         else { ElMessage.error(resp.data?.msg || '评论失败'); }
     } catch { ElMessage.error('评论失败'); } finally { submittingSidebarComment.value = false; }
 }
@@ -1091,6 +1141,56 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 16px;
     margin-top: 8px;
+}
+
+/* 回复列表 */
+.reply-list {
+    margin-top: 8px;
+    padding-left: 8px;
+    border-left: 2px solid var(--border-color);
+}
+.reply-item {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+}
+.reply-item + .reply-item {
+    border-top: 1px solid var(--border-color);
+}
+.reply-avatar {
+    flex-shrink: 0;
+    font-size: 11px;
+    background: var(--accent-light);
+    color: var(--accent-color);
+}
+.reply-content {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.reply-author {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.reply-to {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.reply-time {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-left: 6px;
+}
+.reply-text {
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+.reply-btn {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 0;
+    margin-top: 2px;
 }
 
 /* 评论输入框 - 固定在侧边栏底部 */
