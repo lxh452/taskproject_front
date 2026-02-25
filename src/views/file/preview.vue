@@ -879,15 +879,18 @@ onBeforeUnmount(() => {
 /* ========== 主内容 ========== */
 .preview-main { flex: 1; display: flex; overflow: hidden; }
 
-.content-section { flex: 1; overflow: auto; background: var(--bg-page); }
+.content-section { flex: 1; overflow: hidden; background: var(--bg-page); display: flex; flex-direction: column; }
+
+/* 所有预览容器统一填满高度并内部滚动 */
+.content-section > div { flex: 1; overflow: auto; min-height: 0; }
 
 /* 图片预览 */
-.preview-image { display: flex; align-items: center; justify-content: center; min-height: 100%; padding: 40px; }
+.preview-image { display: flex; align-items: center; justify-content: center; padding: 40px; }
 .preview-image img { max-width: 100%; max-height: calc(100vh - 200px); object-fit: contain; border-radius: var(--radius); box-shadow: var(--shadow-lg); }
 
 /* PDF预览 */
-.preview-pdf { height: 100%; }
-.preview-pdf iframe { width: 100%; height: 100%; }
+.preview-pdf { display: flex; flex-direction: column; }
+.preview-pdf iframe { width: 100%; flex: 1; }
 
 /* Markdown预览 */
 .preview-markdown { padding: 48px; background: var(--bg-card); }
@@ -903,14 +906,17 @@ onBeforeUnmount(() => {
 .preview-document { padding: 48px; background: var(--bg-card); }
 .document-body { max-width: 800px; margin: 0 auto; font-size: 15px; line-height: 1.8; color: var(--text-primary); }
 
+/* 不支持预览 */
+.preview-unsupported { display: flex; align-items: center; justify-content: center; }
+
 /* 加载/错误状态 */
-.loading-state, .error-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; color: var(--text-muted); gap: 16px; }
+.loading-state, .error-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; height: 100%; color: var(--text-muted); gap: 16px; }
 .loading-spinner { font-size: 48px; animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .error-state { color: #ef4444; }
 
 /* Excel预览 */
-.preview-excel { height: 100%; display: flex; flex-direction: column; background: var(--bg-card); }
+.preview-excel { display: flex; flex-direction: column; background: var(--bg-card); }
 .excel-wrapper { flex: 1; overflow: auto; padding: 16px; }
 .excel-table { border-collapse: collapse; font-size: 13px; font-family: var(--font-mono); min-width: 100%; }
 .excel-table th, .excel-table td { border: 1px solid var(--border-color); padding: 10px 14px; text-align: left; white-space: nowrap; }
