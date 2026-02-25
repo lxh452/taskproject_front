@@ -243,13 +243,17 @@
                             </div>
                             <div class="comment-text" v-html="renderCommentContent(comment.content)"></div>
                             <div class="comment-footer">
+                                <el-button link size="small" @click.stop="toggleLike(comment)" :class="{ 'is-liked': isLikedByMe(comment) }">
+                                    <el-icon><Star /></el-icon>
+                                    {{ comment.likeCount || 0 }}
+                                </el-button>
                                 <el-button link size="small" @click.stop="startReply(comment)">
-                                    回复
+                                    回复 {{ comment.replies && comment.replies.length > 0 ? comment.replies.length : '' }}
                                 </el-button>
                             </div>
                             <!-- 子回复列表 -->
-                            <div v-if="getChildComments(comment.commentId).length > 0" class="reply-list">
-                                <div v-for="reply in getChildComments(comment.commentId)" :key="reply.commentId" class="reply-item">
+                            <div v-if="comment.replies && comment.replies.length > 0" class="reply-list">
+                                <div v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
                                     <el-avatar :size="24" class="reply-avatar">
                                         {{ getAvatarText(reply.userId, reply.employeeName) }}
                                     </el-avatar>
@@ -326,8 +330,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, List } from '@element-plus/icons-vue';
-import { getTask, getAttachmentComments, createAttachmentComment, listEmployees, getMyEmployee } from '@/api';
+import { ArrowLeft, Document, Download, ChatDotRound, Plus, Loading, WarningFilled, User, Sunny, Moon, Star, List } from '@element-plus/icons-vue';
+import { getTask, getAttachmentComments, createAttachmentComment, likeAttachmentComment, listEmployees, getMyEmployee } from '@/api';
 import { useUserStore } from '@/store/user';
 import request from '@/utils/request';
 import { marked } from 'marked';
@@ -461,16 +465,7 @@ function getEmployeeName(id: string) { return employeesMap.value[String(id)]?.na
 function getEmployeeAvatar(id: string) { return employeesMap.value[String(id)]?.avatar || ''; }
 function getAvatarText(id: string, fallback?: string) { return (employeesMap.value[String(id)]?.name || fallback || '未')[0] || 'U'; }
 
-// 回复相关
-function getChildComments(parentId: string) {
-    return allComments.value.filter(c => c.parentId === parentId);
-}
-// 顶级评论（非回复）
-const topLevelComments = computed(() => allComments.value.filter(c => !c.parentId));
-const filteredComments = computed(() => {
-    const base = topLevelComments.value;
-    return commentNodeFilter.value ? base.filter(c => c.taskNodeId === commentNodeFilter.value) : base;
-});
+const filteredComments = computed(() => commentNodeFilter.value ? allComments.value.filter(c => c.taskNodeId === commentNodeFilter.value) : allComments.value);
 function renderCommentContent(content: string) { return content ? content.replace(/@(\S+)/g, '<span class="mention">@$1</span>') : ''; }
 function formatTime(time: string) {
     if (!time) return '';
@@ -590,6 +585,29 @@ function startReply(comment: any, topComment?: any) {
 function cancelReply() {
     replyTarget.value = null;
     replyParentId.value = '';
+}
+
+// 点赞
+function isLikedByMe(comment: any) {
+    const uid = userStore.userId || '';
+    return (comment.likedBy || []).includes(uid);
+}
+async function toggleLike(comment: any) {
+    const liked = isLikedByMe(comment);
+    try {
+        const resp = await likeAttachmentComment({ commentId: comment.commentId, isLike: liked ? 0 : 1 });
+        if (resp.data?.code === 200) {
+            // 更新本地数据
+            comment.likeCount = resp.data.data?.likeCount ?? comment.likeCount;
+            const uid = userStore.userId || '';
+            if (liked) {
+                comment.likedBy = (comment.likedBy || []).filter((id: string) => id !== uid);
+            } else {
+                if (!comment.likedBy) comment.likedBy = [];
+                comment.likedBy.push(uid);
+            }
+        }
+    } catch { /* ignore */ }
 }
 
 async function submitSidebarComment() {
@@ -1141,6 +1159,9 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 16px;
     margin-top: 8px;
+}
+.comment-footer .is-liked {
+    color: #f56c6c;
 }
 
 /* 回复列表 */

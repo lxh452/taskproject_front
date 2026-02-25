@@ -344,6 +344,10 @@ export const getAttachmentComments = (data: { fileId: string; page?: number; pag
 export const resolveAttachmentComment = (data: { commentId: string }) =>
     request({ url: '/upload/comment/resolve', method: 'post', data });
 
+// 点赞/取消点赞附件评论
+export const likeAttachmentComment = (data: { commentId: string; isLike: number }) =>
+    request({ url: '/upload/comment/like', method: 'post', data });
+
 // 删除附件评论
 export const deleteAttachmentComment = (data: { commentId: string }) =>
     request({ url: '/upload/comment/delete', method: 'post', data });
