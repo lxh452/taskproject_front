@@ -28,12 +28,12 @@
         class="attachment-card"
       >
         <div class="file-preview">
-          <el-image 
-            v-if="isImage(file.fileType)" 
-            :src="file.fileUrl" 
+          <el-image
+            v-if="isImage(file.fileType)"
+            :src="getFileUrl(file.fileUrl)"
             fit="cover"
             class="preview-image"
-            :preview-src-list="[file.fileUrl]"
+            :preview-src-list="[getFileUrl(file.fileUrl)]"
           />
           <div v-else class="preview-icon">
             <el-icon :size="48"><Document /></el-icon>
@@ -74,9 +74,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { Search, Refresh, Document, View, Download } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { getMyAttachments } from '@/api';
+import { getFileUrl } from '@/utils/fileUrl';
+
+const router = useRouter();
 
 const loading = ref(false);
 const attachments = ref<any[]>([]);
@@ -129,20 +133,42 @@ function resetFilters() {
 }
 
 function previewFile(file: any) {
-  if (file.fileUrl) {
-    window.open(file.fileUrl, '_blank');
-  }
+  if (!file.fileId) return;
+  router.push({
+    path: `/file/preview/${file.fileId}`,
+    query: { fileName: file.fileName }
+  });
 }
 
-function downloadFile(file: any) {
-  if (!file.fileUrl) return;
-  const link = document.createElement('a');
-  link.href = file.fileUrl;
-  link.download = file.fileName || 'download';
-  link.target = '_blank';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+async function downloadFile(file: any) {
+  if (!file.fileId && !file.fileUrl) return;
+  try {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (!token) {
+      ElMessage.warning('请先登录');
+      return;
+    }
+    const url = getFileUrl(file.fileUrl, file.fileId);
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      ElMessage.error('下载文件失败');
+      return;
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = file.fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+  } catch (error) {
+    console.error('下载文件失败:', error);
+    ElMessage.error('下载文件失败');
+  }
 }
 
 async function loadAttachments() {

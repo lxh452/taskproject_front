@@ -255,6 +255,7 @@ import { Search, Refresh, User, Star, Calendar, OfficeBuilding, Document, Pictur
 import { listMyTaskNodes, listTasks, getChecklistList, updateChecklist, getTaskNodeAttachments, getTaskComments, createTaskComment } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage } from 'element-plus';
+import { getFileUrl } from '@/utils/fileUrl';
 
 const router = useRouter();
 
@@ -400,20 +401,46 @@ function isImage(fileType: string): boolean {
 }
 
 function previewAttachment(file: any) {
-  if (file.fileUrl) {
-    window.open(file.fileUrl, '_blank');
-  }
+  if (!file.fileId) return;
+  router.push({
+    path: `/file/preview/${file.fileId}`,
+    query: {
+      taskId: currentTask.value?.taskId || '',
+      nodeId: currentTask.value?.id || '',
+      fileName: file.fileName
+    }
+  });
 }
 
-function downloadAttachment(file: any) {
-  if (!file.fileUrl) return;
-  const link = document.createElement('a');
-  link.href = file.fileUrl;
-  link.download = file.fileName || 'download';
-  link.target = '_blank';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+async function downloadAttachment(file: any) {
+  if (!file.fileId && !file.fileUrl) return;
+  try {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (!token) {
+      ElMessage.warning('请先登录');
+      return;
+    }
+    const url = getFileUrl(file.fileUrl, file.fileId);
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      ElMessage.error('下载文件失败');
+      return;
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = file.fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+  } catch (error) {
+    console.error('下载文件失败:', error);
+    ElMessage.error('下载文件失败');
+  }
 }
 
 async function loadComments(taskId: string, taskNodeId: string) {
