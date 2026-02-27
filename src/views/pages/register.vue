@@ -312,15 +312,43 @@ const step3Rules: FormRules = {
     ],
 };
 
-// 邮箱验证器
+// 邮箱验证器（邮箱可选，但如果填写了就必须格式正确）
 function validateEmail(rule: any, value: string, callback: any) {
     if (!value) {
-        callback(new Error('请输入邮箱'));
+        // 邮箱为空时，检查是否填写了邀请码
+        if (inviteCode.value) {
+            callback(new Error('填写邀请码时必须提供邮箱'));
+            return;
+        }
+        callback(); // 没有邀请码时邮箱可选
         return;
     }
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(value)) {
         callback(new Error('请输入有效的邮箱地址'));
+        return;
+    }
+    callback();
+}
+
+// 验证码验证器（如果填写了邮箱就必须验证）
+function validateVerificationCode(rule: any, value: string, callback: any) {
+    // 如果没有填写邮箱，则不需要验证码
+    if (!param.email) {
+        callback();
+        return;
+    }
+    // 如果填写了邮箱，则必须提供验证码
+    if (!value) {
+        callback(new Error('请输入验证码'));
+        return;
+    }
+    if (value.length !== 6) {
+        callback(new Error('验证码为6位数字'));
+        return;
+    }
+    if (!/^\d{6}$/.test(value)) {
+        callback(new Error('验证码为6位数字'));
         return;
     }
     callback();
