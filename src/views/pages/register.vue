@@ -141,26 +141,7 @@
                 </el-form-item>
             </el-form>
 
-            <!-- Step 4: Invite Code -->
-            <el-form 
-                v-show="currentStep === 3" 
-                :model="param" 
-                ref="step4Form" 
-                size="large" 
-                class="login-form step-form"
-            >
-                <div class="invite-code-section">
-                    <p class="invite-hint">输入邀请码可自动加入公司团队（可选）</p>
-                    <InviteCodeInput
-                        v-model="inviteCode"
-                        :auto-validate="true"
-                        :show-preview="true"
-                        :show-qr-scanner="true"
-                        @validated="handleInviteCodeValidated"
-                        @error="handleInviteCodeError"
-                    />
-                </div>
-            </el-form>
+
 
             <!-- Navigation Buttons -->
             <div class="step-navigation">
@@ -191,7 +172,7 @@
                     @click="submitRegistration" 
                     :loading="loading"
                 >
-                    完成注册
+                    {{ inviteCode ? '注册并申请加入' : '完成注册' }}
                 </el-button>
             </div>
 
@@ -204,18 +185,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Register } from '@/types/user';
-import { apiRegister, sendVerificationCode as sendCode, applyJoinCompany } from '@/api';
+import { apiRegister, sendVerificationCode as sendCode, applyJoinCompany, parseInviteCode } from '@/api';
 import { User, Message, Lock, UserFilled, Key, View, Hide, Check, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
-import InviteCodeInput from '@/components/InviteCodeInput.vue';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
-import type { InviteCodeInfo } from '@/types/company';
-import { extractInviteCodeFromURL } from '@/utils/validation';
 import { handleApiError } from '@/utils/errorHandler';
 
 const router = useRouter();
+const route = useRoute();
 const currentStep = ref(0);
 const loading = ref(false);
 const codeSending = ref(false);
@@ -224,12 +203,15 @@ const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 let countdownTimer: number | null = null;
 
+// 邀请码（从URL参数获取）
+const inviteCode = ref('');
+const companyName = ref('');
+
 // 步骤定义
 const steps = [
     { title: '基本信息' },
     { title: '邮箱验证' },
-    { title: '设置密码' },
-    { title: '邀请码' }
+    { title: '设置密码' }
 ];
 
 // 计算进度条宽度
@@ -247,26 +229,28 @@ const param = reactive<Register & { verificationCode: string; confirmPassword: s
     confirmPassword: '',
 });
 
-// 邀请码相关
-const inviteCode = ref('');
-const validatedCompanyInfo = ref<InviteCodeInfo | null>(null);
-
-onMounted(() => {
+onMounted(async () => {
     // 从URL参数提取邀请码
-    const urlCode = extractInviteCodeFromURL(window.location.href);
+    const urlCode = route.query.inviteCode as string;
     if (urlCode) {
         inviteCode.value = urlCode;
-        ElMessage.success('已自动填充邀请码');
+        // 验证邀请码并获取公司信息
+        try {
+            const res = await parseInviteCode({ inviteCode: urlCode });
+            if (res.data.code === 200) {
+                companyName.value = res.data.data?.companyName || '';
+                ElMessage.success(`您将通过邀请码加入：${companyName.value}`);
+            } else {
+                ElMessage.warning('邀请码无效或已过期');
+                inviteCode.value = '';
+            }
+        } catch (error) {
+            console.error('验证邀请码失败:', error);
+            ElMessage.warning('邀请码验证失败');
+            inviteCode.value = '';
+        }
     }
 });
-
-function handleInviteCodeValidated(companyInfo: InviteCodeInfo | null) {
-    validatedCompanyInfo.value = companyInfo;
-}
-
-function handleInviteCodeError(error: string) {
-    validatedCompanyInfo.value = null;
-}
 
 // 表单引用
 const step1Form = ref<FormInstance>();
@@ -477,16 +461,37 @@ const submitRegistration = async () => {
         if (res.data.code === 200) {
             ElMessage.success('注册成功');
             
-            if (inviteCode.value && validatedCompanyInfo.value) {
+            // 如果有邀请码，自动登录并申请加入
+            if (inviteCode.value) {
                 try {
-                    const joinRes = await applyJoinCompany({ inviteCode: inviteCode.value });
-                    if (joinRes.data.code === 200) {
-                        ElMessage.success('已自动提交加入公司申请，请登录后等待审批');
+                    // 自动登录获取token
+                    const loginRes = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: param.username,
+                            password: param.password
+                        })
+                    });
+                    const loginData = await loginRes.json();
+                    
+                    if (loginData.code === 200 && loginData.data?.token) {
+                        // 保存token
+                        localStorage.setItem('authToken', loginData.data.token);
+                        
+                        // 申请加入公司
+                        const joinRes = await applyJoinCompany({ inviteCode: inviteCode.value });
+                        if (joinRes.data.code === 200) {
+                            ElMessage.success('已自动提交加入公司申请');
+                            // 跳转到等待审批页面
+                            router.push('/waiting-approval');
+                            return;
+                        }
                     }
                 } catch (error) {
                     console.error('自动加入公司失败:', error);
-                    ElMessage.warning('注册成功，但加入公司申请失败，请登录后手动加入');
                 }
+                ElMessage.warning('注册成功，但自动加入公司失败，请登录后手动加入');
             }
             
             router.push('/login');

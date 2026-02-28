@@ -242,7 +242,15 @@ const routes: RouteRecordRaw[] = [
             title: '加入公司',
             noAuth: true,
         },
-        component: () => import(/* webpackChunkName: "join-via-invite" */ '../views/pages/JoinViaInvite.vue'),
+        component: () => import(/* webpackChunkName: "invite-handler" */ '../views/pages/InviteHandler.vue'),
+    },
+    {
+        path: '/waiting-approval',
+        meta: {
+            title: '等待审批',
+            noAuth: false,
+        },
+        component: () => import(/* webpackChunkName: "waiting-approval" */ '../views/pages/WaitingApprovalPage.vue'),
     },
     {
         path: '/forgot-password',
