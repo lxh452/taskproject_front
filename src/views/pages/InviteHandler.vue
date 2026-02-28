@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Loading, CircleCloseFilled } from '@element-plus/icons-vue';
@@ -41,10 +41,15 @@ const showWaitingApproval = ref(false);
 const companyName = ref('');
 
 onMounted(async () => {
+  // 等待下一个 tick，确保路由参数已解析
+  await nextTick();
+  
   const inviteCode = route.query.inviteCode as string;
+  console.log('[InviteHandler] 获取到的邀请码:', inviteCode);
+  console.log('[InviteHandler] 当前路由:', route.path, route.query);
 
   if (!inviteCode) {
-    errorMessage.value = '邀请码无效';
+    errorMessage.value = '邀请码无效或缺失';
     loading.value = false;
     return;
   }
@@ -121,6 +126,15 @@ function goToLogin() {
     router.push('/login');
   }
 }
+
+// 监听路由参数变化
+watch(() => route.query.inviteCode, (newCode) => {
+  if (newCode && !loading.value && !showWaitingApproval.value) {
+    console.log('[InviteHandler] 检测到邀请码变化:', newCode);
+    // 重新加载页面
+    window.location.reload();
+  }
+});
 </script>
 
 <style scoped>
