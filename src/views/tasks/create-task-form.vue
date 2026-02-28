@@ -227,12 +227,14 @@ async function loadEmployees() {
         const companyId = userStore.companyId || '';
         const resp = await listEmployees({ page: 1, pageSize: 1000, companyId });
         if (resp.data?.code === 200) {
-            const list = resp.data?.data?.list || resp.data?.data || [];
+            // 适配后端返回的 employees key
+            const data = resp.data?.data;
+            const list = data?.list || data?.employees?.list || data?.employees || [];
             employees.value = list.map((e: any) => ({
-                id: e.id || e.employeeId,
-                name: e.realName || e.name || '未知',
-                departmentId: e.departmentId || e.department_id,
-                departmentName: e.departmentName || '',
+                id: e.id || e.employeeId || e.EmployeeId,
+                name: e.realName || e.name || e.Name || '未知',
+                departmentId: e.departmentId || e.DepartmentId || e.department_id,
+                departmentName: e.departmentName || e.DepartmentName || '',
             }));
             
             employees.value.forEach((emp: any) => {

@@ -381,10 +381,12 @@ async function loadData() {
 
     const empResp = await listEmployees({ page: 1, pageSize: 200, companyId });
     if (empResp.data?.code === 200) {
-      const empList = empResp.data?.data?.list || [];
+      // 适配后端返回的 employees key
+      const empData = empResp.data?.data;
+      const empList = empData?.list || empData?.employees?.list || empData?.employees || [];
       employeeOptions.value = empList.map((e: any) => ({
-        id: e.id || e.employeeId || e.Id,
-        name: e.realName || e.name || '未知',
+        id: e.id || e.employeeId || e.EmployeeId || e.Id,
+        name: e.realName || e.name || e.Name || '未知',
       }));
     }
   } catch (error: any) { 

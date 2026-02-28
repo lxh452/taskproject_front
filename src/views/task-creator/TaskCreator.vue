@@ -640,9 +640,12 @@ const loadTeam = async () => {
       return
     }
     const res = await listEmployees({ page: 1, pageSize: 50, companyId: employee.value.companyId })
-    teamMembers.value = (res?.data?.data?.list || []).map((e: any) => ({
-      id: e.id || e.employeeId,
-      name: e.realName || e.username,
+    // 适配后端返回的 employees key
+    const data = res?.data?.data;
+    const list = data?.list || data?.employees?.list || data?.employees || [];
+    teamMembers.value = list.map((e: any) => ({
+      id: e.id || e.employeeId || e.EmployeeId,
+      name: e.realName || e.username || e.Name || '未知',
       avatar: e.avatar,
       progress: Math.floor(Math.random() * 40) + 60,
       pendingTasks: Math.floor(Math.random() * 8) + 1

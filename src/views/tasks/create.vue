@@ -262,7 +262,9 @@ onMounted(async () => {
         const empReq: any = { page: 1, pageSize: 100 };
         if (companyId) empReq.companyId = companyId;
         const eres = await listEmployees(empReq);
-        const elist = eres.data?.data?.list || [];
+        // 适配后端返回的 employees key
+        const empData = eres.data?.data;
+        const elist = empData?.list || empData?.employees?.list || empData?.employees || [];
         const byDept: Record<string, any[]> = {};
         elist.forEach((e: any) => {
             const dep = String(e.departmentId || e.DepartmentId || '');

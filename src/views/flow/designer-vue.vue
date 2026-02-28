@@ -1049,8 +1049,9 @@ async function loadEmployees(companyId: string) {
     
     while (true) {
       const resp = await listEmployees({ page, pageSize, companyId })
+      // 适配后端返回的 employees key
       const data = resp?.data?.data || resp?.data || {}
-      const list = data.list || data.rows || []
+      const list = data.list || data.employees?.list || data.employees || data.rows || []
       
       if (list.length === 0) break
       

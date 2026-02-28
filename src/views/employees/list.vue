@@ -433,11 +433,13 @@ async function loadData() {
     const companyId = userStore.companyId || '';
     const resp = await listEmployees({ page: 1, pageSize: 100, companyId });
     if (resp.data.code !== 200) { rows.value = []; return; }
-    const list = resp.data?.data?.list || [];
+    // 适配后端返回的 employees key
+    const empData = resp.data?.data;
+    const list = empData?.list || empData?.employees?.list || empData?.employees || [];
     rows.value = list.map((e: any) => ({
-      id: e.id || e.employeeId,
+      id: e.id || e.employeeId || e.EmployeeId,
       userId: e.userId || e.UserId,
-      realName: e.realName || e.name || '未知',
+      realName: e.realName || e.name || e.Name || '未知',
       department: e.departmentId || e.departmentName || '',
       position: e.positionId || e.positionName || '',
       supervisorId: e.supervisorId || '',
