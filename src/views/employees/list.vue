@@ -270,9 +270,11 @@ async function loadDicts() {
   try {
     const deptResp = await listDepartments({ page: 1, pageSize: 1000, companyId });
     if (deptResp.data.code === 200) {
-      const list = deptResp.data.data?.list || [];
-      departments.value = list.map((d: any) => ({ id: d.id || d.Id, name: d.departmentName || d.DepartmentName }));
-      list.forEach((d: any) => { const id = d.id || d.Id; if (id) deptMap.value[id] = d.departmentName || d.DepartmentName; });
+      // 适配后端返回的 departments key
+      const data = deptResp.data.data;
+      const list = data?.list || data?.departments?.list || data?.departments || [];
+      departments.value = list.map((d: any) => ({ id: d.id || d.Id || d.departmentId || d.DepartmentId, name: d.departmentName || d.DepartmentName || d.name || d.Name }));
+      list.forEach((d: any) => { const id = d.id || d.Id || d.departmentId || d.DepartmentId; if (id) deptMap.value[id] = d.departmentName || d.DepartmentName || d.name || d.Name; });
     }
   } catch (e) { console.error(e); }
 

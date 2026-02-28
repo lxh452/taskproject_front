@@ -862,8 +862,9 @@ function buildPalette(index: number): { color: string; bgFrom: string; bgTo: str
 async function loadDepartments(companyId: string) {
   try {
     const resp = await listDepartments({ page: 1, pageSize: 200, companyId })
+    // 适配后端返回的 departments key
     const data = resp?.data?.data || resp?.data || {}
-    const list = data.list || data.rows || []
+    const list = data.list || data.departments?.list || data.departments || data.rows || []
     const map: Record<string, { color: string; bgFrom: string; bgTo: string }> = {}
     const deptMap: Record<string, string> = {}
     

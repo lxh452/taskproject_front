@@ -364,10 +364,12 @@ async function loadData() {
 
     const resp = await listDepartments({ page: 1, pageSize: 100, companyId });
     if (resp.data.code !== 200) { rows.value = []; return; }
-    const list = resp.data?.data?.list || [];
+    // 适配后端返回的 departments key
+    const data = resp.data?.data;
+    const list = data?.list || data?.departments?.list || data?.departments || [];
     rows.value = list.map((d: any) => ({
-      id: d.id || d.Id,
-      departmentName: d.departmentName || d.DepartmentName || '未命名部门',
+      id: d.id || d.Id || d.departmentId || d.DepartmentId,
+      departmentName: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
       departmentCode: (d.departmentCode?.String ?? d.departmentCode ?? d.DepartmentCode?.String ?? d.DepartmentCode) || '-',
       manager: d.managerName || d.ManagerName || '-',
       managerId: d.managerId || d.ManagerId || '',

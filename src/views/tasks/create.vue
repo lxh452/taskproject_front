@@ -252,10 +252,12 @@ onMounted(async () => {
         if (companyId) depReq.companyId = companyId;
         const resp = await listDepartments(depReq);
         if (resp.data?.code !== 200) return;
-        const list = resp.data?.data?.list || [];
+        // 适配后端返回的 departments key
+        const data = resp.data?.data;
+        const list = data?.list || data?.departments?.list || data?.departments || [];
         departments.value = list.map((d: any) => ({
-            id: d.id || d.Id,
-            name: d.departmentName || d.DepartmentName || '未命名部门',
+            id: d.id || d.Id || d.departmentId || d.DepartmentId,
+            name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
         }));
         const empReq: any = { page: 1, pageSize: 100 };
         if (companyId) empReq.companyId = companyId;

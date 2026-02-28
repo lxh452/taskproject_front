@@ -209,10 +209,12 @@ async function loadDepartments() {
         const companyId = userStore.companyId || '';
         const resp = await listDepartments({ page: 1, pageSize: 100, companyId });
         if (resp.data?.code === 200) {
-            const list = resp.data?.data?.list || resp.data?.data || [];
+            // 适配后端返回的 departments key
+            const data = resp.data?.data;
+            const list = data?.list || data?.departments?.list || data?.departments || [];
             departments.value = list.map((d: any) => ({
-                id: d.id || d.departmentId,
-                name: d.departmentName || d.name || '未命名部门',
+                id: d.id || d.departmentId || d.DepartmentId || d.Id,
+                name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
             }));
         }
     } catch (error: any) {

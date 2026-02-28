@@ -660,9 +660,12 @@ const loadDepts = async () => {
       return
     }
     const res = await listDepartments({ companyId: employee.value.companyId })
-    departments.value = (res?.data?.data?.list || []).map((d: any) => ({
-      id: d.id || d.departmentId,
-      name: d.departmentName || d.name
+    // 适配后端返回的 departments key
+    const data = res?.data?.data
+    const list = data?.list || data?.departments?.list || data?.departments || []
+    departments.value = list.map((d: any) => ({
+      id: d.id || d.departmentId || d.DepartmentId || d.Id,
+      name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门'
     }))
     console.log('部门加载成功:', departments.value.length, '个')
   } catch (e) {

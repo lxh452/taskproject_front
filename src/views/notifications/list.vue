@@ -499,9 +499,12 @@ async function loadDepartments(companyId: string) {
   try {
     const resp = await listDepartments({ page: 1, pageSize: 200, companyId });
     if (resp.data.code === 200) {
-      departmentOptions.value = (resp.data.data?.list || []).map((d: any) => ({
-        id: d.id || d.Id,
-        name: d.departmentName || d.DepartmentName,
+      // 适配后端返回的 departments key
+      const data = resp.data?.data;
+      const list = data?.list || data?.departments?.list || data?.departments || [];
+      departmentOptions.value = list.map((d: any) => ({
+        id: d.id || d.Id || d.departmentId || d.DepartmentId,
+        name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
       }));
     }
   } catch (error) {
