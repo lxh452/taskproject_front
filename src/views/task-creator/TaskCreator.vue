@@ -647,8 +647,9 @@ const loadTeam = async () => {
       id: e.id || e.employeeId || e.EmployeeId,
       name: e.realName || e.username || e.Name || '未知',
       avatar: e.avatar,
-      progress: Math.floor(Math.random() * 40) + 60,
-      pendingTasks: Math.floor(Math.random() * 8) + 1
+      // 使用后端返回的真实任务数量，如果没有则默认为0
+      progress: e.taskCount ? Math.min(100, Math.round((e.taskCount / 10) * 100)) : 0,
+      pendingTasks: e.taskCount || 0
     }))
     console.log('团队成员加载成功:', teamMembers.value.length, '人')
   } catch (e) {

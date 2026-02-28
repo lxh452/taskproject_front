@@ -206,16 +206,37 @@ const rules: FormRules = {
 
 async function loadDepartments() {
     try {
-        const companyId = userStore.companyId || '';
+        let companyId = userStore.companyId || '';
+        console.log('[loadDepartments] userStore.companyId:', companyId);
+        
+        // 如果 store 中没有 companyId，尝试从 getMyEmployee 获取
+        if (!companyId) {
+            console.log('[loadDepartments] store 中没有 companyId，尝试从 getMyEmployee 获取');
+            const me = await getMyEmployee();
+            companyId = me?.data?.data?.companyId || me?.data?.data?.CompanyId || '';
+            console.log('[loadDepartments] 从 getMyEmployee 获取的 companyId:', companyId);
+        }
+        
+        if (!companyId) {
+            console.error('[loadDepartments] 无法获取 companyId，无法加载部门列表');
+            return;
+        }
+        
+        console.log('[loadDepartments] 开始加载部门列表, companyId:', companyId);
         const resp = await listDepartments({ page: 1, pageSize: 100, companyId });
+        console.log('[loadDepartments] 部门列表响应:', resp.data);
         if (resp.data?.code === 200) {
             // 适配后端返回的 departments key
             const data = resp.data?.data;
             const list = data?.list || data?.departments?.list || data?.departments || [];
+            console.log('[loadDepartments] 解析后的部门列表:', list);
             departments.value = list.map((d: any) => ({
                 id: d.id || d.departmentId || d.DepartmentId || d.Id,
                 name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
             }));
+            console.log('[loadDepartments] 部门数据加载完成:', departments.value.length, '个部门');
+        } else {
+            console.error('[loadDepartments] 加载部门列表失败:', resp.data?.msg);
         }
     } catch (error: any) {
         console.error('加载部门列表失败:', error);
@@ -224,12 +245,30 @@ async function loadDepartments() {
 
 async function loadEmployees() {
     try {
-        const companyId = userStore.companyId || '';
+        let companyId = userStore.companyId || '';
+        console.log('[loadEmployees] userStore.companyId:', companyId);
+        
+        // 如果 store 中没有 companyId，尝试从 getMyEmployee 获取
+        if (!companyId) {
+            console.log('[loadEmployees] store 中没有 companyId，尝试从 getMyEmployee 获取');
+            const me = await getMyEmployee();
+            companyId = me?.data?.data?.companyId || me?.data?.data?.CompanyId || '';
+            console.log('[loadEmployees] 从 getMyEmployee 获取的 companyId:', companyId);
+        }
+        
+        if (!companyId) {
+            console.error('[loadEmployees] 无法获取 companyId，无法加载员工列表');
+            return;
+        }
+        
+        console.log('[loadEmployees] 开始加载员工列表, companyId:', companyId);
         const resp = await listEmployees({ page: 1, pageSize: 1000, companyId });
+        console.log('[loadEmployees] 员工列表响应:', resp.data);
         if (resp.data?.code === 200) {
             // 适配后端返回的 employees key
             const data = resp.data?.data;
             const list = data?.list || data?.employees?.list || data?.employees || [];
+            console.log('[loadEmployees] 解析后的员工列表:', list);
             employees.value = list.map((e: any) => ({
                 id: e.id || e.employeeId || e.EmployeeId,
                 name: e.realName || e.name || e.Name || '未知',
@@ -241,7 +280,11 @@ async function loadEmployees() {
                 employeeMap.value[String(emp.id)] = emp;
             });
 
+            console.log('[loadEmployees] 员工数据加载完成:', employees.value.length, '个员工');
+            console.log('[loadEmployees] 当前部门数据:', departments.value.length, '个部门');
             buildChooserTree();
+        } else {
+            console.error('[loadEmployees] 加载员工列表失败:', resp.data?.msg);
         }
     } catch (error: any) {
         console.error('加载员工列表失败:', error);
@@ -249,10 +292,17 @@ async function loadEmployees() {
 }
 
 function buildChooserTree() {
+    console.log('[buildChooserTree] 开始构建选择树');
+    console.log('[buildChooserTree] 部门数量:', departments.value.length);
+    console.log('[buildChooserTree] 员工数量:', employees.value.length);
+    console.log('[buildChooserTree] 当前选中部门:', form.value.departmentIds);
+    
     // 检查是否是创始人
     const isFounder = currentEmployee.value?.isFounder === 1 || 
                       currentEmployee.value?.positionCode === 'FOUNDER' ||
                       currentEmployee.value?.roleTags?.includes('创始人');
+    
+    console.log('[buildChooserTree] 是否创始人:', isFounder);
     
     // 如果是创始人，显示所有部门；否则只显示选中的部门
     const selectedDeptIds = isFounder 
@@ -260,6 +310,8 @@ function buildChooserTree() {
         : (form.value.departmentIds.length > 0 
             ? form.value.departmentIds.map((id: string) => String(id))
             : departments.value.map((d: any) => String(d.id)));
+    
+    console.log('[buildChooserTree] 将要显示的部门ID:', selectedDeptIds);
     
     const deptMap = new Map();
     
@@ -288,6 +340,8 @@ function buildChooserTree() {
 
     chooserTree.value = Array.from(deptMap.values());
     filteredChooserTree.value = chooserTree.value;
+    console.log('[buildChooserTree] 构建完成, 树节点数量:', chooserTree.value.length);
+    console.log('[buildChooserTree] 树结构:', chooserTree.value);
 }
 
 function filterChooserTree() {
@@ -423,12 +477,19 @@ watch(() => form.value.departmentIds, () => {
 onMounted(async () => {
     // 加载当前员工信息
     try {
+        // 先尝试从 store 获取用户信息（会从 localStorage 加载或调用 API）
+        await userStore.getUserInfo();
+        console.log('[onMounted] userStore.companyId:', userStore.companyId);
+        
         const me = await getMyEmployee();
         currentEmployee.value = me?.data?.data || me?.data?.employee || {};
+        console.log('[onMounted] currentEmployee:', currentEmployee.value);
     } catch (error: any) {
         console.error('获取当前员工信息失败:', error);
     }
-    await Promise.all([loadDepartments(), loadEmployees()]);
+    // 先加载部门，再加载员工，确保构建树时部门数据已就绪
+    await loadDepartments();
+    await loadEmployees();
 });
 </script>
 

@@ -243,28 +243,42 @@ const submitting = ref(false);
 
 onMounted(async () => {
     try {
+        console.log('[create.vue onMounted] 开始加载数据');
         const me = await getMyEmployee();
         const companyId = me?.data?.data?.companyId || me?.data?.data?.CompanyId || '';
         const employeeId = me?.data?.data?.employeeId || me?.data?.data?.EmployeeId || '';
         myCompanyId.value = String(companyId || '');
         myEmployeeId.value = String(employeeId || '');
+        console.log('[create.vue onMounted] companyId:', companyId);
+        
         const depReq: any = { page: 1, pageSize: 100 };
         if (companyId) depReq.companyId = companyId;
+        console.log('[create.vue onMounted] 请求部门列表:', depReq);
         const resp = await listDepartments(depReq);
-        if (resp.data?.code !== 200) return;
+        console.log('[create.vue onMounted] 部门列表响应:', resp.data);
+        if (resp.data?.code !== 200) {
+            console.error('[create.vue onMounted] 部门列表加载失败:', resp.data?.msg);
+            return;
+        }
         // 适配后端返回的 departments key
         const data = resp.data?.data;
         const list = data?.list || data?.departments?.list || data?.departments || [];
+        console.log('[create.vue onMounted] 解析后的部门列表:', list);
         departments.value = list.map((d: any) => ({
             id: d.id || d.Id || d.departmentId || d.DepartmentId,
             name: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
         }));
+        console.log('[create.vue onMounted] 部门数据加载完成:', departments.value.length, '个部门');
+        
         const empReq: any = { page: 1, pageSize: 100 };
         if (companyId) empReq.companyId = companyId;
+        console.log('[create.vue onMounted] 请求员工列表:', empReq);
         const eres = await listEmployees(empReq);
+        console.log('[create.vue onMounted] 员工列表响应:', eres.data);
         // 适配后端返回的 employees key
         const empData = eres.data?.data;
         const elist = empData?.list || empData?.employees?.list || empData?.employees || [];
+        console.log('[create.vue onMounted] 解析后的员工列表:', elist);
         const byDept: Record<string, any[]> = {};
         elist.forEach((e: any) => {
             const dep = String(e.departmentId || e.DepartmentId || '');
@@ -275,8 +289,11 @@ onMounted(async () => {
             idToName[id] = name;
         });
         empByDept.value = byDept;
+        console.log('[create.vue onMounted] 员工数据按部门分组:', empByDept.value);
         rebuildChooserTree();
-    } catch {}
+    } catch (e: any) {
+        console.error('[create.vue onMounted] 加载数据失败:', e);
+    }
 });
 
 // 每次进入页面时重置表单（解决keep-alive导致的数据残留问题）
@@ -389,19 +406,33 @@ async function submit() {
 }
 
 function rebuildChooserTree() {
+    console.log('[rebuildChooserTree] 开始重建选择树');
+    console.log('[rebuildChooserTree] 当前选中部门:', form.departmentIds);
+    console.log('[rebuildChooserTree] 部门总数:', departments.value.length);
+    console.log('[rebuildChooserTree] 员工按部门分组:', empByDept.value);
+    
     const selectedDeptIds = (form.departmentIds || []).map((x: any) => String(x));
     const deptSet = new Set(selectedDeptIds);
+    console.log('[rebuildChooserTree] 选中的部门ID集合:', Array.from(deptSet));
+    
     const children = departments.value
         .filter((d) => deptSet.size === 0 || deptSet.has(String(d.id)))
-        .map((d) => ({
-            id: d.id,
-            label: d.name,
-            type: 'dept',
-            children: (empByDept.value[String(d.id)] || []).map((e) => ({ id: e.id, label: `${e.name}`, isLeaf: true, type: 'emp' }))
-        }));
+        .map((d) => {
+            const deptEmps = empByDept.value[String(d.id)] || [];
+            console.log(`[rebuildChooserTree] 部门 ${d.name}(${d.id}) 的员工:`, deptEmps);
+            return {
+                id: d.id,
+                label: d.name,
+                type: 'dept',
+                children: deptEmps.map((e) => ({ id: e.id, label: `${e.name}`, isLeaf: true, type: 'emp' }))
+            };
+        });
+    
+    console.log('[rebuildChooserTree] 构建的子节点:', children);
     chooserTree.value = [
         { id: myCompanyId.value || 'company', label: '所属公司', children }
     ];
+    console.log('[rebuildChooserTree] 最终树结构:', chooserTree.value);
 }
 
 watch(() => form.departmentIds, () => {
