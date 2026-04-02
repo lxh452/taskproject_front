@@ -102,7 +102,7 @@
                             </div>
                         </div>
                         <div class="info-item">
-                            <div class="info-icon"><Timer /></el-icon>
+                            <div class="info-icon"><el-icon><Timer /></el-icon></div>
                             <div class="info-content">
                                 <div class="info-label">预计天数</div>
                                 <div class="info-value">{{ nodeInfo.estimatedDays || 0 }} 天</div>
