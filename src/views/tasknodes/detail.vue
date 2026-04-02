@@ -212,11 +212,7 @@ const checklistRef = ref<any>(null);
 const canEdit = computed(() => {
     if (!nodeInfo.value || !currentEmployeeId.value) return false;
     const leaderId = nodeInfo.value.leaderId || '';
-    const executorId = nodeInfo.value.executorId || '';
-    const executorIds = nodeInfo.value.executorIds || [];
-    return leaderId === currentEmployeeId.value || 
-           executorId === currentEmployeeId.value ||
-           executorIds.includes(currentEmployeeId.value);
+    return leaderId === currentEmployeeId.value;
 });
 
 const isOverdue = computed(() => {
