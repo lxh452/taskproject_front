@@ -109,7 +109,7 @@
                             </div>
                         </div>
                         <div class="info-item">
-                            <div class="info-icon"><Flag /></el-icon>
+                            <div class="info-icon"><el-icon><Flag /></el-icon></div>
                             <div class="info-content">
                                 <div class="info-label">优先级</div>
                                 <div class="info-value">
