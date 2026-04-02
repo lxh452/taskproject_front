@@ -329,8 +329,9 @@ function goToTask() {
 }
 
 function editNode() {
-    // 可以实现编辑节点的逻辑
-    ElMessage.info('编辑功能开发中...');
+    if (nodeId.value) {
+        router.push(`/task-nodes/edit/${nodeId.value}`);
+    }
 }
 
 function onProgressChange(progress: number) {

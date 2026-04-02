@@ -3,8 +3,8 @@
         <!-- 页面头部 - Swiss Minimalism -->
         <div class="page-header">
             <div class="header-left">
-                <h1 class="page-title">创建任务节点</h1>
-                <p class="page-desc">填写节点信息，创建新的任务节点并关联到指定任务</p>
+                <h1 class="page-title">{{ isEditMode ? '编辑任务节点' : '创建任务节点' }}</h1>
+                <p class="page-desc">{{ isEditMode ? '修改任务节点信息' : '填写节点信息，创建新的任务节点并关联到指定任务' }}</p>
             </div>
             <button class="btn-secondary" @click="goBack">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -72,7 +72,7 @@
                                     placeholder="请选择任务" 
                                     class="full-width"
                                     @change="onTaskChange"
-                                    :disabled="!!initialTaskId"
+                                    :disabled="!!initialTaskId || isEditMode"
                                 >
                                     <el-option 
                                         v-for="t in taskOptions" 
@@ -94,19 +94,6 @@
                         </el-col>
                     </el-row>
                     <el-row :gutter="24">
-                        <el-col :span="12">
-                            <el-form-item label="节点类型" prop="nodeType">
-                                <el-select 
-                                    v-model="form.nodeType" 
-                                    placeholder="请选择类型" 
-                                    class="full-width"
-                                >
-                                    <el-option label="任务节点" :value="1" />
-                                    <el-option label="条件节点" :value="2" />
-                                    <el-option label="审批节点" :value="3" />
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
                         <el-col :span="12">
                             <el-form-item label="节点名称" prop="nodeName">
                                 <el-input 
@@ -271,11 +258,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Document, Calendar, User, Connection, Check, RefreshLeft, InfoFilled, CirclePlusFilled, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
-import { createTaskNode, listTasks, getMyEmployee, listEmployees } from '@/api';
+import { createTaskNode, updateTaskNode, listTasks, getMyEmployee, listEmployees } from '@/api';
+import request from '@/utils/request';
 import { useUserStore } from '@/store/user';
 import { useRouter, useRoute } from 'vue-router';
 
@@ -284,7 +272,6 @@ const submitting = ref(false);
 const form = ref<any>({
     taskId: '',
     departmentId: '',
-    nodeType: 1,
     nodeName: '',
     nodeDetail: '',
     nodeStartTime: '',
@@ -306,6 +293,8 @@ const router = useRouter();
 const route = useRoute();
 const currentStep = ref(1);
 const initialTaskId = ref<string>('');
+const isEditMode = computed(() => !!route.params.id);
+const editingNodeId = computed(() => route.params.id as string);
 
 async function loadTasks() {
     try {
@@ -424,6 +413,41 @@ function onTaskChange() {
     }
 }
 
+async function loadNodeForEdit() {
+    try {
+        const resp = await request({ 
+            url: '/tasknode/get', 
+            method: 'post', 
+            data: { taskNodeId: editingNodeId.value } 
+        });
+        if (resp.data.code === 200) {
+            const node = resp.data.data?.taskNode || resp.data.data;
+            if (node) {
+                form.value.taskId = node.taskId || '';
+                form.value.departmentId = node.departmentId || '';
+                form.value.nodeName = node.nodeName || '';
+                form.value.nodeDetail = node.nodeDetail || '';
+                form.value.nodeStartTime = node.nodeStartTime || '';
+                form.value.nodeDeadline = node.nodeDeadline || '';
+                form.value.estimatedHours = node.estimatedDays || node.estimatedHours || 0;
+                form.value.leaderId = node.leaderId || '';
+                form.value.nodePriority = node.nodePriority || 3;
+                // 处理执行人（可能是逗号分隔的字符串）
+                if (node.executorId) {
+                    form.value.executorIds = node.executorId.split(',').filter((id: string) => id.trim());
+                } else if (node.executorIds) {
+                    form.value.executorIds = node.executorIds;
+                }
+            }
+        } else {
+            ElMessage.error('加载节点信息失败');
+        }
+    } catch (error: any) {
+        console.error('加载节点信息失败:', error);
+        ElMessage.error('加载节点信息失败');
+    }
+}
+
 onMounted(async () => {
     loading.value = true;
     try {
@@ -444,6 +468,11 @@ onMounted(async () => {
             })
         ]);
         
+        // 编辑模式：加载节点详情
+        if (isEditMode.value && editingNodeId.value) {
+            await loadNodeForEdit();
+        }
+        
         // 如果有初始 taskId，设置表单值
         if (initialTaskId.value) {
             form.value.taskId = initialTaskId.value;
@@ -459,7 +488,6 @@ onMounted(async () => {
 
 const rules: FormRules = {
     taskId: [{ required: true, message: '请选择所属任务', trigger: 'change' }],
-    nodeType: [{ required: true, message: '请选择节点类型', trigger: 'change' }],
     nodeName: [{ required: true, message: '请输入节点名称', trigger: 'blur' }],
     nodeDeadline: [{ required: true, message: '请选择截止时间', trigger: 'change' }],
     leaderId: [{ required: true, message: '请选择负责人', trigger: 'change' }],
@@ -502,7 +530,6 @@ const onSubmit = () => {
             const payload: any = {
                 taskId: form.value.taskId,
                 departmentId: form.value.departmentId,
-                nodeType: form.value.nodeType,
                 nodeName: form.value.nodeName,
                 nodeDetail: form.value.nodeDetail,
                 nodePriority: form.value.nodePriority,
@@ -512,33 +539,42 @@ const onSubmit = () => {
                 leaderId: form.value.leaderId,
                 executorId: safeExecutors,
             };
-            const resp = await createTaskNode(payload);
-            if (resp.data.code !== 200) throw new Error(resp.data.msg || '创建失败');
-            currentStep.value = 2;
-            ElMessage.success('节点创建成功！');
             
-            // 询问用户下一步操作
-            const { ElMessageBox } = await import('element-plus');
-            try {
-                await ElMessageBox.confirm(
-                    '节点创建成功！您可以选择继续创建节点或前往流程设计器配置节点依赖关系。',
-                    '创建成功',
-                    {
-                        confirmButtonText: '前往流程设计器',
-                        cancelButtonText: '继续创建',
-                        type: 'success',
-                        distinguishCancelAndClose: true,
+            let resp;
+            if (isEditMode.value) {
+                payload.nodeId = editingNodeId.value;
+                resp = await updateTaskNode(payload);
+                if (resp.data.code !== 200) throw new Error(resp.data.msg || '更新失败');
+                ElMessage.success('节点更新成功！');
+                router.push(`/task-nodes/detail/${editingNodeId.value}`);
+            } else {
+                resp = await createTaskNode(payload);
+                if (resp.data.code !== 200) throw new Error(resp.data.msg || '创建失败');
+                currentStep.value = 2;
+                ElMessage.success('节点创建成功！');
+                
+                // 询问用户下一步操作
+                const { ElMessageBox } = await import('element-plus');
+                try {
+                    await ElMessageBox.confirm(
+                        '节点创建成功！您可以选择继续创建节点或前往流程设计器配置节点依赖关系。',
+                        '创建成功',
+                        {
+                            confirmButtonText: '前往流程设计器',
+                            cancelButtonText: '继续创建',
+                            type: 'success',
+                            distinguishCancelAndClose: true,
+                        }
+                    );
+                    // 用户选择前往流程设计器
+                    currentStep.value = 3;
+                    router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
+                } catch (action: any) {
+                    if (action === 'cancel') {
+                        // 用户选择继续创建，重置表单
+                        onReset();
                     }
-                );
-                // 用户选择前往流程设计器
-                currentStep.value = 3;
-                router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
-            } catch (action: any) {
-                if (action === 'cancel') {
-                    // 用户选择继续创建，重置表单
-                    onReset();
                 }
-                // 如果是关闭对话框，不做任何操作
             }
         } catch (e: any) {
             ElMessage.error(e.message || '创建失败');
@@ -550,11 +586,10 @@ const onSubmit = () => {
 
 const onReset = () => {
     const deptId = form.value.departmentId;
-    const taskId = initialTaskId.value; // 保留初始 taskId
+    const taskId = initialTaskId.value;
     form.value = { 
         taskId: taskId || '', 
         departmentId: deptId, 
-        nodeType: 1, 
         nodeName: '', 
         nodeDetail: '', 
         nodeStartTime: '', 

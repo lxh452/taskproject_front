@@ -137,6 +137,12 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/tasknodes/create.vue'),
             },
             {
+                path: '/task-nodes/edit/:id',
+                name: 'task-nodes-edit',
+                meta: { title: '编辑任务节点' },
+                component: () => import('../views/tasknodes/create.vue'),
+            },
+            {
                 path: '/task-nodes/detail/:id',
                 name: 'task-nodes-detail',
                 meta: { title: '任务节点详情' },
