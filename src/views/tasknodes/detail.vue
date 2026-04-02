@@ -102,11 +102,36 @@
                             </div>
                         </div>
                         <div class="info-item">
-                            <div class="info-icon"><el-icon><Timer /></el-icon></div>
+                            <div class="info-icon"><Timer /></el-icon>
                             <div class="info-content">
                                 <div class="info-label">预计天数</div>
                                 <div class="info-value">{{ nodeInfo.estimatedDays || 0 }} 天</div>
                             </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><Flag /></el-icon>
+                            <div class="info-content">
+                                <div class="info-label">优先级</div>
+                                <div class="info-value">
+                                    <el-select 
+                                        v-if="canEditPriority" 
+                                        v-model="nodeInfo.nodePriority" 
+                                        size="small"
+                                        class="priority-select"
+                                        @change="handlePriorityChange"
+                                    >
+                                        <el-option label="紧急" :value="1" />
+                                        <el-option label="高" :value="2" />
+                                        <el-option label="中" :value="3" />
+                                        <el-option label="低" :value="4" />
+                                    </el-select>
+                                    <el-tag v-else :type="getPriorityType(nodeInfo.nodePriority)" size="small">
+                                        {{ getPriorityText(nodeInfo.nodePriority) }}
+                                    </el-tag>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                         </div>
                     </div>
 
@@ -168,10 +193,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
     ArrowLeft, ArrowRight, Edit, User, UserFilled, Calendar, 
-    Clock, OfficeBuilding, Timer, Document, Connection 
+    Clock, OfficeBuilding, Timer, Document, Connection, Flag
 } from '@element-plus/icons-vue';
 import TaskChecklist from '@/components/TaskChecklist.vue';
-import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval } from '@/api';
+import { getMyEmployee, listTaskNodesByTask, getTask, submitTaskNodeCompletionApproval, updateTaskNode } from '@/api';
 import request, { clearDebounceForUrl } from '@/utils/request';
 import { ElMessageBox } from 'element-plus';
 
@@ -212,6 +237,13 @@ const canSubmitApproval = computed(() => {
            isExecutor;
 });
 
+// 是否可以编辑优先级：节点负责人或任务负责人可以编辑
+const canEditPriority = computed(() => {
+    if (!nodeInfo.value || !currentEmployeeId.value) return false;
+    const leaderId = nodeInfo.value.leaderId || '';
+    return leaderId === currentEmployeeId.value;
+});
+
 // 方法
 function getStatusType(status: number) {
     const statusTypeMap: Record<number, string> = {
@@ -231,6 +263,46 @@ function getStatusText(status: number) {
         3: '已逾期'
     };
     return statusMap[status] || '未知';
+}
+
+function getPriorityType(priority: number) {
+    const priorityTypeMap: Record<number, string> = {
+        1: 'danger',
+        2: 'warning',
+        3: 'info',
+        4: 'success'
+    };
+    return priorityTypeMap[priority] || 'info';
+}
+
+function getPriorityText(priority: number) {
+    const priorityMap: Record<number, string> = {
+        1: '紧急',
+        2: '高',
+        3: '中',
+        4: '低'
+    };
+    return priorityMap[priority] || '中';
+}
+
+async function handlePriorityChange(newPriority: number) {
+    if (!nodeInfo.value || !nodeId.value) return;
+    try {
+        const resp = await updateTaskNode({
+            nodeId: nodeId.value,
+            nodePriority: newPriority
+        });
+        if (resp.data.code === 200) {
+            ElMessage.success('优先级更新成功');
+        } else {
+            ElMessage.error(resp.data.msg || '更新优先级失败');
+            await loadNodeDetail();
+        }
+    } catch (error: any) {
+        console.error('更新优先级失败:', error);
+        ElMessage.error('更新优先级失败');
+        await loadNodeDetail();
+    }
 }
 
 function formatDate(date: string) {
@@ -673,6 +745,10 @@ watch(() => route.params.id, async (newId, oldId) => {
     .info-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.priority-select {
+    width: 100px;
 }
 </style>
 

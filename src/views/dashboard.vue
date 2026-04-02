@@ -229,7 +229,7 @@ async function loadData() {
     // 从任务列表计算指标
     metrics.value.totalTasks = list.length;
     metrics.value.completed = list.filter((t: any) => (t.status ?? t.nodeStatus ?? 0) === 2).length;
-    metrics.value.critical = list.filter((t: any) => (t.priority ?? 2) === 4).length;
+    metrics.value.critical = list.filter((t: any) => (t.priority ?? t.nodePriority ?? 2) === 4).length;
     // pendingApprovals 暂时设为0，因为需要额外的审批数据
     metrics.value.pendingApprovals = 0;
 
@@ -243,7 +243,7 @@ async function loadData() {
       else if (s === 3) statusData.review++;
       else statusData.todo++;
 
-      const p = task.priority ?? 2;
+      const p = task.priority ?? task.nodePriority ?? 2;
       if (p === 1) priorityData.low++;
       else if (p === 2) priorityData.medium++;
       else if (p === 3) priorityData.high++;

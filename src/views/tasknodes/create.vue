@@ -118,6 +118,22 @@
                             </el-form-item>
                         </el-col>
                     </el-row>
+                    <el-row :gutter="24">
+                        <el-col :span="12">
+                            <el-form-item label="优先级" prop="nodePriority">
+                                <el-select 
+                                    v-model="form.nodePriority" 
+                                    placeholder="选择优先级" 
+                                    class="full-width"
+                                >
+                                    <el-option label="紧急" :value="1" />
+                                    <el-option label="高" :value="2" />
+                                    <el-option label="中" :value="3" />
+                                    <el-option label="低" :value="4" />
+                                </el-select>
+                            </el-form-item>
+                        </el-col>
+                    </el-row>
                     <el-form-item label="节点详情">
                         <el-input 
                             v-model="form.nodeDetail" 
@@ -276,6 +292,7 @@ const form = ref<any>({
     estimatedHours: 0,
     leaderId: '',
     executorIds: [],
+    nodePriority: 3,
 });
 
 const taskOptions = ref<{ id: string; title: string }[]>([]);
@@ -488,6 +505,7 @@ const onSubmit = () => {
                 nodeType: form.value.nodeType,
                 nodeName: form.value.nodeName,
                 nodeDetail: form.value.nodeDetail,
+                nodePriority: form.value.nodePriority,
                 nodeStartTime: form.value.nodeStartTime ? formatDate(form.value.nodeStartTime) : undefined,
                 nodeDeadline: form.value.nodeDeadline ? formatDate(form.value.nodeDeadline) : undefined,
                 estimatedHours: form.value.estimatedHours || 0,
@@ -543,7 +561,8 @@ const onReset = () => {
         nodeDeadline: '', 
         estimatedHours: 0, 
         leaderId: '', 
-        executorIds: [] 
+        executorIds: [],
+        nodePriority: 3,
     };
     formRef.value?.clearValidate();
     
