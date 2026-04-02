@@ -372,6 +372,16 @@
                                             <el-tag :type="getNodeStatusType(node.status)" size="small" class="node-status-tag">
                                                 {{ getNodeStatusText(node.status) }}
                                             </el-tag>
+                                            <el-button 
+                                                v-if="canEditNode(node)"
+                                                type="primary" 
+                                                link 
+                                                size="small"
+                                                @click.stop="handleEditNode(node)"
+                                                style="margin-left: 8px;"
+                                            >
+                                                编辑
+                                            </el-button>
                                             <div class="node-progress-mini">
                                                 <el-progress 
                                                     :percentage="node.progress || 0" 
@@ -1377,15 +1387,19 @@ function canEditProgress(node: any): boolean {
                     executorIds.includes(currentEmployeeId.value);
 }
 
-// 判断是否是任务节点的执行人（用于清单组件创建权限）
+// 判断是否是任务节点的负责人
 function canEditNode(node: any): boolean {
     if (!currentEmployeeId.value) return false;
-    const executorId = node.executorId || node.executorID || node.ExecutorID || '';
-    const executorIds = Array.isArray(node.executorIds) ? node.executorIds : [];
-    // 检查是否是执行人（executorId可能是逗号分隔的多个ID）
-    const executorList = executorId.split(',').map((id: string) => id.trim()).filter(Boolean);
-    return executorList.includes(currentEmployeeId.value) || 
-           executorIds.includes(currentEmployeeId.value);
+    const leaderId = node.leaderId || node.LeaderId || '';
+    return leaderId === currentEmployeeId.value;
+}
+
+// 编辑节点
+function handleEditNode(node: any) {
+    const nodeId = node.id || node.taskNodeId;
+    if (nodeId) {
+        router.push(`/task-nodes/edit/${nodeId}`);
+    }
 }
 
 // 清单进度变化时更新节点进度
