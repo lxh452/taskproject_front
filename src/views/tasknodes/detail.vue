@@ -132,8 +132,6 @@
                             </div>
                         </div>
                     </div>
-                        </div>
-                    </div>
 
                     <!-- 节点详情 -->
                     <div class="node-detail" v-if="nodeInfo.nodeDetail">
