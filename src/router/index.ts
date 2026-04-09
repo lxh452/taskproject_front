@@ -24,21 +24,6 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "dashboard" */ '../views/dashboard.vue'),
             },
             {
-                path: '/flow-designer',
-                name: 'flow-designer',
-                meta: { title: '流程设计' },
-                component: () => import('../views/flow/designer-vue.vue'),
-            },
-            {
-                path: '/ai-flow-designer',
-                name: 'ai-flow-designer',
-                meta: { 
-                    title: 'AI 流程设计器',
-                    noAuth: true 
-                },
-                component: () => import('../views/flow-designer/FlowDesigner.vue'),
-            },
-            {
                 path: '/ai-task-creator',
                 name: 'ai-task-creator',
                 meta: { 

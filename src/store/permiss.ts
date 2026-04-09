@@ -37,13 +37,13 @@ export const usePermissStore = defineStore('permiss', {
                 '5',
                 '7',
                 // AI center module - NEW
-                'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task',
+                'ai', 'ai_dashboard', 'ai_center', 'ai_task',
                 // my work module - NEW
                 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals',
                 // task module
                 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming',
                 // tasknodes module (independent menu)
-                'tasknodes','tasknodes_my','flow_designer','tasknodes_create','tasknodes_designer',
+                'tasknodes','tasknodes_my','tasknodes_create','tasknodes_designer',
                 // team module
                 'team', 'handover', 'handover_list',
                 'employee', 'employee_list', 'my_nodes',
@@ -54,7 +54,7 @@ export const usePermissStore = defineStore('permiss', {
                 // user center - NEW
                 'ucenter'
             ],
-            user: ['0', 'org_tree_global', 'ai', 'ai_dashboard', 'ai_center', 'ai_flow', 'ai_task', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'notify', 'ucenter'],
+            user: ['0', 'org_tree_global', 'ai', 'ai_dashboard', 'ai_center', 'ai_task', 'my_work', 'my_tasks', 'my_checklists', 'my_attachments', 'my_approvals', 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming', 'notify', 'ucenter'],
         };
         // 初始化时使用默认权限，避免刷新时菜单变化
         // 权限会在登录后通过 applyPermissions 更新

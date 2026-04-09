@@ -93,6 +93,20 @@
 
                 <el-row :gutter="20">
                     <el-col :span="12">
+                        <el-form-item label="优先级" prop="nodePriority">
+                            <el-select 
+                                v-model="form.nodePriority" 
+                                placeholder="选择优先级" 
+                                class="full-width"
+                            >
+                                <el-option label="低" :value="3" />
+                                <el-option label="中" :value="2" />
+                                <el-option label="高" :value="1" />
+                                <el-option label="紧急" :value="0" />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
                         <el-form-item label="负责人" prop="leaderId">
                             <el-select 
                                 v-model="form.leaderId" 
@@ -110,6 +124,9 @@
                             </el-select>
                         </el-form-item>
                     </el-col>
+                </el-row>
+
+                <el-row :gutter="20">
                     <el-col :span="12">
                         <el-form-item label="预计工时">
                             <el-input-number 
@@ -190,6 +207,7 @@ const form = ref<any>({
     nodeStartTime: '',
     nodeDeadline: '',
     estimatedHours: 0,
+    nodePriority: 2, // 默认为中
     leaderId: '',
     executorIds: [],
 });
@@ -206,6 +224,7 @@ const rules: FormRules = {
     nodeType: [{ required: true, message: '请选择节点类型', trigger: 'change' }],
     nodeName: [{ required: true, message: '请输入节点名称', trigger: 'blur' }],
     nodeDeadline: [{ required: true, message: '请选择截止时间', trigger: 'change' }],
+    nodePriority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
     leaderId: [{ required: true, message: '请选择负责人', trigger: 'change' }],
 };
 
@@ -337,6 +356,7 @@ async function handleSubmit() {
                     nodeStartTime: form.value.nodeStartTime,
                     nodeDeadline: form.value.nodeDeadline,
                     estimatedHours: form.value.estimatedHours,
+                    nodePriority: form.value.nodePriority,
                     leaderId: form.value.leaderId,
                     executorIds: form.value.executorIds,
                 });

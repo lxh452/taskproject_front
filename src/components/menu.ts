@@ -26,7 +26,6 @@ export const menuData: Menus[] = [
         icon: 'Collection',
         children: [
             { id: 'task_list_page', pid: 'task', index: '/tasks', title: '全部任务' },
-            { id: 'flow_designer', pid: 'task', index: '/flow-designer', title: '流程设计' },
         ],
     },
     {

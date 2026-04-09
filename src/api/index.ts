@@ -357,14 +357,9 @@ export const deleteAttachmentComment = (data: { commentId: string }) =>
 export const getTaskNode = (data: { taskNodeId: string }) =>
     request({ url: '/tasknode/get', method: 'post', data });
 
-// AI助手API
+// AI 助手 API
 export const getAiSuggestion = () =>
     request({ url: '/ai/suggestion', method: 'get', timeout: 30000 });
-
-// ===== VibeCraft AI Flow API =====
-// 生成设计方案
-export const suggestFlowDesigns = (data: { tasks: string[]; constraints?: Record<string, any> }) =>
-    request({ url: '/ai/flow/designs', method: 'post', data });
 
 // ===== VibeCraft AI Task API =====
 // 润色任务

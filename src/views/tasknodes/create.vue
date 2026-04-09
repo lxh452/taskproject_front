@@ -557,18 +557,17 @@ const onSubmit = () => {
                 const { ElMessageBox } = await import('element-plus');
                 try {
                     await ElMessageBox.confirm(
-                        '节点创建成功！您可以选择继续创建节点或前往流程设计器配置节点依赖关系。',
+                        '节点创建成功！',
                         '创建成功',
                         {
-                            confirmButtonText: '前往流程设计器',
+                            confirmButtonText: '确定',
                             cancelButtonText: '继续创建',
                             type: 'success',
                             distinguishCancelAndClose: true,
                         }
                     );
-                    // 用户选择前往流程设计器
-                    currentStep.value = 3;
-                    router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
+                    // 用户选择继续创建，重置表单
+                    onReset();
                 } catch (action: any) {
                     if (action === 'cancel') {
                         // 用户选择继续创建，重置表单
@@ -614,11 +613,10 @@ function formatDate(d: any) {
 
 function openDesigner() {
     if (!form.value.taskId) {
-        ElMessage.warning('请先填写所属任务ID');
+        ElMessage.warning('请先填写所属任务 ID');
         return;
     }
-    currentStep.value = 3;
-    router.push(`/flow-designer?taskId=${encodeURIComponent(form.value.taskId)}`);
+    ElMessage.info('流程设计器功能已移除');
 }
 
 function goBack() {

@@ -465,23 +465,6 @@
         <el-button v-else type="primary" @click="confirmGeneratedNodes">确认创建</el-button>
       </template>
     </el-dialog>
-
-    <!-- AI流程设计弹窗 - 使用智能流程设计器 -->
-    <el-dialog
-      v-model="showFlowDesignDialog"
-      title="AI智能流程设计"
-      width="1100px"
-      :append-to-body="true"
-      class="flow-design-dialog"
-      destroy-on-close
-    >
-      <SmartFlowDesigner
-        :selected-task="analyzingTask?.originalData"
-        :existing-nodes="flowDesignerNodes"
-        @apply-scheme="handleApplySmartScheme"
-        @edit-scheme="navigateToDesignerFromSmart"
-      />
-    </el-dialog>
   </div>
 </template>
 
@@ -498,8 +481,6 @@ import {
 } from '@/api';
 import { useUserStore } from '@/store/user';
 import type { DashboardData } from './types';
-import FlowSchemeSelector from './components/FlowSchemeSelector.vue';
-import SmartFlowDesigner from './components/SmartFlowDesigner.vue';
 
 interface TaskUnit {
   id: string;
@@ -570,16 +551,13 @@ const taskCommentsCategorized = computed(() => {
 // 弹窗状态
 const showCreateTaskDialog = ref(false);
 const showPolishDialog = ref(false);
-const showFlowDesigner = ref(false);
 const showGenerateNodesDialog = ref(false);
-const showFlowDesignDialog = ref(false); // AI流程设计弹窗
 const newTaskInput = ref('');
 const polishInput = ref('');
 const polishedResult = ref('');
 const isPolishing = ref(false);
 const generatedNodes = ref<any[]>([]);
 const isGeneratingNodes = ref(false);
-const flowDesignerNodes = ref<any[]>([]); // 流程设计器的节点数据
 
 // 计算属性 - 指挥官模式使用公司级别的统计数据（基于allTasks）
 const taskStats = computed(() => ({
@@ -1063,7 +1041,7 @@ function tryParsePartialSubtasks(content: string): any[] {
       }).filter(Boolean);
     }
     
-    // 尝试提取包含title的完整对象（兼容旧格式）
+    // 尝试提取包含 title 的完整对象（兼容旧格式）
     const titleMatches = content.match(/\{\s*"title"[^}]+\}/g);
     if (titleMatches) {
       return titleMatches.map((match, index) => {
@@ -1075,6 +1053,7 @@ function tryParsePartialSubtasks(content: string): any[] {
             nodeDetail: obj.description,
             nodeType: 2,
             estimatedHours: obj.estimatedHours || 8,
+            nodePriority: obj.nodePriority || obj.priority ? (obj.priority >= 4 ? 0 : obj.priority === 3 ? 1 : obj.priority === 2 ? 2 : 3) : 2,
             id: index 
           };
         } catch {
@@ -1083,7 +1062,7 @@ function tryParsePartialSubtasks(content: string): any[] {
       }).filter(Boolean);
     }
     
-    // 尝试匹配完整的subtasks数组
+    // 尝试匹配完整的 subtasks 数组
     const arrayMatch = content.match(/"subtasks"\s*:\s*(\[[\s\S]*?\])/);
     if (arrayMatch) {
       try {
@@ -1094,6 +1073,7 @@ function tryParsePartialSubtasks(content: string): any[] {
           nodeDetail: s.nodeDetail || s.description,
           nodeType: s.nodeType || 2,
           estimatedHours: s.estimatedHours || 8,
+          nodePriority: s.nodePriority || (s.priority ? (s.priority >= 4 ? 0 : s.priority === 3 ? 1 : s.priority === 2 ? 2 : 3) : 2),
           id: index
         }));
       } catch {
@@ -1159,6 +1139,7 @@ async function confirmGeneratedNodes() {
         nodeName: node.name, 
         nodeDetail: node.description || node.name,
         estimatedHours: node.estimatedHours || 8,
+        nodePriority: node.nodePriority || 2, // 默认为中优先级
         departmentId: departmentId || undefined,
         leaderId: leaderId || undefined,
         nodeStartTime: startTime,
@@ -1175,32 +1156,9 @@ async function confirmGeneratedNodes() {
   }
 }
 
-// AI流程设计相关函数
+// AI 流程设计相关函数
 async function openFlowDesignDialog() {
-  if (!analyzingTask.value) {
-    ElMessage.warning('请先选择一个任务');
-    return;
-  }
-  
-  const taskId = analyzingTask.value.taskId || analyzingTask.value.id;
-  
-  // 加载节点数据
-  try {
-    const res = await listTaskNodesByTask({ taskId, page: 1, pageSize: 50 });
-    if (res?.data?.code === 200) {
-      const nodeList = Array.isArray(res.data.data) ? res.data.data : [];
-      flowDesignerNodes.value = nodeList.map((n: any) => ({
-        taskNodeId: n.TaskNodeId || n.taskNodeId || n.id,
-        nodeName: n.NodeName || n.nodeName || n.name,
-        nodeStatus: n.NodeStatus ?? n.nodeStatus ?? n.status ?? 0
-      }));
-    }
-  } catch (e) {
-    console.error('加载节点失败:', e);
-    flowDesignerNodes.value = [];
-  }
-  
-  showFlowDesignDialog.value = true;
+  ElMessage.info('流程设计器功能已移除');
 }
 
 function handleSchemeSelected(scheme: any) {
@@ -1208,81 +1166,20 @@ function handleSchemeSelected(scheme: any) {
 }
 
 function navigateToDesigner(scheme: any) {
-  const taskId = analyzingTask.value?.taskId || analyzingTask.value?.id;
-  showFlowDesignDialog.value = false;
-  router.push({
-    path: '/flow-designer',
-    query: {
-      taskId,
-      schemeType: scheme.type,
-      schemeData: JSON.stringify({
-        nodes: scheme.nodes,
-        edges: scheme.edges
-      })
-    }
-  });
+  ElMessage.info('流程设计器功能已移除');
 }
 
 // 智能流程设计器的新处理方法
 async function handleApplySmartScheme(scheme: any) {
-  const taskId = analyzingTask.value?.taskId || analyzingTask.value?.id;
-  if (!taskId) {
-    ElMessage.warning('请先选择任务');
-    return;
-  }
-  
-  try {
-    ElMessage.success('流程方案已应用');
-    showFlowDesignDialog.value = false;
-    // 重新分析任务以更新显示
-    if (analyzingTask.value) analyzeTask(analyzingTask.value);
-  } catch (e) {
-    console.error('应用方案失败:', e);
-    ElMessage.error('应用方案失败');
-  }
+  ElMessage.info('流程设计器功能已移除');
 }
 
 function navigateToDesignerFromSmart(scheme: any) {
-  const taskId = analyzingTask.value?.taskId || analyzingTask.value?.id;
-  showFlowDesignDialog.value = false;
-  router.push({
-    path: '/flow-designer',
-    query: {
-      taskId,
-      schemeType: scheme.type,
-      schemeData: JSON.stringify({
-        nodes: scheme.nodes,
-        edges: scheme.edges
-      })
-    }
-  });
+  ElMessage.info('流程设计器功能已移除');
 }
 
 async function handleApplyScheme(scheme: any) {
-  const taskId = analyzingTask.value?.taskId || analyzingTask.value?.id;
-  if (!taskId) {
-    ElMessage.warning('请先选择任务');
-    return;
-  }
-    try {
-    // 根据方案创建节点
-    for (const node of scheme.nodes) {
-      if (node.id !== 'start' && node.id !== 'end') {
-        await createTaskNode({
-          taskId,
-          nodeType: 2, // 默认为开发任务
-          nodeName: node.data?.label || node.id,
-          nodeDetail: node.data?.description || ''
-        });
-      }
-    }
-    ElMessage.success('流程方案已应用');
-    showFlowDesignDialog.value = false;
-    if (analyzingTask.value) analyzeTask(analyzingTask.value);
-  } catch (e) {
-    console.error('应用方案失败:', e);
-    ElMessage.error('应用方案失败');
-  }
+  ElMessage.info('流程设计器功能已移除');
 }
 
 onMounted(() => { loadTasks(); });

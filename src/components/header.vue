@@ -272,7 +272,7 @@ const isDarkMode = computed(() => themeStore.isDark);
 const toggleTheme = () => themeStore.toggleDarkMode();
 
 // 页面标签配置 - 有标签页的页面只显示首页
-const PAGES_WITH_TABS = ['/tasks', '/handovers', '/flow-designer'];
+const PAGES_WITH_TABS = ['/tasks', '/handovers'];
 
 // 面包屑路径计算
 const breadcrumbs = computed(() => {
