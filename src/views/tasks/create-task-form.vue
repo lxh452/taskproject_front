@@ -168,7 +168,7 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Plus, Search, InfoFilled } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
-import { createTask, listDepartments, listEmployees, getMyEmployee } from '@/api';
+import { createTask, listDepartments, listEmployees, getMyEmployee, streamGenerateSubtasks } from '@/api';
 import { useUserStore } from '@/store/user';
 
 const emit = defineEmits(['success', 'cancel']);
@@ -427,7 +427,7 @@ async function handleSubmit() {
                 }
                 
                 if (!companyId) {
-                    ElMessage.error('无法获取公司ID');
+                    ElMessage.error('无法获取公司 ID');
                     return;
                 }
                 
@@ -440,6 +440,9 @@ async function handleSubmit() {
                 // 根据部门数量确定任务类型：1-单部门，2-跨部门
                 const taskType = (form.value.departmentIds?.length || 0) > 1 ? 2 : 1;
                 
+                // 准备部门 ID 列表（用于传递给 AI）
+                const allDepartmentIds = form.value.departmentIds || [];
+                
                 const resp = await createTask({
                     companyId: companyId,
                     taskTitle: form.value.title,
@@ -447,13 +450,29 @@ async function handleSubmit() {
                     taskPriority: form.value.priority,
                     taskType: taskType,
                     taskDeadline: taskDeadline,
-                    departmentIds: form.value.departmentIds || [],
+                    departmentIds: allDepartmentIds,
                     responsibleEmployeeIds: form.value.responsibles || [],
                     nodeEmployeeIds: form.value.responsibles || [],
                 });
                 
                 if (resp.data?.code === 200) {
                     ElMessage.success('任务创建成功');
+                    
+                    // 任务创建成功后，触发 AI 生成子任务
+                    const taskId = resp.data?.data?.taskId || resp.data?.data?.task?.id;
+                    if (taskId) {
+                        // 构建 AI 生成子任务的上下文
+                        const aiContext = {
+                            departmentIds: allDepartmentIds,
+                            departmentCount: allDepartmentIds.length,
+                            isCrossDepartment: taskType === 2,
+                            responsibleEmployeeIds: form.value.responsibles || [],
+                        };
+                        
+                        // 触发 AI 生成子任务（流式）
+                        triggerAISubtaskGeneration(taskId, form.value.title, form.value.description || '', aiContext);
+                    }
+                    
                     emit('success');
                 } else {
                     ElMessage.error(resp.data?.msg || '创建失败');
@@ -466,6 +485,44 @@ async function handleSubmit() {
             }
         }
     });
+}
+
+// 触发 AI 生成子任务
+function triggerAISubtaskGeneration(
+    taskId: string, 
+    taskTitle: string, 
+    taskDescription: string,
+    context: any
+) {
+    console.log('[AI 子任务生成] 开始生成子任务，taskId:', taskId);
+    console.log('[AI 子任务生成] 上下文:', context);
+    
+    // 使用流式生成子任务
+    streamGenerateSubtasks(
+        { 
+            taskDescription: taskTitle + ' - ' + taskDescription,
+            taskId: taskId
+        },
+        (event, data) => {
+            console.log('[AI 子任务生成] 收到事件:', event, data);
+            
+            if (event === 'start') {
+                console.log('[AI 子任务生成] 开始生成');
+            } else if (event === 'chunk') {
+                console.log('[AI 子任务生成] 收到数据块:', data.content);
+            } else if (event === 'complete') {
+                console.log('[AI 子任务生成] 生成完成，子任务数量:', data.subtasks?.length);
+                ElMessage.success(`AI 已生成 ${data.subtasks?.length || 0} 个子任务`);
+                // 可以在这里刷新任务详情页面，显示新生成的子任务
+            } else if (event === 'error') {
+                console.error('[AI 子任务生成] 错误:', data.message);
+                ElMessage.warning('AI 生成子任务失败：' + (data.message || '未知错误'));
+            }
+        },
+        (error) => {
+            console.error('[AI 子任务生成] 流式请求失败:', error);
+        }
+    );
 }
 
 watch(() => form.value.departmentIds, () => {
