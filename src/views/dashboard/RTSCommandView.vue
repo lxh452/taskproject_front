@@ -955,6 +955,8 @@ async function generateNodes() {
               name: n.nodeName || n.title || '生成中...', 
               description: n.nodeDetail || n.description || '', 
               nodeType: n.nodeType || 2,
+              nodePriority: n.nodePriority || (n.priority ? (n.priority >= 4 ? 0 : n.priority === 3 ? 1 : n.priority === 2 ? 2 : 3) : 2),
+              estimatedHours: n.estimatedHours || 8,
               selected: true 
             }));
             
@@ -978,6 +980,7 @@ async function generateNodes() {
                 description: n.nodeDetail || n.description || '', 
                 nodeType: n.nodeType || 2,
                 estimatedHours: n.estimatedHours || 8,
+                nodePriority: n.nodePriority || (n.priority ? (n.priority >= 4 ? 0 : n.priority === 3 ? 1 : n.priority === 2 ? 2 : 3) : 2),
                 selected: true 
               }));
             } else if (partialNodes.length > 0) {
@@ -987,15 +990,16 @@ async function generateNodes() {
                 description: n.nodeDetail || n.description || '', 
                 nodeType: n.nodeType || 2,
                 estimatedHours: n.estimatedHours || 8,
+                nodePriority: n.nodePriority || (n.priority ? (n.priority >= 4 ? 0 : n.priority === 3 ? 1 : n.priority === 2 ? 2 : 3) : 2),
                 selected: true 
               }));
             } else {
               // 使用默认节点
               generatedNodes.value = [
-                { name: '需求分析', description: '分析任务需求', nodeType: 1, selected: true },
-                { name: '方案设计', description: '设计实现方案', nodeType: 2, selected: true },
-                { name: '开发实现', description: '编码实现功能', nodeType: 2, selected: true },
-                { name: '测试验收', description: '测试并验收', nodeType: 3, selected: true }
+                { name: '需求分析', description: '分析任务需求', nodeType: 1, nodePriority: 1, estimatedHours: 4, selected: true },
+                { name: '方案设计', description: '设计实现方案', nodeType: 2, nodePriority: 1, estimatedHours: 6, selected: true },
+                { name: '开发实现', description: '编码实现功能', nodeType: 2, nodePriority: 2, estimatedHours: 12, selected: true },
+                { name: '测试验收', description: '测试并验收', nodeType: 3, nodePriority: 2, estimatedHours: 4, selected: true }
               ];
             }
             resolve();
@@ -1012,10 +1016,10 @@ async function generateNodes() {
     // 失败时使用默认节点
     if (generatedNodes.value.length === 0) {
       generatedNodes.value = [
-        { name: '需求分析', description: '分析任务需求', selected: true },
-        { name: '方案设计', description: '设计实现方案', selected: true },
-        { name: '开发实现', description: '编码实现功能', selected: true },
-        { name: '测试验收', description: '测试并验收', selected: true }
+        { name: '需求分析', description: '分析任务需求', nodeType: 1, nodePriority: 1, estimatedHours: 4, selected: true },
+        { name: '方案设计', description: '设计实现方案', nodeType: 2, nodePriority: 1, estimatedHours: 6, selected: true },
+        { name: '开发实现', description: '编码实现功能', nodeType: 2, nodePriority: 2, estimatedHours: 12, selected: true },
+        { name: '测试验收', description: '测试并验收', nodeType: 3, nodePriority: 2, estimatedHours: 4, selected: true }
       ];
     }
     ElMessage.error('生成失败'); 
