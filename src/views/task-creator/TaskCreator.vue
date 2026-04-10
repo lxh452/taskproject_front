@@ -724,40 +724,26 @@ const handleAIProcess = async () => {
 
   try {
     console.log('开始构建上下文...')
-    console.log('form.departmentIds:', form.departmentIds)
-    console.log('form.responsibleEmployeeIds:', form.responsibleEmployeeIds)
     console.log('departments.value:', departments.value)
     console.log('teamMembers.value:', teamMembers.value)
     
-    // 构建上下文信息
+    // 构建上下文信息 - 传递完整的部门和员工列表给 AI 决策
     const polishContext: any = { 
       priority: getPriorityValue(aiOptions.priority), // 转换为整数值
       duration: aiOptions.duration === 'auto' ? 7 : parseInt(aiOptions.duration) || 7, // 转换为整数天数
-      taskType: form.departmentIds?.length > 1 ? 1 : 0 // 转换为整数值
+      taskType: form.departmentIds?.length > 1 ? 1 : 0, // 转换为整数值
+      // 传递所有部门信息（包含 ID 和名称）
+      allDepartments: departments.value.map(d => ({
+        id: d.id,
+        name: d.name
+      })),
+      // 传递所有员工信息（包含 ID、姓名等）
+      allEmployees: teamMembers.value.map(e => ({
+        id: e.id,
+        name: e.name,
+        pendingTasks: e.pendingTasks || 0
+      }))
     };
-    
-    // 添加部门信息
-    if (form.departmentIds?.length > 0) {
-      const deptNames = departments.value
-        .filter(d => form.departmentIds?.includes(d.id))
-        .map(d => d.name);
-      polishContext.departmentNames = deptNames;
-      console.log('部门名称:', deptNames)
-    }
-    
-    // 添加负责人信息
-    if (form.responsibleEmployeeIds?.length > 0) {
-      const leaderName = teamMembers.value
-        .find(e => form.responsibleEmployeeIds?.includes(e.id))?.name;
-      if (leaderName) {
-        polishContext.leaderName = leaderName;
-      }
-      const employeeNames = teamMembers.value
-        .filter(e => form.responsibleEmployeeIds?.includes(e.id))
-        .map(e => e.name);
-      polishContext.employeeNames = employeeNames;
-      console.log('员工名称:', employeeNames)
-    }
     
     console.log('最终上下文:', polishContext)
     
