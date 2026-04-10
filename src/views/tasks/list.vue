@@ -135,16 +135,16 @@
               </div>
               <template v-else>
                 <div v-if="taskNodesMap[row.id]?.length > 0" class="nodes-list">
-                  <div v-for="node in taskNodesMap[row.id].slice(0, 5)" :key="node.id" class="node-item">
+                  <div v-for="node in taskNodesMap[row.id].slice(0, 5)" :key="node.TaskNodeId" class="node-item">
                     <div class="node-info">
-                      <span class="node-title" @click.stop="goEditNode(node.id)">{{ node.nodeTitle }}</span>
-                      <span class="node-status" :class="'status-' + (node.status ?? 0)">
-                        {{ node.status === 2 ? '已完成' : node.status === 1 ? '进行中' : '待处理' }}
+                      <span class="node-title" @click.stop="goEditNode(node.TaskNodeId)">{{ node.TaskNodeTitle || node.nodeTitle || '未命名节点' }}</span>
+                      <span class="node-status" :class="'status-' + (node.Status ?? node.status ?? 0)">
+                        {{ (node.Status ?? node.status) === 2 ? '已完成' : (node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
                       </span>
                     </div>
                     <div class="node-meta">
-                      <span v-if="node.executorName">执行人: {{ node.executorName }}</span>
-                      <span v-if="node.estimatedDays">预计 {{ node.estimatedDays }} 天</span>
+                      <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
+                      <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
                     </div>
                     <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, row.id) : goEditNode(node.id)" class="node-menu-dropdown">
                       <button class="node-menu-btn" @click.stop>
@@ -247,7 +247,7 @@ async function toggleTaskExpand(taskId: string) {
         const resp = await listTaskNodesByTask({ taskId });
         console.log('节点列表响应:', resp);
         if (resp.data.code === 200) {
-          taskNodesMap.value[taskId] = resp.data.data?.list || [];
+          taskNodesMap.value[taskId] = resp.data.data || [];
         }
       } catch (e) {
         console.error('加载节点失败:', e);
@@ -273,11 +273,11 @@ async function handleDeleteTask(task: any) {
 
 async function handleDeleteNode(node: any, taskId: string) {
   try {
-    await ElMessageBox.confirm(`确定要删除任务节点「${node.nodeTitle}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
-    const resp = await deleteTaskNode({ nodeId: node.id });
+    await ElMessageBox.confirm(`确定要删除任务节点「${node.TaskNodeTitle || node.nodeTitle || '未命名节点'}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
+    const resp = await deleteTaskNode({ nodeId: node.TaskNodeId || node.id });
     if (resp.data.code === 200) {
       ElMessage.success('节点已删除');
-      taskNodesMap.value[taskId] = taskNodesMap.value[taskId].filter((n: any) => n.id !== node.id);
+      taskNodesMap.value[taskId] = taskNodesMap.value[taskId].filter((n: any) => (n.TaskNodeId || n.id) !== (node.TaskNodeId || node.id));
     } else {
       ElMessage.error(resp.data.msg || '删除失败');
     }
