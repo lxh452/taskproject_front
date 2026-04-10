@@ -135,18 +135,19 @@
               </div>
               <template v-else>
                 <div v-if="taskNodesMap[row.id]?.length > 0" class="nodes-list">
-                  <div v-for="node in taskNodesMap[row.id].slice(0, 5)" :key="node.TaskNodeId" class="node-item">
+                  <div v-for="node in taskNodesMap[row.id]" :key="node.TaskNodeId" class="node-item">
                     <div class="node-info">
-                      <span class="node-title" @click.stop="goEditNode(node.TaskNodeId)">{{ node.TaskNodeTitle || node.nodeTitle || '未命名节点' }}</span>
-                      <span class="node-status" :class="'status-' + (node.Status ?? node.status ?? 0)">
-                        {{ (node.Status ?? node.status) === 2 ? '已完成' : (node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
+                      <span class="node-title" @click.stop="goEditNode(node.TaskNodeId)">{{ node.NodeName || node.nodeName || node.TaskNodeTitle || '未命名节点' }}</span>
+                      <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
+                        {{ (node.NodeStatus ?? node.Status ?? node.status) === 2 ? '已完成' : (node.NodeStatus ?? node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
                       </span>
                     </div>
                     <div class="node-meta">
+                      <span v-if="node.LeaderName || node.leaderName">负责人: {{ node.LeaderName || node.leaderName }}</span>
                       <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
                       <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
                     </div>
-                    <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, row.id) : goEditNode(node.id)" class="node-menu-dropdown">
+                    <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, row.id) : goEditNode(node.TaskNodeId)" class="node-menu-dropdown">
                       <button class="node-menu-btn" @click.stop>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                       </button>
@@ -157,9 +158,6 @@
                         </el-dropdown-menu>
                       </template>
                     </el-dropdown>
-                  </div>
-                  <div v-if="taskNodesMap[row.id].length > 5" class="nodes-more">
-                    还有 {{ taskNodesMap[row.id].length - 5 }} 个节点...
                   </div>
                 </div>
                 <div v-else class="nodes-empty">
@@ -843,6 +841,7 @@ html.dark-mode .action-btn.action-primary:hover {
 
 .task-menu-dropdown {
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .menu-btn {
@@ -856,6 +855,8 @@ html.dark-mode .action-btn.action-primary:hover {
   border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--text-muted);
+  position: relative;
+  z-index: 10;
 }
 
 .menu-btn:hover {
@@ -912,6 +913,10 @@ html.dark-mode .action-btn.action-primary:hover {
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   padding: var(--space-4);
   margin-top: -1px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1;
+  position: relative;
 }
 
 .nodes-loading {
@@ -939,6 +944,7 @@ html.dark-mode .action-btn.action-primary:hover {
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
 }
 
 .node-info {
@@ -988,6 +994,7 @@ html.dark-mode .action-btn.action-primary:hover {
 
 .node-menu-dropdown {
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .node-menu-btn {
