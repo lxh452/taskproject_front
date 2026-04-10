@@ -541,7 +541,7 @@ import {
   Document, TrendCharts, List, Operation, QuestionFilled, InfoFilled, Opportunity,
   CircleCheck, RefreshLeft, Check, Clock, Folder, Upload, Cpu, Setting, Promotion, Plus
 } from '@element-plus/icons-vue'
-import { streamPolishTask, createTask, getMyEmployee, listEmployees, listDepartments } from '@/api'
+import { streamPolishTask, createTask, getMyEmployee, listEmployees, listDepartments, streamGenerateSubtasks } from '@/api'
 
 const router = useRouter()
 
@@ -840,7 +840,7 @@ const submitTask = async () => {
   isSubmitting.value = true
   try {
     const assignees = result.value.subtasks?.filter((n: any) => n.assigneeId).map((n: any) => n.assigneeId) || []
-    await createTask({
+    const createResult = await createTask({
       companyId: employee.value?.companyId,
       taskTitle: result.value.title,
       taskDetail: result.value.description,
@@ -851,10 +851,60 @@ const submitTask = async () => {
       departmentIds: result.value.departmentIds || [],
       responsibleEmployeeIds: result.value.responsibleEmployeeIds || []
     })
-    ElMessage.success('任务创建成功')
+    
+    // 获取任务 ID
+    const taskId = createResult.data?.taskId || createResult.data?.id
+    console.log('任务创建成功，ID:', taskId)
+    
+    // 触发流式生成子任务
+    if (taskId) {
+      console.log('开始流式生成子任务...')
+      ElMessage.info('正在生成子任务，请稍候...')
+      
+      await new Promise<void>((resolve, reject) => {
+        let subtaskCount = 0
+        
+        streamGenerateSubtasks(
+          {
+            taskDescription: result.value.description,
+            taskId: taskId,
+            context: {
+              departmentIds: result.value.departmentIds || [],
+              responsibleEmployeeIds: result.value.responsibleEmployeeIds || []
+            }
+          },
+          (event, data) => {
+            console.log('子任务生成事件:', event, data)
+            
+            if (event === 'start') {
+              ElMessage.info('AI 正在分析任务并生成子任务...')
+            } else if (event === 'subtask') {
+              subtaskCount++
+              console.log(`已生成第 ${subtaskCount} 个子任务`)
+            } else if (event === 'complete') {
+              console.log('子任务生成完成，共生成', subtaskCount, '个子任务')
+              ElMessage.success(`任务创建成功，已生成 ${subtaskCount} 个子任务`)
+              resolve()
+            } else if (event === 'error') {
+              console.error('子任务生成失败:', data)
+              reject(new Error(data.message || '生成子任务失败'))
+            }
+          },
+          (error) => {
+            console.error('流式生成子任务错误:', error)
+            reject(error)
+          }
+        )
+      })
+    } else {
+      ElMessage.success('任务创建成功')
+    }
+    
+    // 跳转到任务列表
     router.push('/tasks')
-  } catch {
-    ElMessage.error('创建失败')
+  } catch (error) {
+    console.error('任务创建失败:', error)
+    ElMessage.error('创建失败：' + (error as Error).message)
   } finally {
     isSubmitting.value = false
   }
