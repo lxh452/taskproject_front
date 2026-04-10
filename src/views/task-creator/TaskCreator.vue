@@ -772,18 +772,67 @@ const handleAIProcess = async () => {
               taskType: r.taskType !== undefined ? r.taskType : (form.departmentIds?.length > 1 ? 1 : 0),
               taskPriority: r.taskPriority !== undefined ? r.taskPriority : aiOptions.priority,
               estimatedDays: r.estimatedDays || aiOptions.duration,
-              subtasks: [],
+              subtasks: [], // 先初始化为空，稍后生成子任务
               // 保存部门和人员信息（优先使用 AI 返回的，其次使用用户选择的）
               departmentIds: r.departmentIds?.length > 0 ? r.departmentIds : (form.departmentIds || []),
               responsibleEmployeeIds: r.responsibleEmployeeIds?.length > 0 ? r.responsibleEmployeeIds : (form.responsibleEmployeeIds || [])
             }
 
-            setTimeout(() => {
-              isProcessing.value = false
-              showResult.value = true
-              saveHistory()
-              resolve()
-            }, 500)
+            // 润色完成后，立即生成子任务
+            console.log('开始生成子任务...')
+            const generatedSubtasks: any[] = []
+            
+            streamGenerateSubtasks(
+              {
+                taskDescription: result.value.description,
+                context: {
+                  departmentIds: result.value.departmentIds,
+                  responsibleEmployeeIds: result.value.responsibleEmployeeIds
+                }
+              },
+              (subtaskEvent, subtaskData) => {
+                console.log('子任务生成事件:', subtaskEvent, subtaskData)
+                
+                if (subtaskEvent === 'subtask' && subtaskData.subtask) {
+                  generatedSubtasks.push({
+                    title: subtaskData.subtask.nodeName || subtaskData.subtask.name,
+                    description: subtaskData.subtask.nodeDetail || subtaskData.subtask.detail,
+                    estimatedHours: subtaskData.subtask.estimatedHours,
+                    difficulty: subtaskData.subtask.difficulty || 'medium',
+                    assigneeId: null
+                  })
+                  // 实时更新 result.subtasks
+                  result.value.subtasks = [...generatedSubtasks]
+                } else if (subtaskEvent === 'complete') {
+                  console.log('子任务生成完成，共生成', generatedSubtasks.length, '个子任务')
+                  setTimeout(() => {
+                    isProcessing.value = false
+                    showResult.value = true
+                    saveHistory()
+                    resolve()
+                  }, 500)
+                } else if (subtaskEvent === 'error') {
+                  console.error('子任务生成失败:', subtaskData)
+                  // 即使子任务生成失败，也继续显示润色结果
+                  setTimeout(() => {
+                    isProcessing.value = false
+                    showResult.value = true
+                    saveHistory()
+                    resolve()
+                  }, 500)
+                }
+              },
+              (error) => {
+                console.error('流式生成子任务错误:', error)
+                // 即使子任务生成失败，也继续显示润色结果
+                setTimeout(() => {
+                  isProcessing.value = false
+                  showResult.value = true
+                  saveHistory()
+                  resolve()
+                }, 500)
+              }
+            )
           } else if (event === 'error') {
             clearInterval(timer)
             isProcessing.value = false
@@ -861,9 +910,9 @@ const submitTask = async () => {
       console.log('开始流式生成子任务...')
       ElMessage.info('正在生成子任务，请稍候...')
       
+      const generatedSubtasks: any[] = []
+      
       await new Promise<void>((resolve, reject) => {
-        let subtaskCount = 0
-        
         streamGenerateSubtasks(
           {
             taskDescription: result.value.description,
@@ -879,11 +928,21 @@ const submitTask = async () => {
             if (event === 'start') {
               ElMessage.info('AI 正在分析任务并生成子任务...')
             } else if (event === 'subtask') {
-              subtaskCount++
-              console.log(`已生成第 ${subtaskCount} 个子任务`)
+              // 收集生成的子任务
+              if (data.subtask) {
+                generatedSubtasks.push({
+                  title: data.subtask.nodeName || data.subtask.name,
+                  description: data.subtask.nodeDetail || data.subtask.detail,
+                  estimatedHours: data.subtask.estimatedHours,
+                  difficulty: data.subtask.difficulty || 'medium',
+                  assigneeId: null
+                })
+                // 实时更新 result.subtasks，让页面显示
+                result.value.subtasks = [...generatedSubtasks]
+              }
             } else if (event === 'complete') {
-              console.log('子任务生成完成，共生成', subtaskCount, '个子任务')
-              ElMessage.success(`任务创建成功，已生成 ${subtaskCount} 个子任务`)
+              console.log('子任务生成完成，共生成', generatedSubtasks.length, '个子任务')
+              ElMessage.success(`任务创建成功，已生成 ${generatedSubtasks.length} 个子任务`)
               resolve()
             } else if (event === 'error') {
               console.error('子任务生成失败:', data)

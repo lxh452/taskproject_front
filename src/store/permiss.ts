@@ -43,7 +43,7 @@ export const usePermissStore = defineStore('permiss', {
                 // task module
                 'task', 'task_overview', 'task_kanban', 'task_list_page', 'task_gantt', 'task_timeline', 'task_upcoming',
                 // tasknodes module (independent menu)
-                'tasknodes','tasknodes_my','tasknodes_create','tasknodes_designer',
+                'tasknodes','tasknodes_my','flow_designer','tasknodes_create','tasknodes_designer',
                 // team module
                 'team', 'handover', 'handover_list',
                 'employee', 'employee_list', 'my_nodes',
