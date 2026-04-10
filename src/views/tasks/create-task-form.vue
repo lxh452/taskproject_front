@@ -497,11 +497,12 @@ function triggerAISubtaskGeneration(
     console.log('[AI 子任务生成] 开始生成子任务，taskId:', taskId);
     console.log('[AI 子任务生成] 上下文:', context);
     
-    // 使用流式生成子任务
+    // 使用流式生成子任务，传递 context 参数
     streamGenerateSubtasks(
         { 
             taskDescription: taskTitle + ' - ' + taskDescription,
-            taskId: taskId
+            taskId: taskId,
+            context: context  // 传递上下文信息（部门、责任人等）
         },
         (event, data) => {
             console.log('[AI 子任务生成] 收到事件:', event, data);

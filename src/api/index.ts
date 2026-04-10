@@ -372,7 +372,14 @@ export const generateSubtasks = (data: { taskDescription: string }) =>
 
 // 流式润色任务
 export const streamPolishTask = (
-    data: { rawDescription: string; polishType?: string; context?: Record<string, any> },
+    data: { 
+        rawDescription: string; 
+        polishType?: string; 
+        taskId?: string;
+        companyId?: string;
+        departmentIds?: string[];
+        context?: Record<string, any> 
+    },
     onEvent: (event: string, data: any) => void,
     onError?: (error: Error) => void
 ) => {
@@ -514,7 +521,7 @@ export const streamAIChat = (
 
 // 流式生成子任务
 export const streamGenerateSubtasks = (
-    data: { taskDescription: string; taskId?: string },
+    data: { taskDescription: string; taskId?: string; context?: any },
     onEvent: (event: string, data: any) => void,
     onError?: (error: Error) => void
 ) => {

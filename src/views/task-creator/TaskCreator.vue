@@ -703,9 +703,42 @@ const handleAIProcess = async () => {
   }, 200)
 
   try {
+    // 构建上下文信息
+    const polishContext: any = { 
+      priority: aiOptions.priority, 
+      duration: aiOptions.duration,
+      taskType: form.value.departmentIds?.length > 1 ? '跨部门协作' : '单部门任务'
+    };
+    
+    // 添加部门信息
+    if (form.value.departmentIds?.length > 0) {
+      const deptNames = departments.value
+        .filter(d => form.value.departmentIds?.includes(d.id))
+        .map(d => d.name);
+      polishContext.departmentNames = deptNames;
+    }
+    
+    // 添加负责人信息
+    if (form.value.responsibleEmployeeIds?.length > 0) {
+      const leaderName = employees.value
+        .find(e => form.value.responsibleEmployeeIds?.includes(e.id))?.name;
+      if (leaderName) {
+        polishContext.leaderName = leaderName;
+      }
+      const employeeNames = employees.value
+        .filter(e => form.value.responsibleEmployeeIds?.includes(e.id))
+        .map(e => e.name);
+      polishContext.employeeNames = employeeNames;
+    }
+    
     await new Promise<void>((resolve, reject) => {
       streamPolishTask(
-        { rawDescription: taskInput.value, context: { priority: aiOptions.priority, duration: aiOptions.duration } },
+        { 
+          rawDescription: taskInput.value, 
+          companyId: employee.value?.companyId,
+          departmentIds: form.value.departmentIds || [],
+          context: polishContext 
+        },
         (event, data) => {
           if (event === 'complete') {
             clearInterval(timer)
