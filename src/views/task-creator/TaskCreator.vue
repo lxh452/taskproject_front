@@ -780,7 +780,7 @@ const handleAIProcess = async () => {
 
             // 润色完成后，立即生成子任务
             console.log('开始生成子任务...')
-            const generatedSubtasks: any[] = []
+            let jsonContent = ''
             
             streamGenerateSubtasks(
               {
@@ -793,18 +793,30 @@ const handleAIProcess = async () => {
               (subtaskEvent, subtaskData) => {
                 console.log('子任务生成事件:', subtaskEvent, subtaskData)
                 
-                if (subtaskEvent === 'subtask' && subtaskData.subtask) {
-                  generatedSubtasks.push({
-                    title: subtaskData.subtask.nodeName || subtaskData.subtask.name,
-                    description: subtaskData.subtask.nodeDetail || subtaskData.subtask.detail,
-                    estimatedHours: subtaskData.subtask.estimatedHours,
-                    difficulty: subtaskData.subtask.difficulty || 'medium',
-                    assigneeId: null
-                  })
-                  // 实时更新 result.subtasks
-                  result.value.subtasks = [...generatedSubtasks]
+                if (subtaskEvent === 'chunk') {
+                  // 累积 JSON 字符串
+                  jsonContent += subtaskData.content
                 } else if (subtaskEvent === 'complete') {
-                  console.log('子任务生成完成，共生成', generatedSubtasks.length, '个子任务')
+                  console.log('子任务生成完成，开始解析 JSON...')
+                  try {
+                    // 解析完整的 JSON
+                    const parsed = JSON.parse(jsonContent)
+                    const subtasks = parsed.subtasks || []
+                    console.log('解析成功，共生成', subtasks.length, '个子任务')
+                    
+                    // 转换为前端格式
+                    result.value.subtasks = subtasks.map((node: any) => ({
+                      title: node.nodeName || node.name,
+                      description: node.nodeDetail || node.detail,
+                      estimatedHours: node.estimatedHours,
+                      difficulty: node.difficulty || 'medium',
+                      assigneeId: null
+                    }))
+                  } catch (error) {
+                    console.error('解析子任务 JSON 失败:', error)
+                    console.log('原始 JSON 内容:', jsonContent)
+                  }
+                  
                   setTimeout(() => {
                     isProcessing.value = false
                     showResult.value = true
@@ -906,58 +918,66 @@ const submitTask = async () => {
     console.log('任务创建成功，ID:', taskId)
     
     // 触发流式生成子任务
-    if (taskId) {
-      console.log('开始流式生成子任务...')
-      ElMessage.info('正在生成子任务，请稍候...')
-      
-      const generatedSubtasks: any[] = []
-      
-      await new Promise<void>((resolve, reject) => {
-        streamGenerateSubtasks(
-          {
-            taskDescription: result.value.description,
-            taskId: taskId,
-            context: {
-              departmentIds: result.value.departmentIds || [],
-              responsibleEmployeeIds: result.value.responsibleEmployeeIds || []
-            }
-          },
-          (event, data) => {
-            console.log('子任务生成事件:', event, data)
-            
-            if (event === 'start') {
-              ElMessage.info('AI 正在分析任务并生成子任务...')
-            } else if (event === 'subtask') {
-              // 收集生成的子任务
-              if (data.subtask) {
-                generatedSubtasks.push({
-                  title: data.subtask.nodeName || data.subtask.name,
-                  description: data.subtask.nodeDetail || data.subtask.detail,
-                  estimatedHours: data.subtask.estimatedHours,
-                  difficulty: data.subtask.difficulty || 'medium',
-                  assigneeId: null
-                })
-                // 实时更新 result.subtasks，让页面显示
-                result.value.subtasks = [...generatedSubtasks]
+      if (taskId) {
+        console.log('开始流式生成子任务...')
+        ElMessage.info('正在生成子任务，请稍候...')
+        
+        let jsonContent = ''
+        
+        await new Promise<void>((resolve, reject) => {
+          streamGenerateSubtasks(
+            {
+              taskDescription: result.value.description,
+              taskId: taskId,
+              context: {
+                departmentIds: result.value.departmentIds || [],
+                responsibleEmployeeIds: result.value.responsibleEmployeeIds || []
               }
-            } else if (event === 'complete') {
-              console.log('子任务生成完成，共生成', generatedSubtasks.length, '个子任务')
-              ElMessage.success(`任务创建成功，已生成 ${generatedSubtasks.length} 个子任务`)
-              resolve()
-            } else if (event === 'error') {
-              console.error('子任务生成失败:', data)
-              reject(new Error(data.message || '生成子任务失败'))
+            },
+            (event, data) => {
+              console.log('子任务生成事件:', event, data)
+              
+              if (event === 'chunk') {
+                // 累积 JSON 字符串
+                jsonContent += data.content
+              } else if (event === 'complete') {
+                console.log('子任务生成完成，开始解析 JSON...')
+                try {
+                  // 解析完整的 JSON
+                  const parsed = JSON.parse(jsonContent)
+                  const subtasks = parsed.subtasks || []
+                  console.log('解析成功，共生成', subtasks.length, '个子任务')
+                  
+                  // 转换为前端格式
+                  result.value.subtasks = subtasks.map((node: any) => ({
+                    title: node.nodeName || node.name,
+                    description: node.nodeDetail || node.detail,
+                    estimatedHours: node.estimatedHours,
+                    difficulty: node.difficulty || 'medium',
+                    assigneeId: null
+                  }))
+                  
+                  ElMessage.success(`任务创建成功，已生成 ${subtasks.length} 个子任务`)
+                  resolve()
+                } catch (error) {
+                  console.error('解析子任务 JSON 失败:', error)
+                  console.log('原始 JSON 内容:', jsonContent)
+                  reject(new Error('解析子任务失败'))
+                }
+              } else if (event === 'error') {
+                console.error('子任务生成失败:', data)
+                reject(new Error(data.message || '生成子任务失败'))
+              }
+            },
+            (error) => {
+              console.error('流式生成子任务错误:', error)
+              reject(error)
             }
-          },
-          (error) => {
-            console.error('流式生成子任务错误:', error)
-            reject(error)
-          }
-        )
-      })
-    } else {
-      ElMessage.success('任务创建成功')
-    }
+          )
+        })
+      } else {
+        ElMessage.success('任务创建成功')
+      }
     
     // 跳转到任务列表
     router.push('/tasks')
