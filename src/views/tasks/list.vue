@@ -264,7 +264,7 @@ async function handleDeleteTask(task: any) {
     } else {
       ElMessage.error(resp.data.msg || '删除失败');
     }
-  } catch { if (error !== 'cancel') ElMessage.error('删除失败'); }
+  } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
 }
 
 async function handleDeleteNode(node: any, taskId: string) {
@@ -277,7 +277,7 @@ async function handleDeleteNode(node: any, taskId: string) {
     } else {
       ElMessage.error(resp.data.msg || '删除失败');
     }
-  } catch { if (error !== 'cancel') ElMessage.error('删除失败'); }
+  } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
 }
 
 function goEditNode(nodeId: string) { router.push({ name: 'tasknodes-detail', params: { id: nodeId } }); }

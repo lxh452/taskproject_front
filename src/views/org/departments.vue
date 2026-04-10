@@ -371,7 +371,7 @@ async function loadData() {
       id: d.id || d.Id || d.departmentId || d.DepartmentId,
       departmentName: d.departmentName || d.DepartmentName || d.name || d.Name || '未命名部门',
       departmentCode: (d.departmentCode?.String ?? d.departmentCode ?? d.DepartmentCode?.String ?? d.DepartmentCode) || '-',
-      manager: d.managerName || d.ManagerName || '-',
+      manager: d.managerName || d.ManagerName || d.manager || '-',  // 优先使用 managerName
       managerId: d.managerId || d.ManagerId || '',
       remark: d.description || d.remark || d.Remark || '',
       status: d.status ?? d.Status ?? 1,
