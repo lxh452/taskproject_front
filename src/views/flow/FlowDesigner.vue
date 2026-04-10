@@ -480,6 +480,7 @@ function applyAIFlow(flowData: any) {
   flowEdges.value = edges;
 
   const aiDesign: DesignOption = {
+    id: 'ai-generated',
     name: 'AI智能生成方案',
     description: '基于AI分析任务依赖关系自动生成的流程方案',
     estimatedDays: Math.ceil(nodes.length * 0.8),
