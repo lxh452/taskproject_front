@@ -86,21 +86,6 @@
                 </el-select>
               </div>
             </div>
-            <!-- 人员分配 -->
-            <div class="option-row" style="margin-top: 16px;">
-              <div class="option-item">
-                <span class="option-label">关联部门</span>
-                <el-select v-model="form.departmentIds" multiple collapse-tags placeholder="选择部门" size="small" style="width:100%">
-                  <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id" />
-                </el-select>
-              </div>
-              <div class="option-item">
-                <span class="option-label">负责人</span>
-                <el-select v-model="form.responsibleEmployeeIds" multiple collapse-tags filterable placeholder="选择员工" size="small" style="width:100%">
-                  <el-option v-for="m in teamMembers" :key="m.id" :label="m.name" :value="m.id" />
-                </el-select>
-              </div>
-            </div>
           </div>
 
           <!-- 快速模板 -->
@@ -441,6 +426,22 @@
                 </el-form-item>
                 <el-form-item label="截止日期" prop="taskDeadline">
                   <el-date-picker v-model="form.taskDeadline" type="date" style="width:100%" value-format="YYYY-MM-DD" :disabled-date="disablePast" />
+                </el-form-item>
+              </div>
+            </div>
+            <!-- 人员分配 -->
+            <div class="form-section">
+              <div class="section-title"><el-icon><User /></el-icon>人员分配（AI 已推荐，可手动调整）</div>
+              <div class="form-row half">
+                <el-form-item label="关联部门">
+                  <el-select v-model="form.departmentIds" multiple collapse-tags style="width:100%">
+                    <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="负责人">
+                  <el-select v-model="form.responsibleEmployeeIds" multiple collapse-tags filterable style="width:100%">
+                    <el-option v-for="m in teamMembers" :key="m.id" :label="m.name" :value="m.id" />
+                  </el-select>
                 </el-form-item>
               </div>
             </div>
@@ -825,9 +826,11 @@ const editAsManual = () => {
   form.taskDetail = result.value.description
   form.taskPriority = getPriorityValue(result.value.taskPriority || result.value.priority)
   form.taskDeadline = new Date(Date.now() + (result.value.estimatedDays || 7) * 86400000).toISOString().split('T')[0]
-  // 同步跨部门、紧急度等信息
+  // 同步 AI 推荐的部门和员工（用户可以手动修改）
   form.departmentIds = result.value.departmentIds || []
   form.responsibleEmployeeIds = result.value.responsibleEmployeeIds || []
+  console.log('AI 推荐的部门:', form.departmentIds)
+  console.log('AI 推荐的员工:', form.responsibleEmployeeIds)
   inputMode.value = 'manual'
   showResult.value = false
 }
