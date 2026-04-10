@@ -119,11 +119,11 @@
               </div>
 
               <div class="expand-btn-row">
-                <button class="expand-btn" @click.stop="toggleTaskExpand(row.id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks[row.id] }">
+                <button class="expand-btn" @click.stop="openNodeDialog(row)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks[row.id] ? '收起' : '查看节点' }}
+                  查看节点
                   <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
                 </button>
               </div>
@@ -151,6 +151,66 @@
     <el-drawer v-model="createNodeDialogVisible" title="创建任务节点" size="520px" :close-on-click-modal="false" destroy-on-close>
       <create-node-form v-if="createNodeDialogVisible" :task-id="selectedTaskId" @success="handleNodeCreated" @cancel="createNodeDialogVisible = false" />
     </el-drawer>
+
+    <!-- 查看任务节点弹窗 -->
+    <el-dialog
+      v-model="nodeDialogVisible"
+      :title="currentTaskTitle"
+      width="600px"
+      :close-on-click-modal="true"
+      destroy-on-close
+    >
+      <div v-if="nodeDialogLoading" class="dialog-loading">
+        <el-icon class="is-loading"><Loading /></el-icon>
+        <span>加载节点中...</span>
+      </div>
+      <div v-else-if="currentTaskNodes.length === 0" class="dialog-empty">
+        <el-empty description="暂无任务节点" />
+      </div>
+      <div v-else class="task-nodes-list">
+        <div 
+          v-for="node in currentTaskNodes" 
+          :key="node.TaskNodeId || node.id"
+          class="task-node-item"
+          @click="goToNodeDetail(node)"
+        >
+          <div class="node-header">
+            <span class="node-name">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
+            <el-tag :type="getNodeStatusType(node)" size="small">
+              {{ getNodeStatusText(node) }}
+            </el-tag>
+          </div>
+          <div class="node-info">
+            <span v-if="node.LeaderName || node.leaderName" class="info-item">
+              <el-icon><User /></el-icon>
+              负责人: {{ node.LeaderName || node.leaderName }}
+            </span>
+            <span v-if="node.ExecutorName || node.executorName" class="info-item">
+              <el-icon><UserFilled /></el-icon>
+              执行人: {{ node.ExecutorName || node.executorName }}
+            </span>
+            <span v-if="node.NodeDeadline || node.nodeDeadline" class="info-item">
+              <el-icon><Calendar /></el-icon>
+              截止: {{ formatDate(node.NodeDeadline || node.nodeDeadline) }}
+            </span>
+          </div>
+          <div v-if="node.NodeDetail || node.nodeDetail" class="node-desc">
+            {{ node.NodeDetail || node.nodeDetail }}
+          </div>
+          <div class="node-progress" v-if="node.Progress || node.progress !== undefined">
+            <el-progress :percentage="node.Progress || node.progress || 0" :status="getNodeProgressStatus(node)" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="nodeDialogVisible = false">关闭</el-button>
+          <el-button type="primary" @click="goToTaskDetail(currentTaskId)">
+            查看任务详情
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -160,7 +220,7 @@ import { useRouter } from 'vue-router';
 import { listTasks, listTaskNodesByTask, deleteTask, deleteTaskNode } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Loading } from '@element-plus/icons-vue';
+import { Loading, User, UserFilled, Calendar } from '@element-plus/icons-vue';
 import CreateTaskForm from './create-task-form.vue';
 import CreateNodeForm from '../tasknodes/create-node-form.vue';
 
@@ -175,6 +235,13 @@ const expandedTasks = ref<Record<string, boolean>>({});
 const taskNodesMap = ref<Record<string, any[]>>({});
 const nodesLoading = ref<Record<string, boolean>>({});
 const taskExecutorsMap = ref<Record<string, any>>({});
+
+// 节点查看弹窗
+const nodeDialogVisible = ref(false);
+const nodeDialogLoading = ref(false);
+const currentTaskId = ref('');
+const currentTaskTitle = ref('');
+const currentTaskNodes = ref<any[]>([]);
 
 const filteredRows = computed(() => {
   const { keyword, priority, status } = query.value;
@@ -194,6 +261,86 @@ function openCreateTaskDialog() {
 
 function openCreateNodeDialog(row: any) {
   router.push({ path: '/task-nodes/create', query: { taskId: row.id } });
+}
+
+// 打开节点查看弹窗
+async function openNodeDialog(row: any) {
+  if (!row.id) {
+    ElMessage.warning('任务 ID 不存在');
+    return;
+  }
+  
+  currentTaskId.value = row.id;
+  currentTaskTitle.value = row.taskTitle || '任务节点';
+  nodeDialogVisible.value = true;
+  nodeDialogLoading.value = true;
+  currentTaskNodes.value = [];
+  
+  try {
+    const resp = await listTaskNodesByTask({ taskId: row.id });
+    if (resp.data.code === 200) {
+      currentTaskNodes.value = resp.data.data || [];
+    } else {
+      ElMessage.error(resp.data.msg || '加载节点失败');
+    }
+  } catch (e) {
+    console.error('加载节点失败:', e);
+    ElMessage.error('加载节点失败');
+  } finally {
+    nodeDialogLoading.value = false;
+  }
+}
+
+// 获取节点状态类型
+function getNodeStatusType(node: any): string {
+  const status = node.NodeStatus ?? node.Status ?? node.status ?? 0;
+  switch (status) {
+    case 2: return 'success';
+    case 1: return 'warning';
+    default: return 'info';
+  }
+}
+
+// 获取节点状态文本
+function getNodeStatusText(node: any): string {
+  const status = node.NodeStatus ?? node.Status ?? node.status ?? 0;
+  switch (status) {
+    case 2: return '已完成';
+    case 1: return '进行中';
+    default: return '待处理';
+  }
+}
+
+// 获取节点进度状态
+function getNodeProgressStatus(node: any): string | undefined {
+  const progress = node.Progress ?? node.progress ?? 0;
+  const deadline = node.NodeDeadline || node.nodeDeadline;
+  if (!deadline) return undefined;
+  
+  const left = Math.ceil((Date.parse(deadline) - Date.now()) / (24 * 3600 * 1000));
+  if (left < 0 && progress < 100) return 'exception';
+  if (left <= 1 && progress < 100) return 'warning';
+  return undefined;
+}
+
+// 格式化日期
+function formatDate(date: string): string {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('zh-CN');
+}
+
+// 跳转到节点详情
+function goToNodeDetail(node: any) {
+  const nodeId = node.TaskNodeId || node.id;
+  if (nodeId) {
+    router.push({ name: 'tasknodes-detail', params: { id: nodeId } });
+  }
+}
+
+// 跳转到任务详情
+function goToTaskDetail(taskId: string) {
+  nodeDialogVisible.value = false;
+  router.push({ name: 'tasks-detail', params: { id: taskId } });
 }
 
 async function toggleTaskExpand(taskId: string) {
@@ -526,6 +673,95 @@ onActivated(() => {
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* 节点查看弹窗样式 */
+.dialog-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.dialog-empty {
+  padding: 40px 0;
+}
+
+.task-nodes-list {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-node-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-node-item:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.node-name {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.node-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.info-item .el-icon {
+  font-size: 14px;
+}
+
+.node-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.node-progress {
+  margin-top: 8px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 /* Tasks Grid */
