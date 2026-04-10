@@ -30,15 +30,6 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/flow/designer-vue.vue'),
             },
             {
-                path: '/ai-flow-designer',
-                name: 'ai-flow-designer',
-                meta: {
-                    title: 'AI 流程设计器',
-                    noAuth: true
-                },
-                component: () => import('../views/flow/FlowDesigner.vue'),
-            },
-            {
                 path: '/ai-task-creator',
                 name: 'ai-task-creator',
                 meta: { 

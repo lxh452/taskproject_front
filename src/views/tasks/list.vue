@@ -65,18 +65,19 @@
             <div
               class="task-card"
               :class="'priority-' + row.priorityType"
-              :style="{ cursor: 'default' }"
+              @click.stop="toggleTaskExpand(row.id)"
             >
               <div class="card-header">
                 <div class="task-title-row">
                   <el-checkbox 
                     v-model="row.checked" 
                     @change="() => {}" 
+                    @click.stop
                     class="task-checkbox"
                   />
-                  <h3 class="task-title" @click.stop="viewDetail(row.id)">{{ row.taskTitle }}</h3>
-                  <el-dropdown trigger="click" @command="(cmd: string) => handleTaskMenu(cmd, row)" class="task-menu-dropdown">
-                    <button class="menu-btn" @click.stop>
+                  <h3 class="task-title">{{ row.taskTitle }}</h3>
+                  <el-dropdown trigger="click" @command="(cmd: string) => handleTaskMenu(cmd, row)" class="task-menu-dropdown" @click.stop>
+                    <button class="menu-btn">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                     </button>
                     <template #dropdown>
@@ -122,48 +123,10 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.has(row.id) }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.has(row.id) ? '收起节点' : '查看节点' }}
+                  {{ expandedTasks.has(row.id) ? '收起' : '查看节点' }}
                   <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
                 </button>
               </div>
-            </div>
-
-            <!-- 展开的任务节点列表 -->
-            <div v-if="expandedTasks.has(row.id)" class="nodes-panel">
-              <div v-if="nodesLoading.has(row.id)" class="nodes-loading">
-                <el-icon class="is-loading"><Loading /></el-icon> 加载中...
-              </div>
-              <template v-else>
-                <div v-if="taskNodesMap[row.id]?.length > 0" class="nodes-list">
-                  <div v-for="node in taskNodesMap[row.id]" :key="node.TaskNodeId" class="node-item">
-                    <div class="node-info">
-                      <span class="node-title" @click.stop="goEditNode(node.TaskNodeId)">{{ node.NodeName || node.nodeName || node.TaskNodeTitle || '未命名节点' }}</span>
-                      <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
-                        {{ (node.NodeStatus ?? node.Status ?? node.status) === 2 ? '已完成' : (node.NodeStatus ?? node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
-                      </span>
-                    </div>
-                    <div class="node-meta">
-                      <span v-if="node.LeaderName || node.leaderName">负责人: {{ node.LeaderName || node.leaderName }}</span>
-                      <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
-                      <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
-                    </div>
-                    <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, row.id) : goEditNode(node.TaskNodeId)" class="node-menu-dropdown">
-                      <button class="node-menu-btn" @click.stop>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                      </button>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="edit">编辑</el-dropdown-item>
-                          <el-dropdown-item command="delete">删除</el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </div>
-                </div>
-                <div v-else class="nodes-empty">
-                  暂无任务节点
-                </div>
-              </template>
             </div>
           </div>
         </div>
@@ -906,17 +869,26 @@ html.dark-mode .action-btn.action-primary:hover {
   font-size: 10px;
 }
 
+/* 浮窗样式 - 不改变行间距 */
 .nodes-panel {
-  background: var(--bg-secondary);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-top: none;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
-  margin-top: -1px;
+  margin-top: var(--space-2);
   max-height: 400px;
   overflow-y: auto;
-  z-index: 1;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.task-card-wrapper {
   position: relative;
+  display: block;
 }
 
 .nodes-loading {

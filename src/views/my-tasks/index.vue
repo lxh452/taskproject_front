@@ -6,29 +6,7 @@
       <p class="page-subtitle">查看和管理分配给我的所有任务节点</p>
     </div>
 
-    <!-- Tabs -->
-    <el-tabs v-model="activeTab" class="task-tabs" @tab-change="handleTabChange">
-      <el-tab-pane label="执行中" name="executor">
-        <template #label>
-          <span class="tab-label">
-            <el-icon><User /></el-icon>
-            执行中
-            <el-badge v-if="executorTasks.length > 0" :value="executorTasks.length" class="tab-badge" />
-          </span>
-        </template>
-      </el-tab-pane>
-      <el-tab-pane label="负责中" name="leader">
-        <template #label>
-          <span class="tab-label">
-            <el-icon><Star /></el-icon>
-            负责中
-            <el-badge v-if="leaderTasks.length > 0" :value="leaderTasks.length" class="tab-badge" />
-          </span>
-        </template>
-      </el-tab-pane>
-    </el-tabs>
-
-    <!-- Filters -->
+    <!-- 按任务分组的节点列表 -->
     <div class="filters-bar">
       <el-input 
         v-model="filters.keyword" 
@@ -45,58 +23,65 @@
       <el-button @click="resetFilters" :icon="Refresh">重置</el-button>
     </div>
 
-    <!-- Task List -->
+    <!-- 按任务分组的节点列表 -->
     <div class="task-list" v-loading="loading">
-      <div 
-        v-for="task in filteredTasks" 
-        :key="task.id" 
-        class="task-card"
-        @click="openDrawer(task)"
-      >
-        <div class="task-card-header">
-          <div class="task-info">
-            <h3 class="task-name">{{ task.nodeName }}</h3>
-            <p class="task-subtitle">{{ task.taskTitle }}</p>
-          </div>
-          <div class="task-header-actions">
-            <div class="task-status" :class="getStatusClass(task.status)">
-              {{ task.statusText }}
-            </div>
-            <el-button 
-              type="primary" 
-              size="small" 
-              :icon="View"
-              @click.stop="goToTask(task.taskId)"
-              class="view-details-btn"
-            >
-              查看详情
-            </el-button>
-          </div>
-        </div>
-        
-        <div class="task-card-body">
-          <div class="task-meta">
-            <div class="meta-item">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>{{ task.department || '-' }}</span>
-            </div>
-            <div class="meta-item">
-              <el-icon><Calendar /></el-icon>
-              <span>{{ task.deadline || '-' }}</span>
+      <template v-if="groupedTasks.length > 0">
+        <div v-for="group in groupedTasks" :key="group.taskId" class="task-card-wrapper">
+          <div class="task-card" @click.stop="toggleTaskExpand(group.taskId)">
+            <div class="task-card-header">
+              <div class="task-info">
+                <h3 class="task-name">{{ group.taskTitle }}</h3>
+                <span class="node-count">{{ group.nodes.length }} 个节点</span>
+              </div>
+              <div class="task-header-actions">
+                <button class="expand-btn" @click.stop="toggleTaskExpand(group.taskId)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.has(group.taskId) }">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                  {{ expandedTasks.has(group.taskId) ? '收起' : '展开' }}
+                </button>
+              </div>
             </div>
           </div>
-          
-          <div class="task-progress">
-            <el-progress 
-              :percentage="task.progress" 
-              :status="task.progressStatus"
-              :stroke-width="6"
-            />
-          </div>
-        </div>
-      </div>
 
-      <el-empty v-if="filteredTasks.length === 0 && !loading" description="暂无任务节点" />
+          <!-- 节点浮窗 -->
+          <div v-if="expandedTasks.has(group.taskId)" class="nodes-panel">
+            <div v-if="nodesLoading.has(group.taskId)" class="nodes-loading">
+              <el-icon class="is-loading"><Loading /></el-icon> 加载中...
+            </div>
+            <template v-else>
+              <div v-if="taskNodesMap.value[group.taskId]?.length > 0" class="nodes-list">
+                <div v-for="node in taskNodesMap.value[group.taskId]" :key="node.TaskNodeId" class="node-item">
+                  <div class="node-info">
+                    <span class="node-title" @click.stop="openDrawer(node)">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
+                    <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
+                      {{ (node.NodeStatus ?? node.Status ?? node.status) === 2 ? '已完成' : (node.NodeStatus ?? node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
+                    </span>
+                  </div>
+                  <div class="node-meta">
+                    <span v-if="node.LeaderName || node.leaderName">负责人: {{ node.LeaderName || node.leaderName }}</span>
+                    <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
+                    <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
+                  </div>
+                  <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, group.taskId) : openDrawer(node)" class="node-menu-dropdown">
+                    <button class="node-menu-btn" @click.stop>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                    </button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="view">查看详情</el-dropdown-item>
+                        <el-dropdown-item command="delete">删除</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+              </div>
+              <div v-else class="nodes-empty">暂无任务节点</div>
+            </template>
+          </div>
+        </div>
+      </template>
+      <el-empty v-else-if="!loading" description="暂无任务节点" />
     </div>
 
     <!-- Task Node Drawer -->
@@ -251,10 +236,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
-import { Search, Refresh, User, Star, Calendar, OfficeBuilding, Document, Picture, Download, View } from '@element-plus/icons-vue';
-import { listMyTaskNodes, listTasks, getChecklistList, updateChecklist, getTaskNodeAttachments, getTaskComments, createTaskComment } from '@/api';
+import { Search, Refresh, User, Star, Calendar, OfficeBuilding, Document, Picture, Download, View, Loading } from '@element-plus/icons-vue';
+import { listMyTaskNodes, listTasks, listTaskNodesByTask, getChecklistList, updateChecklist, getTaskNodeAttachments, getTaskComments, createTaskComment, deleteTaskNode } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { getFileUrl } from '@/utils/fileUrl';
 
 const router = useRouter();
@@ -274,6 +259,11 @@ const attachmentLoading = ref(false);
 const comments = ref<any[]>([]);
 const commentLoading = ref(false);
 const newComment = ref('');
+
+// 按任务分组
+const expandedTasks = ref<Set<string>>(new Set());
+const taskNodesMap = ref<Record<string, any[]>>({});
+const nodesLoading = ref<Set<string>>(new Set());
 
 // Filters
 const filters = ref({
@@ -295,6 +285,30 @@ const filteredTasks = computed(() => {
     const matchStatus = status === null || task.status === status;
     return matchKeyword && matchStatus;
   });
+});
+
+// 按任务分组
+interface TaskGroup {
+  taskId: string;
+  taskTitle: string;
+  nodes: any[];
+}
+
+const groupedTasks = computed((): TaskGroup[] => {
+  const taskGroups: Record<string, TaskGroup> = {};
+  filteredTasks.value.forEach((task) => {
+    const tid = task.taskId;
+    if (!tid) return;
+    if (!taskGroups[tid]) {
+      taskGroups[tid] = {
+        taskId: tid,
+        taskTitle: task.taskTitle,
+        nodes: []
+      };
+    }
+    taskGroups[tid].nodes.push(task);
+  });
+  return Object.values(taskGroups).filter(g => g.nodes.length > 0);
 });
 
 // Methods
@@ -321,6 +335,40 @@ function openDrawer(task: any) {
   loadChecklists(task.id);
   loadAttachments(task.id);
   loadComments(task.taskId, task.id);
+}
+
+async function toggleTaskExpand(taskId: string) {
+  if (expandedTasks.value.has(taskId)) {
+    expandedTasks.value.delete(taskId);
+  } else {
+    expandedTasks.value.add(taskId);
+    if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
+      nodesLoading.value.add(taskId);
+      try {
+        const resp = await listTaskNodesByTask({ taskId });
+        if (resp.data.code === 200) {
+          taskNodesMap.value[taskId] = resp.data.data || [];
+        }
+      } catch (e) {
+        console.error('加载节点失败:', e);
+      } finally {
+        nodesLoading.value.delete(taskId);
+      }
+    }
+  }
+}
+
+async function handleDeleteNode(node: any, taskId: string) {
+  try {
+    await ElMessageBox.confirm(`确定要删除任务节点「${node.NodeName || node.nodeName || '未命名节点'}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
+    const resp = await deleteTaskNode({ nodeId: node.TaskNodeId || node.id });
+    if (resp.data.code === 200) {
+      ElMessage.success('节点已删除');
+      loadMyTasks();
+    } else {
+      ElMessage.error(resp.data.msg || '删除失败');
+    }
+  } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
 }
 
 async function loadChecklists(taskNodeId: string) {
@@ -721,320 +769,177 @@ onActivated(() => {
 }
 
 .view-details-btn {
-  white-space: nowrap;
-}
+    display: none;
+  }
 
-.task-name {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-1) 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-status {
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-}
-
-.status-success {
-  background: var(--color-success-light);
-  color: var(--color-success);
-}
-
-.status-warning {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-}
-
-.status-info {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-}
-
-.task-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.task-meta {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.task-progress {
-  margin-top: var(--space-2);
-}
-
-/* Drawer */
-.task-drawer :deep(.el-drawer__header) {
-  margin-bottom: 0;
-  padding: var(--space-5);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.task-drawer :deep(.el-drawer__body) {
-  padding: 0;
-}
-
-.drawer-content {
-  padding: var(--space-5);
-}
-
-.info-section {
-  margin-bottom: var(--space-6);
-}
-
-.section-title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-4) 0;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.info-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
-.info-value {
-  font-size: var(--font-size-base);
-  color: var(--text-primary);
-}
-
-/* Checklist */
-.checklist-container {
-  min-height: 100px;
-}
-
-.checklist-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.checklist-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-}
-
-.checklist-item:hover {
-  background: var(--bg-hover);
-}
-
-.checklist-item.completed .checklist-content {
-  color: var(--text-muted);
-  text-decoration: line-through;
-}
-
-.checklist-checkbox {
-  flex-shrink: 0;
-}
-
-.checklist-content {
-  flex: 1;
-  font-size: var(--font-size-base);
-  color: var(--text-primary);
-}
-
-.checklist-time {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-/* Attachments */
-.attachment-container {
-  min-height: 100px;
-}
-
-.attachment-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.attachment-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-}
-
-.attachment-item:hover {
-  background: var(--bg-hover);
-}
-
-.attachment-icon {
-  flex-shrink: 0;
-  color: var(--text-secondary);
-}
-
-.attachment-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.attachment-name {
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attachment-meta {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  margin-top: var(--space-1);
-}
-
-.attachment-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-/* Comments */
-.comment-container {
-  min-height: 200px;
-}
-
-.comment-input-box {
+/* 浮窗样式 */
+.task-card-wrapper {
+  position: relative;
   margin-bottom: var(--space-4);
-  padding: var(--space-4);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
 }
 
-.comment-input {
-  margin-bottom: var(--space-3);
+.task-card {
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.comment-actions {
-  display: flex;
-  justify-content: flex-end;
+.task-card:hover {
+  border-color: var(--color-primary-light);
 }
 
-.comment-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.comment-item {
-  padding: var(--space-4);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-primary);
-}
-
-.comment-header {
+.task-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-2);
 }
 
-.comment-author {
+.task-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.node-count {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+}
+
+.expand-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.expand-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.expand-btn svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 浮窗 */
+.nodes-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-top: var(--space-2);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.nodes-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
 }
 
-.comment-time {
+.nodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+
+.node-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.node-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.node-title:hover {
+  color: var(--color-primary);
+}
+
+.node-status {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.node-status.status-0 {
+  background: rgba(29, 78, 216, 0.1);
+  color: #1D4ED8;
+}
+
+.node-status.status-1 {
+  background: rgba(217, 119, 6, 0.1);
+  color: #D97706;
+}
+
+.node-status.status-2 {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.node-meta {
+  display: flex;
+  gap: var(--space-3);
   font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
-.comment-content {
-  font-size: var(--font-size-base);
-  color: var(--text-primary);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+.node-menu-dropdown {
+  flex-shrink: 0;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .my-tasks-page {
-    padding: var(--space-4);
-  }
+.node-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+}
 
-  .task-list {
-    grid-template-columns: 1fr;
-  }
+.node-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 
-  .filters-bar {
-    flex-direction: column;
-  }
-
-  .filter-input {
-    width: 100%;
-  }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .task-drawer {
-    width: 100% !important;
-  }
-
-  .task-header-actions {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .view-details-btn {
-    font-size: var(--font-size-xs);
-    padding: 4px 8px;
-  }
+.nodes-empty {
+  text-align: center;
+  padding: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 </style>
