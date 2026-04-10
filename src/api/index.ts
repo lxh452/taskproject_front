@@ -203,7 +203,7 @@ export const listTaskNodesByTask = (data: any) =>
     request({ url: '/tasknode/list', method: 'post', data });
 
 // 删除任务节点
-export const deleteTaskNode = (data: { nodeId: string }) =>
+export const deleteTaskNode = (data: { taskNodeId: string }) =>
     request({ url: '/tasknode/delete', method: 'post', data });
 
 // Employee Leave

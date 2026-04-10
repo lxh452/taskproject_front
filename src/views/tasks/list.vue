@@ -350,7 +350,7 @@ function formatDate(date: string): string {
 function goToNodeDetail(node: any) {
   const nodeId = node.TaskNodeId || node.id;
   if (nodeId) {
-    router.push({ name: 'tasknodes-detail', params: { id: nodeId } });
+    router.push({ name: 'task-nodes-detail', params: { id: nodeId } });
   }
 }
 
@@ -359,7 +359,7 @@ function editNode(node: any) {
   const nodeId = node.TaskNodeId || node.id;
   if (nodeId) {
     nodeDialogVisible.value = false;
-    router.push({ name: 'tasknodes-detail', params: { id: nodeId }, query: { edit: 'true' } });
+    router.push({ name: 'task-nodes-detail', params: { id: nodeId }, query: { edit: 'true' } });
   }
 }
 
@@ -380,7 +380,7 @@ async function deleteNode(node: any) {
       { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
     );
     
-    const resp = await deleteTaskNode({ nodeId });
+    const resp = await deleteTaskNode({ taskNodeId: nodeId });
     if (resp.data.code === 200) {
       ElMessage.success('节点已删除');
       // 从当前列表中移除该节点
@@ -450,7 +450,7 @@ async function handleDeleteTask(task: any) {
 async function handleDeleteNode(node: any, taskId: string) {
   try {
     await ElMessageBox.confirm(`确定要删除任务节点「${node.TaskNodeTitle || node.nodeTitle || '未命名节点'}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
-    const resp = await deleteTaskNode({ nodeId: node.TaskNodeId || node.id });
+    const resp = await deleteTaskNode({ taskNodeId: node.TaskNodeId || node.id });
     if (resp.data.code === 200) {
       ElMessage.success('节点已删除');
       if (taskNodesMap.value[taskId]) {
@@ -462,7 +462,7 @@ async function handleDeleteNode(node: any, taskId: string) {
   } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
 }
 
-function goEditNode(nodeId: string) { router.push({ name: 'tasknodes-detail', params: { id: nodeId } }); }
+function goEditNode(nodeId: string) { router.push({ name: 'task-nodes-detail', params: { id: nodeId } }); }
 
 function handleTaskMenu(cmd: string, row: any) {
   if (cmd === 'view') viewDetail(row.id);
