@@ -52,8 +52,8 @@
             <template v-else>
               <div v-if="taskNodesMap[group.taskId]?.length > 0" class="nodes-list">
                 <div v-for="node in taskNodesMap[group.taskId]" :key="node.TaskNodeId" class="node-item">
-                  <div class="node-info">
-                    <span class="node-title" @click.stop="openDrawer(node)">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
+                  <div class="node-info" @click.stop="goToTask(group.taskId)">
+                    <span class="node-title">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
                     <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
                       {{ (node.NodeStatus ?? node.Status ?? node.status) === 2 ? '已完成' : (node.NodeStatus ?? node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
                     </span>
@@ -63,14 +63,14 @@
                     <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
                     <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
                   </div>
-                  <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, group.taskId) : openDrawer(node)" class="node-menu-dropdown">
+                  <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, group.taskId) : goToTask(group.taskId)" class="node-menu-dropdown">
                     <button class="node-menu-btn" @click.stop>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                     </button>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="view">查看详情</el-dropdown-item>
-                        <el-dropdown-item command="delete">删除</el-dropdown-item>
+                        <el-dropdown-item command="view">查看任务详情</el-dropdown-item>
+                        <el-dropdown-item command="delete">删除节点</el-dropdown-item>
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
@@ -84,270 +84,6 @@
       <el-empty v-else-if="!loading" description="暂无任务节点" />
     </div>
 
-    <!-- Task Node Drawer -->
-    <el-drawer
-      v-model="drawerVisible"
-      :title="currentTask?.nodeName || '任务节点详情'"
-      size="650px"
-      direction="rtl"
-      class="task-node-drawer"
-      :before-close="handleDrawerClose"
-    >
-      <div v-if="currentTask" class="drawer-content">
-        <!-- Task Basic Info Card -->
-        <div class="info-card">
-          <div class="card-header">
-            <el-icon :size="20" color="var(--color-primary)"><Document /></el-icon>
-            <h3 class="card-title">基本信息</h3>
-          </div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">
-                <el-icon><Document /></el-icon>
-                所属任务
-              </div>
-              <el-button 
-                link 
-                type="primary" 
-                class="task-link-btn"
-                @click="goToTask(currentTask.taskId)"
-              >
-                {{ currentTask.taskTitle || '-' }}
-                <el-icon><Right /></el-icon>
-              </el-button>
-            </div>
-            <div class="info-item">
-              <div class="info-label">
-                <el-icon><OfficeBuilding /></el-icon>
-                所属部门
-              </div>
-              <span class="info-value">
-                <el-tag size="small" effect="plain">
-                  {{ currentTask.departmentName || currentTask.department || '-' }}
-                </el-tag>
-              </span>
-            </div>
-            <div class="info-item">
-              <div class="info-label">
-                <el-icon><User /></el-icon>
-                负责人
-              </div>
-              <span class="info-value">
-                <el-avatar 
-                  v-if="currentTask.leaderName" 
-                  :size="24" 
-                  style="margin-right: 6px; vertical-align: middle;"
-                >
-                  {{ currentTask.leaderName.charAt(0) }}
-                </el-avatar>
-                {{ currentTask.leaderName || currentTask.LeaderName || '-' }}
-              </span>
-            </div>
-            <div class="info-item">
-              <div class="info-label">
-                <el-icon><Calendar /></el-icon>
-                截止时间
-              </div>
-              <span class="info-value" :class="{ 'text-danger': isOverdue(currentTask.deadline) }">
-                <el-icon><Warning /></el-icon>
-                {{ currentTask.deadline ? new Date(currentTask.deadline).toLocaleDateString('zh-CN') : '-' }}
-              </span>
-            </div>
-            <div class="info-item full-width">
-              <div class="info-label">
-                <el-icon><TrendCharts /></el-icon>
-                进度
-              </div>
-              <div class="progress-wrapper">
-                <el-progress 
-                  :percentage="currentTask.progress || 0" 
-                  :stroke-width="10"
-                  :status="getProgressStatus(currentTask)"
-                  :format="formatProgress"
-                />
-              </div>
-            </div>
-            <div class="info-item" v-if="currentTask.status !== undefined">
-              <div class="info-label">
-                <el-icon><CircleCheck /></el-icon>
-                状态
-              </div>
-              <el-tag :type="getStatusType(currentTask.status)" size="small" effect="light">
-                {{ getStatusText(currentTask.status) }}
-              </el-tag>
-            </div>
-            <div class="info-item" v-if="currentTask.priority !== undefined">
-              <div class="info-label">
-                <el-icon><Flag /></el-icon>
-                优先级
-              </div>
-              <el-tag :type="getPriorityType(currentTask.priority)" size="small" effect="light">
-                {{ getPriorityText(currentTask.priority) }}
-              </el-tag>
-            </div>
-          </div>
-        </div>
-
-        <!-- Checklist Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <el-icon :size="20" color="#10b981"><CircleCheck /></el-icon>
-            <h3 class="card-title">检查清单</h3>
-            <el-tag size="small" type="info" class="count-tag">
-              {{ getCompletedCount(checklists) }}/{{ checklists.length }}
-            </el-tag>
-          </div>
-          <div v-loading="checklistLoading" class="checklist-container">
-            <div v-if="checklists.length > 0" class="checklist-list">
-              <div 
-                v-for="item in checklists" 
-                :key="item.id" 
-                class="checklist-item"
-                :class="{ 'completed': item.isCompleted === 1 }"
-              >
-                <el-checkbox 
-                  :model-value="item.isCompleted === 1"
-                  @change="toggleChecklistComplete(item)"
-                  class="checklist-checkbox"
-                  size="large"
-                />
-                <div class="checklist-content-wrapper">
-                  <span class="checklist-content">{{ item.content }}</span>
-                  <span v-if="item.completeTime" class="checklist-time">
-                    <el-icon><Clock /></el-icon>
-                    {{ formatChecklistTime(item.completeTime) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <el-empty 
-              v-else 
-              description="暂无检查清单" 
-              :image-size="100"
-              class="empty-state"
-            />
-          </div>
-        </div>
-
-        <!-- Attachments Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <el-icon :size="20" color="#3b82f6"><Folder /></el-icon>
-            <h3 class="card-title">附件</h3>
-            <el-tag size="small" type="info" class="count-tag">
-              {{ attachments.length }} 个文件
-            </el-tag>
-          </div>
-          <div v-loading="attachmentLoading" class="attachment-container">
-            <div v-if="attachments.length > 0" class="attachment-list">
-              <div 
-                v-for="file in attachments" 
-                :key="file.fileId || file.id" 
-                class="attachment-item"
-              >
-                <div class="attachment-icon" :class="getFileIconClass(file.fileType)">
-                  <el-icon :size="28">
-                    <component :is="getFileIcon(file.fileType)" />
-                  </el-icon>
-                </div>
-                <div class="attachment-info">
-                  <div class="attachment-name">{{ file.fileName || '未命名文件' }}</div>
-                  <div class="attachment-meta">
-                    <span>{{ file.fileSize ? formatFileSize(file.fileSize) : '-' }}</span>
-                    <span v-if="file.uploadTime"> · {{ formatDate(file.uploadTime) }}</span>
-                  </div>
-                </div>
-                <div class="attachment-actions">
-                  <el-button 
-                    circle
-                    type="primary" 
-                    :icon="View" 
-                    size="small"
-                    @click="previewAttachment(file)"
-                    title="预览"
-                  />
-                  <el-button 
-                    circle
-                    type="success" 
-                    :icon="Download" 
-                    size="small"
-                    @click="downloadAttachment(file)"
-                    title="下载"
-                  />
-                </div>
-              </div>
-            </div>
-            <el-empty 
-              v-else 
-              description="暂无附件" 
-              :image-size="100"
-              class="empty-state"
-            />
-          </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <el-icon :size="20" color="#8b5cf6"><ChatDotRound /></el-icon>
-            <h3 class="card-title">评论讨论</h3>
-            <el-tag size="small" type="info" class="count-tag">
-              {{ comments.length }} 条评论
-            </el-tag>
-          </div>
-          <div v-loading="commentLoading" class="comment-container">
-            <!-- Comment Input -->
-            <div class="comment-input-box">
-              <el-input
-                v-model="newComment"
-                type="textarea"
-                :rows="3"
-                placeholder="分享你的想法..."
-                class="comment-input"
-                maxlength="500"
-                show-word-limit
-              />
-              <div class="comment-actions">
-                <el-button type="primary" @click="submitComment" :icon="Promotion">
-                  发表评论
-                </el-button>
-              </div>
-            </div>
-
-            <!-- Comment List -->
-            <div v-if="comments.length > 0" class="comment-list">
-              <div 
-                v-for="comment in comments" 
-                :key="comment.commentId || comment._id" 
-                class="comment-item"
-              >
-                <div class="comment-avatar">
-                  <el-avatar :size="40">
-                    {{ (comment.employeeName || '匿')[0] }}
-                  </el-avatar>
-                </div>
-                <div class="comment-content-wrapper">
-                  <div class="comment-header">
-                    <span class="comment-author">{{ comment.employeeName || '匿名用户' }}</span>
-                    <span class="comment-time">
-                      <el-icon><Clock /></el-icon>
-                      {{ formatCommentTime(comment.createTime) }}
-                    </span>
-                  </div>
-                  <div class="comment-content">{{ comment.content }}</div>
-                </div>
-              </div>
-            </div>
-            <el-empty 
-              v-else 
-              description="暂无评论，快来抢沙发吧" 
-              :image-size="100"
-              class="empty-state"
-            />
-          </div>
-        </div>
-      </div>
-    </el-drawer>
   </div>
 </template>
 
@@ -355,31 +91,20 @@
 import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
-  Search, Refresh, User, Star, Calendar, OfficeBuilding, Document, Picture, Download, View, Loading,
-  Right, TrendCharts, CircleCheck, Flag, Warning, Folder, ChatDotRound, Clock, Promotion
+  Search, Refresh, User, Star, Calendar, OfficeBuilding, Loading
 } from '@element-plus/icons-vue';
-import { listMyTaskNodes, listTasks, listTaskNodesByTask, getChecklistList, updateChecklist, getTaskNodeAttachments, getTaskComments, createTaskComment, deleteTaskNode } from '@/api';
+import { listMyTaskNodes, listTasks, listTaskNodesByTask, deleteTaskNode } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getFileUrl } from '@/utils/fileUrl';
 
 const router = useRouter();
 
 // State
 const activeTab = ref('executor');
 const loading = ref(false);
-const drawerVisible = ref(false);
 const executorTasks = ref<any[]>([]);
 const leaderTasks = ref<any[]>([]);
-const currentTask = ref<any>(null);
 const taskMap = ref<Record<string, any>>({});
-const checklists = ref<any[]>([]);
-const checklistLoading = ref(false);
-const attachments = ref<any[]>([]);
-const attachmentLoading = ref(false);
-const comments = ref<any[]>([]);
-const commentLoading = ref(false);
-const newComment = ref('');
 
 // 按任务分组
 const expandedTasks = ref<Record<string, boolean>>({});
@@ -450,14 +175,6 @@ function resetFilters() {
   };
 }
 
-function openDrawer(task: any) {
-  currentTask.value = task;
-  drawerVisible.value = true;
-  loadChecklists(task.id);
-  loadAttachments(task.id);
-  loadComments(task.taskId, task.id);
-}
-
 async function toggleTaskExpand(taskId: string) {
   if (!taskId || typeof taskId !== 'string') return;
   
@@ -494,307 +211,6 @@ async function handleDeleteNode(node: any, taskId: string) {
       ElMessage.error(resp.data.msg || '删除失败');
     }
   } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
-}
-
-async function loadChecklists(taskNodeId: string) {
-  checklistLoading.value = true;
-  try {
-    const resp = await getChecklistList({ taskNodeId });
-    if (resp.data?.code === 200) {
-      checklists.value = resp.data?.data?.list || [];
-    } else {
-      checklists.value = [];
-    }
-  } catch (error) {
-    console.error('加载清单失败:', error);
-    checklists.value = [];
-  } finally {
-    checklistLoading.value = false;
-  }
-}
-
-async function toggleChecklistComplete(checklist: any) {
-  try {
-    const newStatus = checklist.isCompleted === 1 ? 0 : 1;
-    const resp = await updateChecklist({
-      checklistId: checklist.id,
-      isCompleted: newStatus,
-    });
-
-    if (resp.data.code === 200) {
-      checklist.isCompleted = newStatus;
-      checklist.completeTime = newStatus === 1 ? new Date().toISOString() : null;
-      ElMessage.success(newStatus === 1 ? '已完成' : '已取消完成');
-      
-      // Update progress in current task
-      if (currentTask.value) {
-        const total = checklists.value.length;
-        const completed = checklists.value.filter(c => c.isCompleted === 1).length;
-        currentTask.value.progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-      }
-    } else {
-      ElMessage.error(resp.data.msg || '操作失败');
-    }
-  } catch (error) {
-    console.error('更新清单失败:', error);
-    ElMessage.error('网络错误，请稍后重试');
-  }
-}
-
-async function loadAttachments(taskNodeId: string) {
-  attachmentLoading.value = true;
-  try {
-    const resp = await getTaskNodeAttachments({ taskNodeId });
-    if (resp.data?.code === 200) {
-      attachments.value = resp.data?.data?.list || resp.data?.data || [];
-    } else {
-      attachments.value = [];
-    }
-  } catch (error) {
-    console.error('加载附件失败:', error);
-    attachments.value = [];
-  } finally {
-    attachmentLoading.value = false;
-  }
-}
-
-function getFileIcon(fileType: string) {
-  if (!fileType) return Document;
-  const type = fileType.toLowerCase();
-  if (type.includes('image') || type.includes('png') || type.includes('jpg') || type.includes('jpeg')) {
-    return Picture;
-  }
-  return Document;
-}
-
-function isImage(fileType: string): boolean {
-  if (!fileType) return false;
-  const type = fileType.toLowerCase();
-  return type.includes('image') || type.includes('png') || type.includes('jpg') || type.includes('jpeg') || type.includes('gif');
-}
-
-function previewAttachment(file: any) {
-  if (!file.fileId) return;
-  router.push({
-    path: `/file/preview/${file.fileId}`,
-    query: {
-      taskId: currentTask.value?.taskId || '',
-      nodeId: currentTask.value?.id || '',
-      fileName: file.fileName
-    }
-  });
-}
-
-async function downloadAttachment(file: any) {
-  if (!file.fileId && !file.fileUrl) return;
-  try {
-    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    if (!token) {
-      ElMessage.warning('请先登录');
-      return;
-    }
-    const url = getFileUrl(file.fileUrl, file.fileId);
-    const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) {
-      ElMessage.error('下载文件失败');
-      return;
-    }
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = file.fileName || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-  } catch (error) {
-    console.error('下载文件失败:', error);
-    ElMessage.error('下载文件失败');
-  }
-}
-
-async function loadComments(taskId: string, taskNodeId: string) {
-  commentLoading.value = true;
-  try {
-    const resp = await getTaskComments({ taskId, taskNodeId, page: 1, pageSize: 100 });
-    if (resp.data?.code === 200) {
-      comments.value = resp.data?.data?.list || resp.data?.data || [];
-    } else {
-      comments.value = [];
-    }
-  } catch (error) {
-    console.error('加载评论失败:', error);
-    comments.value = [];
-  } finally {
-    commentLoading.value = false;
-  }
-}
-
-async function submitComment() {
-  if (!newComment.value.trim()) {
-    ElMessage.warning('请输入评论内容');
-    return;
-  }
-
-  if (!currentTask.value) return;
-
-  try {
-    const resp = await createTaskComment({
-      taskId: currentTask.value.taskId,
-      taskNodeId: currentTask.value.id,
-      content: newComment.value,
-    });
-
-    if (resp.data.code === 200) {
-      ElMessage.success('评论成功');
-      newComment.value = '';
-      loadComments(currentTask.value.taskId, currentTask.value.id);
-    } else {
-      ElMessage.error(resp.data.msg || '评论失败');
-    }
-  } catch (error) {
-    console.error('提交评论失败:', error);
-    ElMessage.error('网络错误，请稍后重试');
-  }
-}
-
-function formatCommentTime(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 7) return `${days}天前`;
-  return date.toLocaleDateString('zh-CN');
-}
-
-// ========== 新增的辅助函数 ==========
-function handleDrawerClose(done: () => void) {
-  drawerVisible.value = false;
-  currentTask.value = null;
-  checklists.value = [];
-  attachments.value = [];
-  comments.value = [];
-  done();
-}
-
-function isOverdue(deadline: string): boolean {
-  if (!deadline) return false;
-  return new Date(deadline) < new Date();
-}
-
-function getProgressStatus(task: any): '' | 'success' | 'exception' | 'warning' {
-  if (!task) return '';
-  const progress = task.progress || 0;
-  if (progress >= 100) return 'success';
-  if (isOverdue(task.deadline)) return 'exception';
-  const deadline = task.deadline ? new Date(task.deadline) : null;
-  if (deadline) {
-    const now = new Date();
-    const diff = deadline.getTime() - now.getTime();
-    const daysLeft = diff / (1000 * 60 * 60 * 24);
-    if (daysLeft <= 1) return 'warning';
-  }
-  return '';
-}
-
-function formatProgress(percentage: number): string {
-  return `${percentage}%`;
-}
-
-function getStatusType(status: number): 'success' | 'warning' | 'info' | 'danger' {
-  switch (status) {
-    case 2: return 'success';
-    case 1: return 'warning';
-    case 0: return 'info';
-    default: return 'info';
-  }
-}
-
-function getStatusText(status: number): string {
-  switch (status) {
-    case 2: return '已完成';
-    case 1: return '进行中';
-    case 0: return '待处理';
-    default: return '未知';
-  }
-}
-
-function getPriorityType(priority: number): 'danger' | 'warning' | 'info' {
-  switch (priority) {
-    case 3: return 'danger';
-    case 2: return 'warning';
-    case 1: return 'info';
-    default: return 'info';
-  }
-}
-
-function getPriorityText(priority: number): string {
-  switch (priority) {
-    case 3: return '紧急';
-    case 2: return '重要';
-    case 1: return '普通';
-    default: return '未知';
-  }
-}
-
-function getCompletedCount(list: any[]): number {
-  return list.filter(item => item.isCompleted === 1).length;
-}
-
-function formatChecklistTime(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (hours < 1) return '刚刚完成';
-  if (hours < 24) return `${hours}小时前完成`;
-  if (days < 7) return `${days}天前完成`;
-  return date.toLocaleDateString('zh-CN');
-}
-
-function formatFileSize(bytes: number): string {
-  if (!bytes) return '-';
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${Math.round(kb)} KB`;
-  const mb = kb / 1024;
-  return `${mb.toFixed(2)} MB`;
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('zh-CN');
-}
-
-function getFileIconClass(fileType: string): string {
-  if (!fileType) return 'file-icon-default';
-  const type = fileType.toLowerCase();
-  if (type.includes('image') || type.includes('png') || type.includes('jpg')) {
-    return 'file-icon-image';
-  }
-  if (type.includes('pdf')) {
-    return 'file-icon-pdf';
-  }
-  if (type.includes('word') || type.includes('document')) {
-    return 'file-icon-word';
-  }
-  if (type.includes('excel') || type.includes('sheet')) {
-    return 'file-icon-excel';
-  }
-  return 'file-icon-default';
 }
 
 function goToTask(taskId: string) {

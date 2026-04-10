@@ -226,13 +226,13 @@ async function loadData() {
             const progress = n.progress ?? 0;
             const status = n.status ?? n.nodeStatus ?? 0;
             const taskId = n.taskId || n.TaskId || '';
-            const task = taskMap.value[String(taskId)] || {};
+            const task = taskMap.value[String(taskId)];
 
             return {
                 id: n.id || n.taskNodeId,
                 nodeName: n.nodeName || n.taskNodeName || n.NodeName,
                 taskId,
-                taskTitle: task.title || '-',
+                taskTitle: task?.title || n.taskTitle || n.TaskTitle || '未命名任务',
                 department: n.departmentName || n.departmentId || '-',
                 deadline: deadline ? new Date(deadline).toLocaleDateString('zh-CN') : '-',
                 progress,
