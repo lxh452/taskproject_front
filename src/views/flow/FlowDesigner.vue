@@ -261,8 +261,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import { ElMessage } from 'element-plus';
-import { createTaskNode } from '@/api';
-
+import { createTaskNode, streamAIChat } from '@/api';
 
 interface DesignOption {
   id: string;
@@ -282,6 +281,52 @@ interface DesignOption {
 }
 
 const { fitView } = useVueFlow();
+
+// AI 流式分析流程
+async function streamFlowAnalysis(
+  taskDescription: string,
+  callbacks: {
+    onStart?: (data: any) => void;
+    onChunk?: (data: any) => void;
+    onComplete?: (data: any) => void;
+    onError?: (error: Error) => void;
+  }
+) {
+  return new Promise((resolve, reject) => {
+    const accumulatedContent: string[] = [];
+    let flowData: any = null;
+
+    // 构建 AI 分析 prompt
+    const prompt = `请分析以下任务列表，生成流程图的节点和依赖关系。
+任务列表：
+${taskDescription}
+
+请返回 JSON 格式，包含 nodes 数组和 edges 数组：
+- nodes: 每个节点包含 id, label, x, y 坐标
+- edges: 每条边包含 id, source, target
+
+只返回 JSON 数据，不要其他说明。`;
+
+    streamAIChat(prompt, (content) => {
+      accumulatedContent.push(content);
+      callbacks.onChunk?.({ content });
+    }, (error) => {
+      callbacks.onError?.(error);
+      reject(error);
+    }).then((fullContent) => {
+      try {
+        // 解析完整的 JSON 内容
+        flowData = JSON.parse(fullContent);
+        callbacks.onComplete?.(flowData);
+        resolve(flowData);
+      } catch (error) {
+        console.error('解析 AI 返回数据失败:', error);
+        console.log('原始内容:', fullContent);
+        reject(error);
+      }
+    });
+  });
+}
 
 // 状态
 const taskListInput = ref('');
@@ -319,10 +364,12 @@ watch(taskListInput, (val) => {
 
 function clearInput() {
   taskListInput.value = '';
+  extractedTasks.value = [];
   designOptions.value = [];
   selectedDesign.value = null;
   flowNodes.value = [];
   flowEdges.value = [];
+  isAIGenerated.value = false;
 }
 
 function getRiskLabel(level: string) {
@@ -338,18 +385,43 @@ async function analyzeTasks() {
   if (extractedTasks.value.length === 0) return;
   isAnalyzing.value = true;
   analysisProgress.value = 0;
-
-  const steps = ['解析任务列表...', '分析依赖关系...', '生成设计方案...', '优化流程结构...'];
+  analyzeStep.value = '正在调用 AI 分析...';
 
   try {
-    for (let i = 0; i < steps.length; i++) {
-      analyzeStep.value = steps[i];
-      analysisProgress.value = (i + 1) * 25;
-      await new Promise(r => setTimeout(r, 500));
-    }
-
-    // 生成设计方案
-    isAIGenerated.value = false;
+    // 构建任务描述
+    const taskDescription = extractedTasks.value.join('\n');
+    
+    // 调用 AI 流式接口
+    await streamFlowAnalysis(taskDescription, {
+      onStart: (data) => {
+        analyzeStep.value = 'AI 开始分析...';
+        analysisProgress.value = 10;
+      },
+      onChunk: (data) => {
+        analyzeStep.value = 'AI 分析中...';
+        analysisProgress.value = 50;
+      },
+      onComplete: (data) => {
+        analyzeStep.value = '分析完成';
+        analysisProgress.value = 100;
+        
+        // 解析 AI 返回的流程数据
+        if (data && data.nodes && data.edges) {
+          applyAIFlow(data);
+          ElMessage.success('AI 流程分析完成');
+        } else {
+          throw new Error('AI 返回的数据格式不正确');
+        }
+      },
+      onError: (error) => {
+        console.error('AI 分析失败:', error);
+        ElMessage.error('AI 分析失败，使用默认方案');
+        generateMockDesigns();
+      }
+    });
+  } catch (error) {
+    console.error('AI 分析异常:', error);
+    ElMessage.error('AI 分析异常，使用默认方案');
     generateMockDesigns();
   } finally {
     isAnalyzing.value = false;
@@ -454,49 +526,59 @@ function generateFlowFromDesign(design: DesignOption) {
 }
 
 
-// 应用AI助手生成的流程
+// 应用 AI 助手生成的流程
 function applyAIFlow(flowData: any) {
-  const nodes = flowData.nodes.map((node: any) => ({
-    id: node.id,
-    type: 'custom',
-    position: { x: node.x, y: node.y },
-    data: {
-      label: node.label,
-      status: 'pending',
-      assignee: '',
-      days: 1,
-      priority: 'medium'
-    }
-  }));
-
-  const edges = flowData.edges.map((edge: any) => ({
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    animated: true
-  }));
-
-  flowNodes.value = nodes;
-  flowEdges.value = edges;
-
-  const aiDesign: DesignOption = {
-    id: 'ai-generated',
-    name: 'AI智能生成方案',
-    description: '基于AI分析任务依赖关系自动生成的流程方案',
-    estimatedDays: Math.ceil(nodes.length * 0.8),
-    requiredPeople: Math.min(Math.ceil(nodes.length / 3), 5),
-    riskLevel: 'medium',
-    isRecommended: true,
-    type: 'hybrid',
-    confidence: 0.9
-  };
-
-  selectedDesign.value = aiDesign;
-
-  ElMessage.success('AI流程图已应用，可以在此基础上继续编辑');
-
+  // 清空现有数据，确保不会缓存旧数据
+  flowNodes.value = [];
+  flowEdges.value = [];
+  designOptions.value = [];
+  
   nextTick(() => {
-    fitView({ padding: 0.2 });
+    const nodes = flowData.nodes.map((node: any) => ({
+      id: node.id,
+      type: 'custom',
+      position: { x: node.x || 100, y: node.y || 100 },
+      data: {
+        label: node.label,
+        status: 'pending',
+        assignee: '',
+        days: 1,
+        priority: 'medium'
+      }
+    }));
+
+    const edges = flowData.edges.map((edge: any) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      animated: true
+    }));
+
+    flowNodes.value = nodes;
+    flowEdges.value = edges;
+
+    const aiDesign: DesignOption = {
+      id: 'ai-generated-' + Date.now(), // 使用时间戳确保唯一性
+      name: 'AI 智能生成方案',
+      description: '基于 AI 分析任务依赖关系自动生成的流程方案',
+      estimatedDays: Math.ceil(nodes.length * 0.8),
+      requiredPeople: Math.min(Math.ceil(nodes.length / 3), 5),
+      riskLevel: 'medium',
+      isRecommended: true,
+      type: 'hybrid',
+      confidence: 0.9,
+      nodes: nodes,
+      edges: edges
+    };
+
+    selectedDesign.value = aiDesign;
+    isAIGenerated.value = true;
+
+    ElMessage.success('AI 流程图已应用，可以在此基础上继续编辑');
+
+    nextTick(() => {
+      fitView({ padding: 0.2 });
+    });
   });
 }
 
