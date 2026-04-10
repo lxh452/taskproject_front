@@ -49,6 +49,10 @@ export const updateTaskProgress = (data: any) =>
 export const updateTask = (data: any) =>
     request({ url: '/task/update', method: 'put', data });
 
+// 删除任务
+export const deleteTask = (data: { taskId: string }) =>
+    request({ url: '/task/delete', method: 'post', data });
+
 // Handover
 export const getHandoverList = (data?: any) =>
     request({ url: '/handover/list', method: 'post', data: data || { page: 1, pageSize: 10 } });
@@ -197,6 +201,10 @@ export const updatePrerequisiteNodes = (data: { nodeId: string; prerequisiteNode
 
 export const listTaskNodesByTask = (data: any) =>
     request({ url: '/tasknode/list', method: 'post', data });
+
+// 删除任务节点
+export const deleteTaskNode = (data: { nodeId: string }) =>
+    request({ url: '/tasknode/delete', method: 'post', data });
 
 // Employee Leave
 export const employeeLeave = (data: { employeeId: string; leaveReason: string; leaveDate?: string }) =>

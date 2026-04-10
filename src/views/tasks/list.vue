@@ -60,61 +60,112 @@
           <div
             v-for="row in filteredRows"
             :key="row.id"
-            class="task-card"
-            :class="'priority-' + row.priorityType"
-            @click="viewDetail(row.id)"
+            class="task-card-wrapper"
           >
-            <div class="card-header">
-              <h3 class="task-title">{{ row.taskTitle }}</h3>
-              <span class="status-badge" :class="getStatusClass(row.status)">{{ row.statusText }}</span>
-            </div>
-
-            <div class="task-meta">
-              <span class="meta-item priority" :class="row.priorityType">
-                <span class="priority-dot"></span>
-                {{ row.priorityText }}
-              </span>
-              <span class="meta-item">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                {{ row.deadline || '无截止日期' }}
-              </span>
-            </div>
-
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">进度</span>
-                <span class="progress-value">{{ row.progress }}%</span>
+            <div
+              class="task-card"
+              :class="'priority-' + row.priorityType"
+              :style="{ cursor: 'default' }"
+            >
+              <div class="card-header">
+                <div class="task-title-row">
+                  <el-checkbox 
+                    v-model="row.checked" 
+                    @change="() => {}" 
+                    class="task-checkbox"
+                  />
+                  <h3 class="task-title" @click.stop="viewDetail(row.id)">{{ row.taskTitle }}</h3>
+                  <el-dropdown trigger="click" @command="(cmd: string) => handleTaskMenu(cmd, row)" class="task-menu-dropdown">
+                    <button class="menu-btn" @click.stop>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                    </button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="view">查看详情</el-dropdown-item>
+                        <el-dropdown-item command="edit">编辑任务</el-dropdown-item>
+                        <el-dropdown-item command="add-node">添加节点</el-dropdown-item>
+                        <el-dropdown-item command="delete" divided>删除任务</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+                <span class="status-badge" :class="getStatusClass(row.status)">{{ row.statusText }}</span>
               </div>
-              <div class="progress-bar">
-                <div class="progress-fill" :class="getProgressClass(row.progress)" :style="{ width: row.progress + '%' }"></div>
+
+              <div class="task-meta">
+                <span class="meta-item priority" :class="row.priorityType">
+                  <span class="priority-dot"></span>
+                  {{ row.priorityText }}
+                </span>
+                <span class="meta-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  {{ row.deadline || '无截止日期' }}
+                </span>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-label">进度</span>
+                  <span class="progress-value">{{ row.progress }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :class="getProgressClass(row.progress)" :style="{ width: row.progress + '%' }"></div>
+                </div>
+              </div>
+
+              <div class="expand-btn-row">
+                <button class="expand-btn" @click.stop="toggleTaskExpand(row.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.has(row.id) }">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                  {{ expandedTasks.has(row.id) ? '收起节点' : '查看节点' }}
+                  <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
+                </button>
               </div>
             </div>
 
-            <div class="card-actions">
-              <button class="action-btn" @click.stop="viewDetail(row.id)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                查看
-              </button>
-              <button class="action-btn" @click.stop="editTask(row.id)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                编辑
-              </button>
-              <button class="action-btn action-primary" @click.stop="openCreateNodeDialog(row)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                节点
-              </button>
+            <!-- 展开的任务节点列表 -->
+            <div v-if="expandedTasks.has(row.id)" class="nodes-panel">
+              <div v-if="nodesLoading.has(row.id)" class="nodes-loading">
+                <el-icon class="is-loading"><Loading /></el-icon> 加载中...
+              </div>
+              <template v-else>
+                <div v-if="taskNodesMap[row.id]?.length > 0" class="nodes-list">
+                  <div v-for="node in taskNodesMap[row.id].slice(0, 5)" :key="node.id" class="node-item">
+                    <div class="node-info">
+                      <span class="node-title" @click.stop="goEditNode(node.id)">{{ node.nodeTitle }}</span>
+                      <span class="node-status" :class="'status-' + (node.status ?? 0)">
+                        {{ node.status === 2 ? '已完成' : node.status === 1 ? '进行中' : '待处理' }}
+                      </span>
+                    </div>
+                    <div class="node-meta">
+                      <span v-if="node.executorName">执行人: {{ node.executorName }}</span>
+                      <span v-if="node.estimatedDays">预计 {{ node.estimatedDays }} 天</span>
+                    </div>
+                    <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, row.id) : goEditNode(node.id)" class="node-menu-dropdown">
+                      <button class="node-menu-btn" @click.stop>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                      </button>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                          <el-dropdown-item command="delete">删除</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </div>
+                  <div v-if="taskNodesMap[row.id].length > 5" class="nodes-more">
+                    还有 {{ taskNodesMap[row.id].length - 5 }} 个节点...
+                  </div>
+                </div>
+                <div v-else class="nodes-empty">
+                  暂无任务节点
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -145,9 +196,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { listTasks } from '@/api';
+import { listTasks, listTaskNodesByTask, deleteTask, deleteTaskNode } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Loading } from '@element-plus/icons-vue';
 import CreateTaskForm from './create-task-form.vue';
 import CreateNodeForm from '../tasknodes/create-node-form.vue';
 
@@ -158,6 +210,10 @@ const loading = ref(false);
 const createTaskDialogVisible = ref(false);
 const createNodeDialogVisible = ref(false);
 const selectedTaskId = ref('');
+const expandedTasks = ref<Set<string>>(new Set());
+const taskNodesMap = ref<Record<string, any[]>>({});
+const nodesLoading = ref<Set<string>>(new Set());
+const taskExecutorsMap = ref<Record<string, any>>({});
 
 const filteredRows = computed(() => {
   const { keyword, priority, status } = query.value;
@@ -177,6 +233,60 @@ function openCreateTaskDialog() {
 
 function openCreateNodeDialog(row: any) {
   router.push({ path: '/task-nodes/create', query: { taskId: row.id } });
+}
+
+async function toggleTaskExpand(taskId: string) {
+  if (expandedTasks.value.has(taskId)) {
+    expandedTasks.value.delete(taskId);
+  } else {
+    expandedTasks.value.add(taskId);
+    if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
+      nodesLoading.value.add(taskId);
+      try {
+        const resp = await listTaskNodesByTask({ taskId, page: 1, pageSize: 100 });
+        if (resp.data.code === 200) {
+          taskNodesMap.value[taskId] = resp.data.data?.list || [];
+        }
+      } finally {
+        nodesLoading.value.delete(taskId);
+      }
+    }
+  }
+}
+
+async function handleDeleteTask(task: any) {
+  try {
+    await ElMessageBox.confirm(`确定要删除任务「${task.taskTitle}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
+    const resp = await deleteTask({ taskId: task.id });
+    if (resp.data.code === 200) {
+      ElMessage.success('任务已删除');
+      loadData();
+    } else {
+      ElMessage.error(resp.data.msg || '删除失败');
+    }
+  } catch { if (error !== 'cancel') ElMessage.error('删除失败'); }
+}
+
+async function handleDeleteNode(node: any, taskId: string) {
+  try {
+    await ElMessageBox.confirm(`确定要删除任务节点「${node.nodeTitle}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
+    const resp = await deleteTaskNode({ nodeId: node.id });
+    if (resp.data.code === 200) {
+      ElMessage.success('节点已删除');
+      taskNodesMap.value[taskId] = taskNodesMap.value[taskId].filter((n: any) => n.id !== node.id);
+    } else {
+      ElMessage.error(resp.data.msg || '删除失败');
+    }
+  } catch { if (error !== 'cancel') ElMessage.error('删除失败'); }
+}
+
+function goEditNode(nodeId: string) { router.push({ name: 'tasknodes-detail', params: { id: nodeId } }); }
+
+function handleTaskMenu(cmd: string, row: any) {
+  if (cmd === 'view') viewDetail(row.id);
+  else if (cmd === 'edit') editTask(row.id);
+  else if (cmd === 'add-node') openCreateNodeDialog(row);
+  else if (cmd === 'delete') handleDeleteTask(row);
 }
 
 function handleTaskCreated() { createTaskDialogVisible.value = false; loadData(); }
@@ -223,6 +333,8 @@ async function loadData() {
         priorityText: pri.text,
         priorityType: pri.type,
         statusText: status === 1 ? '进行中' : status === 2 ? '已完成' : '待处理',
+        nodeCount: t.nodeCount || 0,
+        checked: false,
       };
     });
   } catch (error: any) {
@@ -702,5 +814,200 @@ html.dark-mode .action-btn.action-primary:hover {
   .task-card:hover {
     transform: none;
   }
+}
+
+/* New styles for task list with nodes */
+.task-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.task-checkbox {
+  flex-shrink: 0;
+}
+
+.task-title {
+  cursor: pointer;
+}
+
+.task-menu-dropdown {
+  flex-shrink: 0;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.expand-btn-row {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.expand-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.expand-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.expand-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.expand-btn svg.rotated {
+  transform: rotate(180deg);
+}
+
+.node-count {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+}
+
+.nodes-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  padding: var(--space-4);
+  margin-top: -1px;
+}
+
+.nodes-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.nodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+
+.node-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.node-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.node-title:hover {
+  color: var(--color-primary);
+}
+
+.node-status {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.node-status.status-0 {
+  background: rgba(29, 78, 216, 0.1);
+  color: #1D4ED8;
+}
+
+.node-status.status-1 {
+  background: rgba(217, 119, 6, 0.1);
+  color: #D97706;
+}
+
+.node-status.status-2 {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.node-meta {
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.node-menu-dropdown {
+  flex-shrink: 0;
+}
+
+.node-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.node-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nodes-more, .nodes-empty {
+  text-align: center;
+  padding: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 </style>
