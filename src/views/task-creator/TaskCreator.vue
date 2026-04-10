@@ -705,9 +705,9 @@ const handleAIProcess = async () => {
   try {
     // 构建上下文信息
     const polishContext: any = { 
-      priority: aiOptions.priority, 
-      duration: aiOptions.duration,
-      taskType: form.departmentIds?.length > 1 ? '跨部门协作' : '单部门任务'
+      priority: getPriorityValue(aiOptions.priority), // 转换为整数值
+      duration: aiOptions.duration === 'auto' ? 7 : parseInt(aiOptions.duration) || 7, // 转换为整数天数
+      taskType: form.departmentIds?.length > 1 ? 1 : 0 // 转换为整数值
     };
     
     // 添加部门信息
