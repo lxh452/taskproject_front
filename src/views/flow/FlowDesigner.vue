@@ -267,7 +267,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import { ElMessage } from 'element-plus';
-import { suggestFlowDesigns, createTaskNode } from '@/api';
+import { createTaskNode } from '@/api';
 import FlowAIAssistant from './components/FlowAIAssistant.vue';
 
 interface DesignOption {
@@ -354,38 +354,9 @@ async function analyzeTasks() {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    // 调用AI API生成设计方案
+    // 生成设计方案
     isAIGenerated.value = false;
-    try {
-      const res = await suggestFlowDesigns({ tasks: extractedTasks.value, constraints: constraints.value });
-      console.log('AI设计方案响应:', res);
-
-      if (res?.data?.code === 0 && res?.data?.data?.designs && res.data.data.designs.length > 0) {
-        // 使用AI生成的设计方案
-        designOptions.value = res.data.data.designs.map((design: any) => ({
-          id: design.id || String(Math.random()),
-          name: design.name || '未命名方案',
-          description: design.description || '',
-          estimatedDays: design.estimatedDays || 7,
-          requiredPeople: design.requiredPeople || 2,
-          riskLevel: design.riskLevel || 'medium',
-          isRecommended: design.isRecommended || false,
-          type: design.type || 'hybrid',
-          steps: design.steps || [],
-          pros: design.pros || [],
-          cons: design.cons || [],
-          confidence: design.confidence || 0.8
-        }));
-        isAIGenerated.value = true;
-        console.log('✅ 成功加载AI生成的设计方案:', designOptions.value);
-      } else {
-        console.warn('⚠️ AI返回数据异常，使用默认方案');
-        generateMockDesigns();
-      }
-    } catch (error) {
-      console.error('❌ 调用AI设计API失败:', error);
-      generateMockDesigns();
-    }
+    generateMockDesigns();
   } finally {
     isAnalyzing.value = false;
   }
