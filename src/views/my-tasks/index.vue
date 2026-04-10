@@ -51,8 +51,14 @@
             </div>
             <template v-else>
               <div v-if="taskNodesMap[group.taskId]?.length > 0" class="nodes-list">
-                <div v-for="node in taskNodesMap[group.taskId]" :key="node.TaskNodeId" class="node-item">
-                  <div class="node-info" @click.stop="goToTask(group.taskId)">
+                <div 
+                  v-for="node in taskNodesMap[group.taskId]" 
+                  :key="node.TaskNodeId" 
+                  class="node-item"
+                  @click="goToTask(group.taskId)"
+                  style="cursor: pointer;"
+                >
+                  <div class="node-info">
                     <span class="node-title">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
                     <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
                       {{ (node.NodeStatus ?? node.Status ?? node.status) === 2 ? '已完成' : (node.NodeStatus ?? node.Status ?? node.status) === 1 ? '进行中' : '待处理' }}
@@ -63,17 +69,6 @@
                     <span v-if="node.ExecutorName || node.executorName">执行人: {{ node.ExecutorName || node.executorName }}</span>
                     <span v-if="node.EstimatedDays || node.estimatedDays">预计 {{ node.EstimatedDays || node.estimatedDays }} 天</span>
                   </div>
-                  <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'delete' ? handleDeleteNode(node, group.taskId) : goToTask(group.taskId)" class="node-menu-dropdown">
-                    <button class="node-menu-btn" @click.stop>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                    </button>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item command="view">查看任务详情</el-dropdown-item>
-                        <el-dropdown-item command="delete">删除节点</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
                 </div>
               </div>
               <div v-else class="nodes-empty">暂无任务节点</div>
@@ -93,7 +88,7 @@ import { useRouter } from 'vue-router';
 import { 
   Search, Refresh, User, Star, Calendar, OfficeBuilding, Loading
 } from '@element-plus/icons-vue';
-import { listMyTaskNodes, listTasks, listTaskNodesByTask, deleteTaskNode } from '@/api';
+import { listMyTaskNodes, listTasks, listTaskNodesByTask } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -198,19 +193,6 @@ async function toggleTaskExpand(taskId: string) {
       }
     }
   }
-}
-
-async function handleDeleteNode(node: any, taskId: string) {
-  try {
-    await ElMessageBox.confirm(`确定要删除任务节点「${node.NodeName || node.nodeName || '未命名节点'}」吗？`, '删除确认', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' });
-    const resp = await deleteTaskNode({ nodeId: node.TaskNodeId || node.id });
-    if (resp.data.code === 200) {
-      ElMessage.success('节点已删除');
-      loadMyTasks();
-    } else {
-      ElMessage.error(resp.data.msg || '删除失败');
-    }
-  } catch (err: any) { if (err !== 'cancel') ElMessage.error('删除失败'); }
 }
 
 function goToTask(taskId: string) {
