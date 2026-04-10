@@ -455,6 +455,31 @@ function generateFlowFromDesign(design: DesignOption) {
 
 
 // 应用AI助手生成的流程
+function applyAIFlow(flowData: any) {
+  const nodes = flowData.nodes.map((node: any) => ({
+    id: node.id,
+    type: 'custom',
+    position: { x: node.x, y: node.y },
+    data: {
+      label: node.label,
+      status: 'pending',
+      assignee: '',
+      days: 1,
+      priority: 'medium'
+    }
+  }));
+
+  const edges = flowData.edges.map((edge: any) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    animated: true
+  }));
+
+  flowNodes.value = nodes;
+  flowEdges.value = edges;
+
+  const aiDesign: DesignOption = {
     name: 'AI智能生成方案',
     description: '基于AI分析任务依赖关系自动生成的流程方案',
     estimatedDays: Math.ceil(nodes.length * 0.8),
@@ -469,7 +494,6 @@ function generateFlowFromDesign(design: DesignOption) {
 
   ElMessage.success('AI流程图已应用，可以在此基础上继续编辑');
 
-  // 自动调整视图
   nextTick(() => {
     fitView({ padding: 0.2 });
   });
