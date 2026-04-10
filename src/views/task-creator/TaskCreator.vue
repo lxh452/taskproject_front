@@ -533,7 +533,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, markRaw } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, markRaw, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type UploadUserFile } from 'element-plus'
 import {
@@ -579,6 +579,27 @@ const form = reactive({
   taskDeadline: '',
   departmentIds: [] as string[],
   responsibleEmployeeIds: [] as string[]
+})
+
+// 监听表单变化（调试用）
+watch(() => form.departmentIds, (newVal) => {
+  console.log('form.departmentIds 变化:', newVal)
+}, { deep: true })
+
+watch(() => form.responsibleEmployeeIds, (newVal) => {
+  console.log('form.responsibleEmployeeIds 变化:', newVal)
+}, { deep: true })
+
+watch(() => aiOptions.priority, (newVal) => {
+  console.log('aiOptions.priority 变化:', newVal)
+})
+
+watch(() => aiOptions.duration, (newVal) => {
+  console.log('aiOptions.duration 变化:', newVal)
+})
+
+watch(() => aiOptions.taskType, (newVal) => {
+  console.log('aiOptions.taskType 变化:', newVal)
 })
 
 const rules = {
