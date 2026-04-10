@@ -243,10 +243,14 @@ async function toggleTaskExpand(taskId: string) {
     if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
       nodesLoading.value.add(taskId);
       try {
-        const resp = await listTaskNodesByTask({ taskId, page: 1, pageSize: 100 });
+        console.log('请求节点列表, taskId:', taskId);
+        const resp = await listTaskNodesByTask({ taskId });
+        console.log('节点列表响应:', resp);
         if (resp.data.code === 200) {
           taskNodesMap.value[taskId] = resp.data.data?.list || [];
         }
+      } catch (e) {
+        console.error('加载节点失败:', e);
       } finally {
         nodesLoading.value.delete(taskId);
       }

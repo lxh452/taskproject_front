@@ -300,10 +300,10 @@ export const revokeInviteCode = (data: { inviteCode: string }) => {
 
 // ===== 任务评论 API (MongoDB) =====
 // 创建任务评论
-export const createTaskComment = (data: { 
-    taskId: string; 
-    taskNodeId?: string; 
-    content: string; 
+export const createTaskComment = (data: {
+    taskId: string;
+    taskNodeId?: string;
+    content: string;
     contentHtml?: string;
     atEmployeeIds?: string[];
     parentId?: string;
@@ -380,20 +380,20 @@ export const generateSubtasks = (data: { taskDescription: string }) =>
 
 // 流式润色任务
 export const streamPolishTask = (
-    data: { 
-        rawDescription: string; 
-        polishType?: string; 
+    data: {
+        rawDescription: string;
+        polishType?: string;
         taskId?: string;
         companyId?: string;
         departmentIds?: string[];
         responsibleEmployeeIds?: string[];
-        context?: Record<string, any> 
+        context?: Record<string, any>
     },
     onEvent: (event: string, data: any) => void,
     onError?: (error: Error) => void
 ) => {
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
-    
+
     // 使用 fetch 的 ReadableStream 实现流式请求
     return fetch('/api/v1/ai/task/polish/stream', {
         method: 'POST',
@@ -406,21 +406,21 @@ export const streamPolishTask = (
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        
+
         function readStream(): Promise<void> {
             return reader?.read().then(({ done, value }) => {
                 if (done) {
                     return;
                 }
-                
+
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n\n');
                 buffer = lines.pop() || '';
-                
+
                 for (const line of lines) {
                     if (line.trim()) {
                         // 解析 SSE 格式: event: xxx\ndata: xxx
@@ -437,11 +437,11 @@ export const streamPolishTask = (
                         }
                     }
                 }
-                
+
                 return readStream();
             }) || Promise.resolve();
         }
-        
+
         return readStream();
     }).catch(error => {
         console.error('流式请求失败:', error);
@@ -535,7 +535,7 @@ export const streamGenerateSubtasks = (
     onError?: (error: Error) => void
 ) => {
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
-    
+
     fetch('/api/v1/ai/task/subtasks/stream', {
         method: 'POST',
         headers: {
@@ -547,21 +547,21 @@ export const streamGenerateSubtasks = (
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        
+
         function readStream(): Promise<void> {
             return reader?.read().then(({ done, value }) => {
                 if (done) {
                     return;
                 }
-                
+
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n\n');
                 buffer = lines.pop() || '';
-                
+
                 for (const line of lines) {
                     if (line.trim()) {
                         const eventMatch = line.match(/event: (\w+)/);
@@ -577,11 +577,11 @@ export const streamGenerateSubtasks = (
                         }
                     }
                 }
-                
+
                 return readStream();
             }) || Promise.resolve();
         }
-        
+
         return readStream();
     }).catch(error => {
         console.error('流式请求失败:', error);
