@@ -338,6 +338,8 @@ function openDrawer(task: any) {
 }
 
 async function toggleTaskExpand(taskId: string) {
+  if (!taskId || typeof taskId !== 'string') return;
+  
   if (expandedTasks.value.has(taskId)) {
     expandedTasks.value.delete(taskId);
   } else {
@@ -345,7 +347,9 @@ async function toggleTaskExpand(taskId: string) {
     if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
       nodesLoading.value.add(taskId);
       try {
+        console.log('请求节点列表, taskId:', taskId);
         const resp = await listTaskNodesByTask({ taskId });
+        console.log('节点列表响应:', resp);
         if (resp.data.code === 200) {
           taskNodesMap.value[taskId] = resp.data.data || [];
         }
