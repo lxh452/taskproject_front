@@ -746,45 +746,15 @@ const handleAIProcess = async () => {
             currentStep.value = 4
             const r = data.result || {}
 
-            // 生成更丰富的结果
-            const nodes = (r.subtasks || []).map((item: any, idx: number) => ({
-              title: typeof item === 'string' ? item : item.title,
-              description: typeof item === 'string' ? `完成${item}相关工作，确保质量和进度` : item.description,
-              estimatedHours: item.estimatedHours || Math.floor(Math.random() * 12) + 4,
-              difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)],
-              skills: item.skills || ['Vue', 'TypeScript', 'API'].slice(0, Math.floor(Math.random() * 3) + 1),
-              dependency: idx > 0 ? (Math.random() > 0.5 ? idx : null) : null,
-              assigneeId: ''
-            }))
-
-            const totalHours = nodes.reduce((sum: number, n: any) => sum + (n.estimatedHours || 0), 0)
-
+            // 直接使用 AI 返回的润色结果
             result.value = {
               title: r.polishedTitle || taskInput.value.slice(0, 50),
               description: r.polishedDetail || taskInput.value,
               priority: aiOptions.priority,
-              estimatedDays: r.estimatedDays || Math.ceil(totalHours / 8),
-              confidence: r.confidence || Math.floor(Math.random() * 10) + 88,
-              complexity: r.complexity || ['simple', 'medium', 'complex'][Math.floor(Math.random() * 3)],
-              complexityAnalysis: r.complexityAnalysis || '该任务涉及多个模块的协调开发，需要前后端配合完成，技术实现有一定复杂度，建议分阶段推进。',
-              riskLevel: r.riskLevel || ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
-              riskAnalysis: r.riskAnalysis || '主要风险在于需求可能存在变更，建议在开发前与产品确认详细需求，预留一定的缓冲时间。',
-              totalHours,
-              suggestedTeamSize: Math.max(1, Math.ceil(nodes.length / 2)),
-              keyPoints: r.keyPoints || [
-                '明确功能边界和验收标准',
-                '设计合理的数据结构和接口',
-                '编写完善的单元测试',
-                '进行代码审查确保质量',
-                '制定详细的上线计划'
-              ],
-              subtasks: nodes,
-              suggestions: r.suggestions || [
-                '建议采用敏捷开发模式，分阶段交付',
-                '每个节点完成后进行代码审查',
-                '提前准备测试环境和测试数据',
-                '关键节点设置里程碑检查点'
-              ]
+              taskType: r.taskType !== undefined ? r.taskType : (form.departmentIds?.length > 1 ? 1 : 0),
+              taskPriority: r.taskPriority !== undefined ? r.taskPriority : aiOptions.priority,
+              estimatedDays: r.estimatedDays || aiOptions.duration,
+              subtasks: []
             }
 
             setTimeout(() => {
@@ -833,8 +803,11 @@ const resetToInput = () => {
 const editAsManual = () => {
   form.taskTitle = result.value.title
   form.taskDetail = result.value.description
-  form.taskPriority = getPriorityValue(result.value.priority)
-  form.taskDeadline = new Date(Date.now() + result.value.estimatedDays * 86400000).toISOString().split('T')[0]
+  form.taskPriority = getPriorityValue(result.value.taskPriority || result.value.priority)
+  form.taskDeadline = new Date(Date.now() + (result.value.estimatedDays || 7) * 86400000).toISOString().split('T')[0]
+  // 同步跨部门、紧急度等信息
+  form.departmentIds = form.departmentIds || []
+  form.responsibleEmployeeIds = form.responsibleEmployeeIds || []
   inputMode.value = 'manual'
   showResult.value = false
 }
@@ -848,10 +821,12 @@ const submitTask = async () => {
       companyId: employee.value?.companyId,
       taskTitle: result.value.title,
       taskDetail: result.value.description,
-      taskPriority: getPriorityValue(result.value.priority),
-      taskType: aiOptions.taskType,
-      taskDeadline: new Date(Date.now() + result.value.estimatedDays * 86400000).toISOString().split('T')[0],
-      nodeEmployeeIds: assignees
+      taskPriority: getPriorityValue(result.value.taskPriority || result.value.priority),
+      taskType: result.value.taskType !== undefined ? result.value.taskType : aiOptions.taskType,
+      taskDeadline: new Date(Date.now() + (result.value.estimatedDays || 7) * 86400000).toISOString().split('T')[0],
+      nodeEmployeeIds: assignees,
+      departmentIds: form.departmentIds || [],
+      responsibleEmployeeIds: form.responsibleEmployeeIds || []
     })
     ElMessage.success('任务创建成功')
     router.push('/tasks')
