@@ -240,7 +240,9 @@ async function handleDeleteNode(node: any, taskId: string) {
     const resp = await deleteTaskNode({ nodeId: node.TaskNodeId || node.id });
     if (resp.data.code === 200) {
       ElMessage.success('节点已删除');
-      taskNodesMap.value[taskId] = taskNodesMap.value[taskId].filter((n: any) => (n.TaskNodeId || n.id) !== (node.TaskNodeId || node.id));
+      if (taskNodesMap.value[taskId]) {
+        taskNodesMap.value[taskId] = taskNodesMap.value[taskId].filter((n: any) => (n.TaskNodeId || n.id) !== (node.TaskNodeId || node.id));
+      }
     } else {
       ElMessage.error(resp.data.msg || '删除失败');
     }
