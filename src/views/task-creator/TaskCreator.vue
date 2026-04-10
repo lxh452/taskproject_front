@@ -707,26 +707,26 @@ const handleAIProcess = async () => {
     const polishContext: any = { 
       priority: aiOptions.priority, 
       duration: aiOptions.duration,
-      taskType: form.value.departmentIds?.length > 1 ? '跨部门协作' : '单部门任务'
+      taskType: form.departmentIds?.length > 1 ? '跨部门协作' : '单部门任务'
     };
     
     // 添加部门信息
-    if (form.value.departmentIds?.length > 0) {
+    if (form.departmentIds?.length > 0) {
       const deptNames = departments.value
-        .filter(d => form.value.departmentIds?.includes(d.id))
+        .filter(d => form.departmentIds?.includes(d.id))
         .map(d => d.name);
       polishContext.departmentNames = deptNames;
     }
     
     // 添加负责人信息
-    if (form.value.responsibleEmployeeIds?.length > 0) {
-      const leaderName = employees.value
-        .find(e => form.value.responsibleEmployeeIds?.includes(e.id))?.name;
+    if (form.responsibleEmployeeIds?.length > 0) {
+      const leaderName = teamMembers.value
+        .find(e => form.responsibleEmployeeIds?.includes(e.id))?.name;
       if (leaderName) {
         polishContext.leaderName = leaderName;
       }
-      const employeeNames = employees.value
-        .filter(e => form.value.responsibleEmployeeIds?.includes(e.id))
+      const employeeNames = teamMembers.value
+        .filter(e => form.responsibleEmployeeIds?.includes(e.id))
         .map(e => e.name);
       polishContext.employeeNames = employeeNames;
     }
@@ -736,7 +736,7 @@ const handleAIProcess = async () => {
         { 
           rawDescription: taskInput.value, 
           companyId: employee.value?.companyId,
-          departmentIds: form.value.departmentIds || [],
+          departmentIds: form.departmentIds || [],
           context: polishContext 
         },
         (event, data) => {
