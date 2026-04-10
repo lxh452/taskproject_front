@@ -35,18 +35,18 @@
               </div>
               <div class="task-header-actions">
                 <button class="expand-btn" @click.stop="toggleTaskExpand(group.taskId)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.has(group.taskId) }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value[group.taskId] }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.has(group.taskId) ? '收起' : '展开' }}
+                  {{ expandedTasks.value[group.taskId] ? '收起' : '展开' }}
                 </button>
               </div>
             </div>
           </div>
 
           <!-- 节点浮窗 -->
-          <div v-if="expandedTasks.has(group.taskId)" class="nodes-panel">
-            <div v-if="nodesLoading.has(group.taskId)" class="nodes-loading">
+          <div v-if="expandedTasks.value[group.taskId]" class="nodes-panel">
+            <div v-if="nodesLoading.value[group.taskId]" class="nodes-loading">
               <el-icon class="is-loading"><Loading /></el-icon> 加载中...
             </div>
             <template v-else>
@@ -261,9 +261,9 @@ const commentLoading = ref(false);
 const newComment = ref('');
 
 // 按任务分组
-const expandedTasks = ref<Set<string>>(new Set());
+const expandedTasks = ref<Record<string, boolean>>({});
 const taskNodesMap = ref<Record<string, any[]>>({});
-const nodesLoading = ref<Set<string>>(new Set());
+const nodesLoading = ref<Record<string, boolean>>({});
 
 // Filters
 const filters = ref({
@@ -340,11 +340,11 @@ function openDrawer(task: any) {
 async function toggleTaskExpand(taskId: string) {
   if (!taskId || typeof taskId !== 'string') return;
   
-  if (expandedTasks.value.has(taskId)) {
-    expandedTasks.value.delete(taskId);
+  if (expandedTasks.value[taskId]) {
+    delete expandedTasks.value[taskId];
   } else {
-    expandedTasks.value.add(taskId);
-    if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
+    expandedTasks.value[taskId] = true;
+    if (!taskNodesMap.value[taskId] && !nodesLoading.value[taskId]) {
       nodesLoading.value.add(taskId);
       try {
         console.log('请求节点列表, taskId:', taskId);
@@ -353,6 +353,14 @@ async function toggleTaskExpand(taskId: string) {
         if (resp.data.code === 200) {
           taskNodesMap.value[taskId] = resp.data.data || [];
         }
+      } catch (e) {
+        console.error('加载节点失败:', e);
+      } finally {
+        nodesLoading.value.delete(taskId);
+      }
+    }
+  }
+}
       } catch (e) {
         console.error('加载节点失败:', e);
       } finally {

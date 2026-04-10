@@ -120,10 +120,10 @@
 
               <div class="expand-btn-row">
                 <button class="expand-btn" @click.stop="toggleTaskExpand(row.id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.has(row.id) }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value(row.id) }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.has(row.id) ? '收起' : '查看节点' }}
+                  {{ expandedTasks.value(row.id) ? '收起' : '查看节点' }}
                   <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
                 </button>
               </div>
@@ -171,9 +171,9 @@ const loading = ref(false);
 const createTaskDialogVisible = ref(false);
 const createNodeDialogVisible = ref(false);
 const selectedTaskId = ref('');
-const expandedTasks = ref<Set<string>>(new Set());
+const expandedTasks = ref<Record<string, boolean>>({});
 const taskNodesMap = ref<Record<string, any[]>>({});
-const nodesLoading = ref<Set<string>>(new Set());
+const nodesLoading = ref<Record<string, boolean>>({});
 const taskExecutorsMap = ref<Record<string, any>>({});
 
 const filteredRows = computed(() => {
@@ -197,12 +197,14 @@ function openCreateNodeDialog(row: any) {
 }
 
 async function toggleTaskExpand(taskId: string) {
-  if (expandedTasks.value.has(taskId)) {
-    expandedTasks.value.delete(taskId);
+  if (!taskId || typeof taskId !== 'string') return;
+  
+  if (expandedTasks.value[taskId]) {
+    delete expandedTasks.value[taskId];
   } else {
-    expandedTasks.value.add(taskId);
-    if (!taskNodesMap.value[taskId] && !nodesLoading.value.has(taskId)) {
-      nodesLoading.value.add(taskId);
+    expandedTasks.value[taskId] = true;
+    if (!taskNodesMap.value[taskId] && !nodesLoading.value[taskId]) {
+      nodesLoading.value[taskId] = true;
       try {
         console.log('请求节点列表, taskId:', taskId);
         const resp = await listTaskNodesByTask({ taskId });
@@ -213,7 +215,7 @@ async function toggleTaskExpand(taskId: string) {
       } catch (e) {
         console.error('加载节点失败:', e);
       } finally {
-        nodesLoading.value.delete(taskId);
+        delete nodesLoading.value[taskId];
       }
     }
   }
