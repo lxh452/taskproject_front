@@ -703,6 +703,12 @@ const handleAIProcess = async () => {
   }, 200)
 
   try {
+    console.log('开始构建上下文...')
+    console.log('form.departmentIds:', form.departmentIds)
+    console.log('form.responsibleEmployeeIds:', form.responsibleEmployeeIds)
+    console.log('departments.value:', departments.value)
+    console.log('teamMembers.value:', teamMembers.value)
+    
     // 构建上下文信息
     const polishContext: any = { 
       priority: getPriorityValue(aiOptions.priority), // 转换为整数值
@@ -716,6 +722,7 @@ const handleAIProcess = async () => {
         .filter(d => form.departmentIds?.includes(d.id))
         .map(d => d.name);
       polishContext.departmentNames = deptNames;
+      console.log('部门名称:', deptNames)
     }
     
     // 添加负责人信息
@@ -729,7 +736,10 @@ const handleAIProcess = async () => {
         .filter(e => form.responsibleEmployeeIds?.includes(e.id))
         .map(e => e.name);
       polishContext.employeeNames = employeeNames;
+      console.log('员工名称:', employeeNames)
     }
+    
+    console.log('最终上下文:', polishContext)
     
     await new Promise<void>((resolve, reject) => {
       streamPolishTask(
