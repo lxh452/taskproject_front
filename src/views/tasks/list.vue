@@ -172,15 +172,32 @@
           v-for="node in currentTaskNodes" 
           :key="node.TaskNodeId || node.id"
           class="task-node-item"
-          @click="goToNodeDetail(node)"
         >
           <div class="node-header">
-            <span class="node-name">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
-            <el-tag :type="getNodeStatusType(node)" size="small">
-              {{ getNodeStatusText(node) }}
-            </el-tag>
+            <span class="node-name" @click="goToNodeDetail(node)">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
+            <div class="node-actions">
+              <el-tag :type="getNodeStatusType(node)" size="small">
+                {{ getNodeStatusText(node) }}
+              </el-tag>
+              <el-button 
+                type="primary" 
+                link 
+                size="small" 
+                @click.stop="editNode(node)"
+              >
+                <el-icon><Edit /></el-icon>
+              </el-button>
+              <el-button 
+                type="danger" 
+                link 
+                size="small" 
+                @click.stop="deleteNode(node)"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
           </div>
-          <div class="node-info">
+          <div class="node-info" @click="goToNodeDetail(node)">
             <span v-if="node.LeaderName || node.leaderName" class="info-item">
               <el-icon><User /></el-icon>
               负责人: {{ node.LeaderName || node.leaderName }}
@@ -194,10 +211,10 @@
               截止: {{ formatDate(node.NodeDeadline || node.nodeDeadline) }}
             </span>
           </div>
-          <div v-if="node.NodeDetail || node.nodeDetail" class="node-desc">
+          <div v-if="node.NodeDetail || node.nodeDetail" class="node-desc" @click="goToNodeDetail(node)">
             {{ node.NodeDetail || node.nodeDetail }}
           </div>
-          <div class="node-progress" v-if="node.Progress || node.progress !== undefined">
+          <div class="node-progress" v-if="node.Progress || node.progress !== undefined" @click="goToNodeDetail(node)">
             <el-progress :percentage="node.Progress || node.progress || 0" :status="getNodeProgressStatus(node)" />
           </div>
         </div>
@@ -220,7 +237,7 @@ import { useRouter } from 'vue-router';
 import { listTasks, listTaskNodesByTask, deleteTask, deleteTaskNode } from '@/api';
 import { clearDebounceForUrl } from '@/utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Loading, User, UserFilled, Calendar } from '@element-plus/icons-vue';
+import { Loading, User, UserFilled, Calendar, Edit, Delete } from '@element-plus/icons-vue';
 import CreateTaskForm from './create-task-form.vue';
 import CreateNodeForm from '../tasknodes/create-node-form.vue';
 
@@ -334,6 +351,55 @@ function goToNodeDetail(node: any) {
   const nodeId = node.TaskNodeId || node.id;
   if (nodeId) {
     router.push({ name: 'tasknodes-detail', params: { id: nodeId } });
+  }
+}
+
+// 编辑节点
+function editNode(node: any) {
+  const nodeId = node.TaskNodeId || node.id;
+  if (nodeId) {
+    nodeDialogVisible.value = false;
+    router.push({ name: 'tasknodes-detail', params: { id: nodeId }, query: { edit: 'true' } });
+  }
+}
+
+// 删除节点
+async function deleteNode(node: any) {
+  const nodeId = node.TaskNodeId || node.id;
+  const nodeName = node.NodeName || node.nodeName || '未命名节点';
+  
+  if (!nodeId) {
+    ElMessage.warning('节点 ID 不存在');
+    return;
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除任务节点「${nodeName}」吗？`,
+      '删除确认',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    );
+    
+    const resp = await deleteTaskNode({ nodeId });
+    if (resp.data.code === 200) {
+      ElMessage.success('节点已删除');
+      // 从当前列表中移除该节点
+      currentTaskNodes.value = currentTaskNodes.value.filter(
+        (n: any) => (n.TaskNodeId || n.id) !== nodeId
+      );
+      // 更新任务节点数
+      const task = rows.value.find((t: any) => t.id === currentTaskId.value);
+      if (task && task.nodeCount > 0) {
+        task.nodeCount--;
+      }
+    } else {
+      ElMessage.error(resp.data.msg || '删除失败');
+    }
+  } catch (err: any) {
+    if (err !== 'cancel') {
+      console.error('删除节点失败:', err);
+      ElMessage.error('删除失败');
+    }
   }
 }
 
@@ -722,6 +788,25 @@ onActivated(() => {
   font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-primary);
+  cursor: pointer;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-name:hover {
+  color: var(--color-primary);
+}
+
+.node-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.node-actions .el-button {
+  padding: 4px;
 }
 
 .node-info {
