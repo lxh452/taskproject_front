@@ -253,12 +253,6 @@
       </aside>
     </div>
 
-    <!-- AI流程助手浮窗 -->
-    <FlowAIAssistant
-        :tasks="extractedTasks"
-        @apply-flow="applyAIFlow"
-        @clear-tasks="clearInput"
-    />
   </div>
 </template>
 
@@ -268,7 +262,7 @@ import { VueFlow, useVueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import { ElMessage } from 'element-plus';
 import { createTaskNode } from '@/api';
-import FlowAIAssistant from './components/FlowAIAssistant.vue';
+
 
 interface DesignOption {
   id: string;
@@ -459,35 +453,8 @@ function generateFlowFromDesign(design: DesignOption) {
   flowEdges.value = edges;
 }
 
+
 // 应用AI助手生成的流程
-function applyAIFlow(flowData: any) {
-  // 转换AI生成的数据为VueFlow格式
-  const nodes = flowData.nodes.map((node: any) => ({
-    id: node.id,
-    type: 'custom',
-    position: { x: node.x, y: node.y },
-    data: {
-      label: node.label,
-      status: 'pending',
-      assignee: '',
-      days: 1,
-      priority: 'medium'
-    }
-  }));
-
-  const edges = flowData.edges.map((edge: any) => ({
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    animated: true
-  }));
-
-  flowNodes.value = nodes;
-  flowEdges.value = edges;
-
-  // 创建一个AI生成的设计方案
-  const aiDesign: DesignOption = {
-    id: 'ai-generated',
     name: 'AI智能生成方案',
     description: '基于AI分析任务依赖关系自动生成的流程方案',
     estimatedDays: Math.ceil(nodes.length * 0.8),
