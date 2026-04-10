@@ -345,7 +345,7 @@ async function toggleTaskExpand(taskId: string) {
   } else {
     expandedTasks.value[taskId] = true;
     if (!taskNodesMap.value[taskId] && !nodesLoading.value[taskId]) {
-      nodesLoading.value.add(taskId);
+      nodesLoading.value[taskId] = true;
       try {
         console.log('请求节点列表, taskId:', taskId);
         const resp = await listTaskNodesByTask({ taskId });
@@ -355,16 +355,8 @@ async function toggleTaskExpand(taskId: string) {
         }
       } catch (e) {
         console.error('加载节点失败:', e);
-      } finally {
-        nodesLoading.value.delete(taskId);
-      }
-    }
-  }
-}
-      } catch (e) {
-        console.error('加载节点失败:', e);
-      } finally {
-        nodesLoading.value.delete(taskId);
+} finally {
+        nodesLoading.value[taskId] = false;
       }
     }
   }

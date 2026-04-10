@@ -120,10 +120,10 @@
 
               <div class="expand-btn-row">
                 <button class="expand-btn" @click.stop="toggleTaskExpand(row.id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value(row.id) }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value[row.id] }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.value(row.id) ? '收起' : '查看节点' }}
+                  {{ expandedTasks.value[row.id] ? '收起' : '查看节点' }}
                   <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
                 </button>
               </div>
