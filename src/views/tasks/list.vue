@@ -120,10 +120,10 @@
 
               <div class="expand-btn-row">
                 <button class="expand-btn" @click.stop="toggleTaskExpand(row.id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value[row.id] }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks[row.id] }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.value[row.id] ? '收起' : '查看节点' }}
+                  {{ expandedTasks[row.id] ? '收起' : '查看节点' }}
                   <span class="node-count" v-if="row.nodeCount > 0">{{ row.nodeCount }}</span>
                 </button>
               </div>
@@ -293,8 +293,9 @@ async function loadData() {
       const deadline = t.deadline || t.taskDeadline;
       const progress = Math.round(t.progress ?? 0);
       const status = t.status ?? 0;
+      const taskId = t.id || t.taskId || '';
       return {
-        id: t.id || t.taskId,
+        id: taskId,
         taskTitle: t.taskTitle || t.title || '未命名任务',
         priority: t.priority ?? t.taskPriority ?? 3,
         deadline: deadline ? new Date(deadline).toLocaleDateString('zh-CN') : '-',
@@ -305,7 +306,7 @@ async function loadData() {
         nodeCount: t.nodeCount || 0,
         checked: false,
       };
-    });
+    }).filter((r: any) => r.id); // 过滤掉没有 id 的任务
   } catch (error: any) {
     // 忽略防抖取消的请求，不显示错误提示
     if (error.isDebounce || (error.message && error.message.includes('防抖'))) {
