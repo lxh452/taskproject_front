@@ -378,6 +378,7 @@ export const streamPolishTask = (
         taskId?: string;
         companyId?: string;
         departmentIds?: string[];
+        responsibleEmployeeIds?: string[];
         context?: Record<string, any> 
     },
     onEvent: (event: string, data: any) => void,

@@ -737,6 +737,7 @@ const handleAIProcess = async () => {
           rawDescription: taskInput.value, 
           companyId: employee.value?.companyId,
           departmentIds: form.departmentIds || [],
+          responsibleEmployeeIds: form.responsibleEmployeeIds || [],
           context: polishContext 
         },
         (event, data) => {
@@ -755,9 +756,9 @@ const handleAIProcess = async () => {
               taskPriority: r.taskPriority !== undefined ? r.taskPriority : aiOptions.priority,
               estimatedDays: r.estimatedDays || aiOptions.duration,
               subtasks: [],
-              // 保存部门和人员信息
-              departmentIds: form.departmentIds || [],
-              responsibleEmployeeIds: form.responsibleEmployeeIds || []
+              // 保存部门和人员信息（优先使用 AI 返回的，其次使用用户选择的）
+              departmentIds: r.departmentIds?.length > 0 ? r.departmentIds : (form.departmentIds || []),
+              responsibleEmployeeIds: r.responsibleEmployeeIds?.length > 0 ? r.responsibleEmployeeIds : (form.responsibleEmployeeIds || [])
             }
 
             setTimeout(() => {
