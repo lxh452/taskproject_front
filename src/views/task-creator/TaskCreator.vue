@@ -754,7 +754,10 @@ const handleAIProcess = async () => {
               taskType: r.taskType !== undefined ? r.taskType : (form.departmentIds?.length > 1 ? 1 : 0),
               taskPriority: r.taskPriority !== undefined ? r.taskPriority : aiOptions.priority,
               estimatedDays: r.estimatedDays || aiOptions.duration,
-              subtasks: []
+              subtasks: [],
+              // 保存部门和人员信息
+              departmentIds: form.departmentIds || [],
+              responsibleEmployeeIds: form.responsibleEmployeeIds || []
             }
 
             setTimeout(() => {
@@ -806,8 +809,8 @@ const editAsManual = () => {
   form.taskPriority = getPriorityValue(result.value.taskPriority || result.value.priority)
   form.taskDeadline = new Date(Date.now() + (result.value.estimatedDays || 7) * 86400000).toISOString().split('T')[0]
   // 同步跨部门、紧急度等信息
-  form.departmentIds = form.departmentIds || []
-  form.responsibleEmployeeIds = form.responsibleEmployeeIds || []
+  form.departmentIds = result.value.departmentIds || []
+  form.responsibleEmployeeIds = result.value.responsibleEmployeeIds || []
   inputMode.value = 'manual'
   showResult.value = false
 }
@@ -825,8 +828,8 @@ const submitTask = async () => {
       taskType: result.value.taskType !== undefined ? result.value.taskType : aiOptions.taskType,
       taskDeadline: new Date(Date.now() + (result.value.estimatedDays || 7) * 86400000).toISOString().split('T')[0],
       nodeEmployeeIds: assignees,
-      departmentIds: form.departmentIds || [],
-      responsibleEmployeeIds: form.responsibleEmployeeIds || []
+      departmentIds: result.value.departmentIds || [],
+      responsibleEmployeeIds: result.value.responsibleEmployeeIds || []
     })
     ElMessage.success('任务创建成功')
     router.push('/tasks')
