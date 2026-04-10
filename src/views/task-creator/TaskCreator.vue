@@ -782,12 +782,25 @@ const handleAIProcess = async () => {
             console.log('开始生成子任务...')
             let jsonContent = ''
             
+            // 构建节点信息映射（如果有流程设计器生成的节点）
+            const nodeInfoMap: Record<string, string> = {}
+            if (result.value.flowNodes && Array.isArray(result.value.flowNodes)) {
+              result.value.flowNodes.forEach((node: any) => {
+                if (node.id && node.data?.label) {
+                  nodeInfoMap[node.id] = node.data.label
+                }
+              })
+            }
+            
             streamGenerateSubtasks(
               {
                 taskDescription: result.value.description,
                 context: {
                   departmentIds: result.value.departmentIds,
-                  responsibleEmployeeIds: result.value.responsibleEmployeeIds
+                  responsibleEmployeeIds: result.value.responsibleEmployeeIds,
+                  // 传递节点 ID 和名称的映射
+                  nodeInfoMap: nodeInfoMap,
+                  flowNodes: result.value.flowNodes || []
                 }
               },
               (subtaskEvent, subtaskData) => {
