@@ -35,23 +35,23 @@
               </div>
               <div class="task-header-actions">
                 <button class="expand-btn" @click.stop="toggleTaskExpand(group.taskId)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks.value[group.taskId] }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: expandedTasks[group.taskId] }">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  {{ expandedTasks.value[group.taskId] ? '收起' : '展开' }}
+                  {{ expandedTasks[group.taskId] ? '收起' : '展开' }}
                 </button>
               </div>
             </div>
           </div>
 
           <!-- 节点浮窗 -->
-          <div v-if="expandedTasks.value[group.taskId]" class="nodes-panel">
-            <div v-if="nodesLoading.value[group.taskId]" class="nodes-loading">
+          <div v-if="expandedTasks[group.taskId]" class="nodes-panel">
+            <div v-if="nodesLoading[group.taskId]" class="nodes-loading">
               <el-icon class="is-loading"><Loading /></el-icon> 加载中...
             </div>
             <template v-else>
-              <div v-if="taskNodesMap.value[group.taskId]?.length > 0" class="nodes-list">
-                <div v-for="node in taskNodesMap.value[group.taskId]" :key="node.TaskNodeId" class="node-item">
+              <div v-if="taskNodesMap[group.taskId]?.length > 0" class="nodes-list">
+                <div v-for="node in taskNodesMap[group.taskId]" :key="node.TaskNodeId" class="node-item">
                   <div class="node-info">
                     <span class="node-title" @click.stop="openDrawer(node)">{{ node.NodeName || node.nodeName || '未命名节点' }}</span>
                     <span class="node-status" :class="'status-' + (node.NodeStatus ?? node.Status ?? node.status ?? 0)">
@@ -355,7 +355,7 @@ async function toggleTaskExpand(taskId: string) {
         }
       } catch (e) {
         console.error('加载节点失败:', e);
-} finally {
+      } finally {
         nodesLoading.value[taskId] = false;
       }
     }
